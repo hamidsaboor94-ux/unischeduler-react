@@ -1,0 +1,197 @@
+{
+  "roomsPage": {
+    "title": "Room Management",
+    "searchAriaLabel": "Search rooms",
+    "searchPlaceholder": "Search rooms…",
+    "addRoom": "Add room",
+    "columns": {
+      "type": "Type",
+      "capacity": "Capacity",
+      "equipment": "Equipment"
+    },
+    "editAria": "Edit room {{name}}",
+    "deleteAria": "Delete room {{name}}",
+    "confirmDelete": "Delete room {{name}}? This cannot be undone.",
+    "toastRemoved": "Room removed"
+  },
+  "roomForm": {
+    "nameLabel": "Room name",
+    "namePlaceholder": "e.g. Room D110",
+    "typeLabel": "Type",
+    "capacityLabel": "Capacity",
+    "equipmentLabel": "Equipment",
+    "equipmentPlaceholder": "e.g. Projector, whiteboard",
+    "types": {
+      "lectureHall": "Lecture hall",
+      "examHall": "Exam hall",
+      "classroom": "Classroom",
+      "computerLab": "Computer lab",
+      "scienceLab": "Science lab"
+    },
+    "validateName": "Please enter a room name.",
+    "confirmDelete": "Delete room {{name}}?",
+    "toastRemoved": "Room removed"
+  },
+  "coursesPage": {
+    "title": "Course Management",
+    "searchAriaLabel": "Search courses",
+    "searchPlaceholder": "Search courses…",
+    "allDepartments": "All departments",
+    "noDepartment": "No department",
+    "allInstructors": "All instructors",
+    "allCredits": "All credits",
+    "creditsOption_one": "{{count}} credit",
+    "creditsOption_other": "{{count}} credits",
+    "assignDepartment": "Assign department",
+    "addCourse": "Add course",
+    "columns": {
+      "code": "Code",
+      "name": "Course Name",
+      "dept": "Dept.",
+      "credits": "Credits",
+      "instructor": "Instructor"
+    },
+    "csvEnrolled": "Enrolled",
+    "csvCapacity": "Capacity",
+    "statusOverEnrolled": "Over-enrolled",
+    "statusActive": "Active",
+    "deleteAria": "Delete course {{code}}",
+    "confirmDelete": "Delete course {{code}}? This also removes its timetable slots, exams, and enrollments.",
+    "toastRemoved": "Course removed",
+    "toastExported": "Courses exported.",
+    "toastCsvNoRows": "CSV file has no data rows.",
+    "toastCsvMissingColumns": "CSV must have Code, Course Name, Department, and Credits columns.",
+    "toastSelectSemester": "Select a semester before importing courses.",
+    "toastImported_one": "Imported {{count}} course.",
+    "toastImported_other": "Imported {{count}} courses.",
+    "toastImportedFailed_one": " {{count}} row failed.",
+    "toastImportedFailed_other": " {{count}} rows failed.",
+    "importErrorsTitle": "Import completed with errors",
+    "importErrorsRowLabel": "Row",
+    "toastAddDeptFirst": "Add a department first.",
+    "toastNoCoursesMatch": "No courses match the current filters."
+  },
+  "courseForm": {
+    "codeLabel": "Course code",
+    "codePlaceholder": "e.g. CS401",
+    "nameLabel": "Course name",
+    "namePlaceholder": "e.g. Machine Learning",
+    "departmentLabel": "Department",
+    "creditsLabel": "Credits",
+    "instructorLabel": "Instructor",
+    "primaryRoomLabel": "Primary room",
+    "maxStudentsLabel": "Max students",
+    "termLabel": "Term",
+    "prerequisitesLabel": "Prerequisites",
+    "noOtherCourses": "No other courses yet.",
+    "saveFirstHint": "Save the course first, then reopen it to set prerequisites.",
+    "validateRequired": "Course code and name are required.",
+    "confirmDelete": "Delete course {{code}}? This also removes its timetable slots, exams, and enrollments.",
+    "toastRemoved": "Course removed",
+    "toastSaved": "Saved."
+  },
+  "teachersPage": {
+    "title": "Teacher Management",
+    "searchAriaLabel": "Search teachers by name or faculty ID",
+    "searchPlaceholder": "Search name or faculty ID…",
+    "addTeacher": "Add teacher",
+    "columns": {
+      "facultyId": "Faculty ID",
+      "courses": "Courses taught",
+      "sessions": "Weekly sessions"
+    },
+    "noCourses": "None",
+    "deleteAria": "Delete teacher {{name}}",
+    "confirmDelete": "Delete teacher {{name}}?",
+    "toastRemoved": "Teacher removed"
+  },
+  "teacherForm": {
+    "facultyIdLabel": "Faculty ID",
+    "facultyIdUnassigned": "Not assigned — this teacher has no login account yet",
+    "fullNameLabel": "Full name",
+    "fullNamePlaceholder": "e.g. Dr. Smith",
+    "noDepartment": "— No department —",
+    "validateName": "Please enter a name.",
+    "confirmDelete": "Delete teacher {{name}}?",
+    "toastRemoved": "Teacher removed"
+  },
+  "departmentsPage": {
+    "title": "Department Management",
+    "addDepartment": "Add department",
+    "columns": {
+      "courses": "Courses",
+      "teachers": "Teachers"
+    },
+    "deleteAria": "Delete department {{name}}",
+    "confirmDelete": "Delete department {{name}}?",
+    "toastRemoved": "Department removed"
+  },
+  "departmentForm": {
+    "nameLabel": "Department name",
+    "namePlaceholder": "e.g. Chemistry",
+    "validateName": "Please enter a department name.",
+    "confirmDelete": "Delete department {{name}}?",
+    "toastRemoved": "Department removed"
+  },
+  "bulkAssignDept": {
+    "description_one": "This sets the department for {{count}} course — whichever courses match the current search/filters on the Courses page.",
+    "description_other": "This sets the department for {{count}} courses — whichever courses match the current search/filters on the Courses page.",
+    "none": "— None —",
+    "assign": "Assign",
+    "toastPickDepartment": "Pick a department.",
+    "toastAssigned_one": "Department assigned to {{count}} course.",
+    "toastAssigned_other": "Department assigned to {{count}} courses."
+  },
+  "semestersPage": {
+    "title": "Semester Management",
+    "addSemester": "Add semester",
+    "columns": {
+      "start": "Start",
+      "end": "End",
+      "creditLimit": "Credit Limit"
+    },
+    "creditsValue_one": "{{count}} credit",
+    "creditsValue_other": "{{count}} credits",
+    "active": "Active",
+    "inactive": "Inactive",
+    "setActive": "Set active",
+    "copyCoursesTitle": "Copy courses from another semester",
+    "copyCoursesIn": "Copy courses in",
+    "deleteAria": "Delete semester {{name}}",
+    "confirmDelete": "Delete semester {{name}}?",
+    "toastRemoved": "Semester removed",
+    "toastActiveUpdated": "Active semester updated."
+  },
+  "termForm": {
+    "nameLabel": "Semester name",
+    "namePlaceholder": "e.g. Fall 2026",
+    "startDateLabel": "Start date",
+    "endDateLabel": "End date",
+    "setActiveLabel": "Set as the active semester",
+    "nonTeachingDaysLabel": "Non-teaching days",
+    "nonTeachingDaysHint": "Classes won't be scheduled on these days for this semester (e.g. mark Friday off if that's your weekend).",
+    "creditLimitLabel": "Credit limit per student",
+    "creditLimitPlaceholder": "No limit",
+    "creditLimitHint": "Maximum total credits a student can be enrolled in during this semester. Leave blank for no limit.",
+    "examStartDateLabel": "Exam period start",
+    "examEndDateLabel": "Exam period end",
+    "examRangeHint": "Used by Auto-generate on the Exam Schedule page to pick exam dates. Leave blank to default to the last two weeks of the semester.",
+    "validateExamRange": "Exam period end date cannot be before the start date.",
+    "validateName": "Please enter a semester name.",
+    "confirmDelete": "Delete semester {{name}}?",
+    "toastRemoved": "Semester removed",
+    "toastSaved": "Saved."
+  },
+  "rolloverForm": {
+    "copyFromLabel": "Copy courses from",
+    "none": "— None —",
+    "hint": "Every course in the selected semester is copied into {{target}}. Courses whose code is already used in {{target}} are skipped and reported.",
+    "copyCourses": "Copy courses",
+    "courseLabel": "Course {{code}}",
+    "toastPickSemester": "Pick a semester to copy from.",
+    "toastCopied_one": "Copied {{count}} course.",
+    "toastCopied_other": "Copied {{count}} courses.",
+    "toastSkipped_one": " {{count}} skipped.",
+    "toastSkipped_other": " {{count}} skipped."
+  }
+}

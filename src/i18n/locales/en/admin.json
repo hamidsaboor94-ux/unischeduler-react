@@ -1,0 +1,159 @@
+{
+  "conflictsPage": {
+    "title": "Conflict Detection",
+    "rescan": "Re-scan",
+    "autoResolve": "Auto-resolve",
+    "allActiveIssues": "All Active Issues",
+    "noActiveIssues": "No active issues — everything looks clear.",
+    "toast": {
+      "scanComplete": "Conflict scan complete"
+    },
+    "stats": {
+      "critical": {
+        "label": "Critical",
+        "sub": "Room double-books"
+      },
+      "warnings": {
+        "label": "Warnings",
+        "sub": "Clash + capacity"
+      },
+      "notices": {
+        "label": "Notices",
+        "sub": "Invigilator gaps"
+      },
+      "allClear": {
+        "label": "All clear",
+        "sub": "Live status"
+      }
+    },
+    "detail": {
+      "issueGone": "This issue no longer applies — it may already be resolved. Try re-scanning.",
+      "unknownCourse": "Unknown course",
+      "noRoom": "No room set",
+      "movedSessionTag": "Moved session",
+      "regularClassTag": "Regular class",
+      "clashDuplicate": "Same course — likely a duplicate entry",
+      "clashSameRoom": "Same room ({{room}})",
+      "clashSameInstructor": "Same instructor ({{name}})",
+      "clashOverlappingTime": "Overlapping time",
+      "clashMovedSession": "One-off moved session",
+      "removeDuplicate": "Remove this duplicate",
+      "rescheduleRoom": "Reschedule to another room",
+      "changeTime": "Change time",
+      "confirmMove": "Confirm",
+      "noRoomsAvailable": "No other rooms are free at this exact day and time.",
+      "noTimesAvailable": "No free times found for this room today.",
+      "confirmRemoveDuplicate": "Remove this session from the timetable? This can't be undone.",
+      "confirmRemoveButton": "Remove",
+      "toastResolved": "Conflict resolved — re-checked the timetable for new clashes.",
+      "toastRemoved": "Duplicate session removed."
+    }
+  },
+  "conflictItem": {
+    "severity": {
+      "critical": "Critical",
+      "warning": "Warning",
+      "notice": "Notice"
+    },
+    "actions": {
+      "suggestFix": "Suggest fix",
+      "viewDetails": "View details",
+      "reschedule": "Reschedule",
+      "viewStudents": "View students",
+      "findLargerRoom": "Find larger room",
+      "assignInvigilators": "Assign invigilators"
+    }
+  },
+  "usersPage": {
+    "title": "User Management",
+    "searchAriaLabel": "Search by name, email, or ID number",
+    "searchPlaceholder": "Search name, email, or ID…",
+    "allRoles": "All roles",
+    "bulkImport": "Bulk import",
+    "createAccount": "Create account",
+    "resetPassword": "Reset password",
+    "viewProfile": "View Profile",
+    "cannotChangeOwnRole": "Use another admin account to change your own role",
+    "confirmDelete": "Delete user {{name}}? This cannot be undone.",
+    "deleteAriaLabel": "Delete user {{name}}",
+    "table": {
+      "idNumber": "ID Number",
+      "joined": "Joined"
+    },
+    "toast": {
+      "roleUpdated": "Role updated.",
+      "userRemoved": "User removed",
+      "unsupportedFileType": "Please upload a .csv or .xlsx file.",
+      "fileReadError": "Could not read that file.",
+      "noDataRows": "File has no data rows.",
+      "imported": "Created {{created}} account(s).",
+      "importedWithSkipped": "Created {{created}} account(s). {{skipped}} row(s) skipped."
+    }
+  },
+  "createAccountForm": {
+    "namePlaceholder": "e.g. Jordan Lee",
+    "tempPasswordHint": "A temporary password is generated automatically — you'll see it right after creating the account. There's no email; share it with them directly.",
+    "submit": "Create account",
+    "toast": {
+      "nameEmailRequired": "Name and email are required.",
+      "pickDepartment": "Pick a department for a faculty account."
+    }
+  },
+  "resetPasswordForm": {
+    "hint": "This immediately replaces the user's current password. There is no email notification — tell them the new password directly.",
+    "validation": {
+      "minLength": "Password must be at least 8 characters."
+    }
+  },
+  "accountCredentials": {
+    "hint": "Copy or export these now — temporary passwords are shown only once. Share them with each person directly; they'll be forced to set a new password on first login.",
+    "none": "No accounts were created.",
+    "skippedCount": "{{count}} row(s) skipped:",
+    "rowLabel": "Row {{row}}",
+    "exportCsv": "Export CSV",
+    "exportReadable": "Export readable list",
+    "done": "Done",
+    "table": {
+      "idNumber": "ID Number",
+      "tempPassword": "Temp password"
+    },
+    "toast": {
+      "exported": "Credentials exported."
+    }
+  },
+  "auditLogPage": {
+    "title": "Audit Log",
+    "allActions": "All actions",
+    "allEntities": "All entities",
+    "unknownUser": "Unknown",
+    "empty": "No actions recorded yet.",
+    "table": {
+      "time": "Time",
+      "user": "User",
+      "action": "Action",
+      "entity": "Entity",
+      "details": "Details"
+    }
+  },
+  "backupPage": {
+    "title": "Backup & Restore",
+    "export": {
+      "title": "Export backup",
+      "hint": "Saves everything — courses, timetables, exams, user accounts, and enrollments — into a single file. Do this regularly (for example at the end of each week) and keep the file on a USB drive or another computer, so the data survives if this machine fails.",
+      "button": "Export backup file"
+    },
+    "restore": {
+      "title": "Restore from backup",
+      "hint": "Loads a previously exported backup file. <strong>This overwrites all current data</strong> with what the backup contains — you will be asked to confirm before anything happens.",
+      "chooseButton": "Choose backup file…"
+    },
+    "confirmRestore": {
+      "message": "Restore \"{{fileName}}\"? This replaces ALL current data — every course, timetable, user account, and enrollment — with the contents of that backup. Anything added or changed since the backup was made will be lost. The app reloads when the restore finishes, and you may need to log in again.",
+      "label": "Restore backup"
+    },
+    "toast": {
+      "exported": "Backup exported — keep the file somewhere safe, like a USB drive or shared folder.",
+      "restored": "Backup restored — reloading…"
+    }
+  }
+}

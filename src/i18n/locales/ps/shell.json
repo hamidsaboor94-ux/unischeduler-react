@@ -1,0 +1,122 @@
+{
+  "sidebar": {
+    "sections": {
+      "overview": "عمومي کتنه",
+      "scheduling": "مهالویش",
+      "exams": "ازموینې",
+      "system": "سیسټم",
+      "myTeaching": "زما تدریس",
+      "courses": "کورسونه",
+      "admissions": "منل"
+    },
+    "nav": {
+      "dashboard": "ډشبورډ",
+      "reports": "راپورونه",
+      "timetable": "مهالویش",
+      "rooms": "خونې",
+      "courses": "کورسونه",
+      "teachers": "ښوونکي",
+      "departments": "څانګې",
+      "semesters": "سمسترونه",
+      "examSchedule": "د ازموینو مهالویش",
+      "enrollment": "نومليکنه",
+      "attendance": "حاضري",
+      "gradebook": "نمرې",
+      "myGrades": "زما نمرې",
+      "conflicts": "ټکرونه",
+      "users": "کاروونکي",
+      "auditLog": "د پلټنې ثبت",
+      "backup": "بیک اپ",
+      "branding": "برانډینګ",
+      "gradingScale": "د نمرو معیار",
+      "myCourses": "زما کورسونه",
+      "catalog": "کتالوګ",
+      "mySchedule": "زما مهالویش",
+      "myAttendance": "زما حاضري",
+      "myProfile": "زما پروفایل",
+      "admissions": "غوښتنلیکونه"
+    },
+    "noTermsYet": "تر اوسه هیڅ سمستر نشته"
+  },
+  "search": {
+    "placeholder": "کورسونه یا ښوونکي ولټوئ…",
+    "ariaLabel": "د کورسونو او ښوونکو لټون",
+    "clear": "لټون پاک کړئ",
+    "course": "کورس",
+    "teacher": "ښوونکی",
+    "noMatches": "هیڅ کورس یا ښوونکی \"{{query}}\" سره سمون نه خوري"
+  },
+  "termDropdown": {
+    "loading": "سمستر پورته کیږي…",
+    "selectSemester": "یو سمستر وټاکئ",
+    "noTermsYet": "تر اوسه هیڅ سمستر نشته",
+    "addSemester": "سمستر اضافه کول",
+    "ariaLabel": "سمستر غوره کړئ"
+  },
+  "notifications": {
+    "title": "خبرتیاوې",
+    "empty": "تر اوسه هیڅ خبرتیا نشته."
+  },
+  "modal": {
+    "areYouSure": "ایا ډاډه یاست؟",
+    "editSlot": "د مهالویش وخت سمول",
+    "addSlot": "د مهالویش وخت اضافه کول",
+    "oneOffExceptions": "یو ځلي استثناوې",
+    "resetTimetable": "مهالویش بیا تنظیمول — {{label}}",
+    "pdfImportPreview": "د PDF څخه مهالویش وارول — د تایید دمخه بیاکتنه",
+    "pdfImportComplete": "وارول بشپړ شول",
+    "editRoom": "خونه سمول",
+    "addRoom": "خونه اضافه کول",
+    "editTeacher": "ښوونکی سمول",
+    "addTeacher": "ښوونکی اضافه کول",
+    "editDepartment": "څانګه سمول",
+    "addDepartment": "څانګه اضافه کول",
+    "editSemester": "سمستر سمول",
+    "addSemester": "سمستر اضافه کول",
+    "copyCoursesInto": "کورسونه {{term}} ته کاپي کول",
+    "editCourse": "کورس سمول",
+    "addCourse": "کورس اضافه کول",
+    "assignDepartment": "څانګه ټاکل",
+    "importCompletedWithErrors": "وارول د تېروتنو سره بشپړ شول",
+    "editExam": "ازموینه سمول",
+    "scheduleExam": "ازموینه مهالویش کول",
+    "autoGenerateExamType": "ازموینې په خپلکاره توګه جوړول",
+    "roster": "{{code}} فهرست",
+    "affectedStudents": "اغیزمن شوي زده کوونکي ({{count}})",
+    "createAccount": "حساب جوړول",
+    "accountCreated": "حساب جوړ شو",
+    "accountsCreated": "{{count}} حسابونه جوړ شول",
+    "resetPassword": "پټنوم بیا تنظیمول — {{name}}",
+    "myProfile": "زما پروفایل",
+    "conflictDetail": "د ټکر جزئیات",
+    "moveSlot": "لیږدول — {{code}}",
+    "applicationStatusChange": "حالت تازه کول — {{name}}",
+    "applicationApprove": "منل — {{name}}",
+    "closeDialog": "دیالوګ بندول"
+  },
+  "auth": {
+    "welcomeBack": "ښه راغلاست",
+    "loginToOrg": "{{org}} ته ننوتل",
+    "emailPlaceholder": "you@university.edu",
+    "passwordPlaceholder": "••••••••",
+    "signIn": "ننوتل",
+    "noSelfRegistration": "پخپله نومليکنه شتون نلري — یو اډمین ستاسو حساب جوړوي او تاسو ته یو لنډمهاله پټنوم درکوي.",
+    "applyPrompt": "لا تر اوسه زده کوونکی نه یاست؟",
+    "applyLink": "د منلو غوښتنلیک"
+  },
+  "setPassword": {
+    "title": "نوی پټنوم ټاکئ",
+    "hint": "دا حساب یو لنډمهاله پټنوم کاروي. د دوام لپاره نوی یو غوره کړئ.",
+    "confirmNewPassword": "نوی پټنوم تایید کړئ",
+    "newPasswordPlaceholder": "لږ تر لږه ۸ توري",
+    "confirmPlaceholder": "پټنوم بیا ولیکئ",
+    "submit": "پټنوم ټاکئ او دوام ورکړئ",
+    "logOutInstead": "پرځای یې ووځئ",
+    "mismatch": "پټنومونه سره سمون نه خوري."
+  },
+  "brandingSetup": {
+    "welcome": "{{appName}} ته ښه راغلاست",
+    "hint": "مخکې له دې چې پیل وکړئ، راځئ ستاسو د موسسې برانډینګ تنظیم کړو. دا د هرچا لپاره چې دغه اپلیکیشن کاروي په ټوله اپ کې ښکاره کیږي، او تاسو کولی شئ هرکله یې د تنظیماتو څخه بدل کړئ.",
+    "saveAndContinue": "خوندي کول او دوام"
+  }
+}

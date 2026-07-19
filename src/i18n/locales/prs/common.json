@@ -1,0 +1,86 @@
+{
+  "appName": "UniScheduler",
+  "actions": {
+    "save": "ذخیره",
+    "cancel": "لغو",
+    "close": "بستن",
+    "edit": "ویرایش",
+    "delete": "حذف",
+    "remove": "حذف",
+    "add": "افزودن",
+    "create": "ایجاد",
+    "update": "به‌روزرسانی",
+    "submit": "ارسال",
+    "confirm": "تأیید",
+    "back": "بازگشت",
+    "search": "جستجو",
+    "loading": "در حال بارگذاری…",
+    "yes": "بله",
+    "no": "خیر",
+    "undo": "واگرد",
+    "export": "صدور",
+    "import": "ورود",
+    "download": "دانلود",
+    "upload": "بارگذاری",
+    "view": "مشاهده",
+    "logOut": "خروج",
+    "viewProfile": "مشاهده پروفایل",
+    "changePassword": "تغییر رمز عبور",
+    "reset": "بازنشانی"
+  },
+  "fields": {
+    "name": "نام",
+    "fullName": "نام کامل",
+    "email": "ایمیل",
+    "role": "نقش",
+    "department": "دیپارتمنت",
+    "password": "رمز عبور",
+    "currentPassword": "رمز عبور فعلی",
+    "newPassword": "رمز عبور جدید",
+    "confirmPassword": "تأیید رمز عبور",
+    "date": "تاریخ",
+    "time": "زمان",
+    "room": "اتاق",
+    "course": "کورس",
+    "teacher": "استاد",
+    "student": "محصل",
+    "semester": "سمستر",
+    "term": "دوره",
+    "status": "وضعیت"
+  },
+  "roles": {
+    "admin": "ادمین",
+    "faculty": "استاد",
+    "student": "محصل"
+  },
+  "days": {
+    "Mon": "دوشنبه",
+    "Tue": "سه‌شنبه",
+    "Wed": "چهارشنبه",
+    "Thu": "پنجشنبه",
+    "Fri": "جمعه",
+    "Sat": "شنبه",
+    "Sun": "یکشنبه"
+  },
+  "status": {
+    "unscheduled": "برنامه‌ریزی نشده",
+    "overCapacity": "بیش از ظرفیت",
+    "clash": "تداخل",
+    "confirmed": "تأیید شده",
+    "conflict": "تداخل",
+    "partial": "جزئی",
+    "available": "موجود"
+  },
+  "language": {
+    "label": "زبان",
+    "english": "English",
+    "pashto": "پښتو",
+    "dari": "دری"
+  },
+  "theme": {
+    "switchToLight": "رفتن به حالت روشن",
+    "switchToDark": "رفتن به حالت تاریک"
+  },
+  "noneYet": "هنوز چیزی وجود ندارد",
+  "notApplicable": "—"
+}

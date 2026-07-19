@@ -1,0 +1,88 @@
+{
+  "title": "پروفایل محصل",
+  "noStudentSelected": "پروفایل یک محصل را از صفحه کاربران باز کنید تا اینجا نمایش داده شود.",
+  "notFound": "پروفایل این محصل یافت نشد.",
+  "print": "چاپ",
+  "editProfile": "ویرایش پروفایل",
+  "editContact": "ویرایش معلومات تماس",
+  "adminEditHint": "فقط ادمین می‌تواند این فیلدها را ویرایش کند.",
+  "memberSince": "عضویت از: {{date}}",
+  "sections": {
+    "personal": "معلومات شخصی",
+    "address": "معلومات آدرس",
+    "contact": "معلومات تماس",
+    "academic": "معلومات رسمی / اکادمیک",
+    "educational": "معلومات تحصیلی",
+    "documents": "اسناد رسمی"
+  },
+  "fields": {
+    "studentId": "شماره محصل",
+    "fullName": "نام کامل",
+    "fatherName": "نام پدر",
+    "grandfatherName": "نام پدرکلان",
+    "gender": "جنسیت",
+    "dateOfBirth": "تاریخ تولد",
+    "nationality": "تابعیت",
+    "nationalId": "شماره تذکره",
+    "passportNumber": "شماره پاسپورت",
+    "presentAddress": "آدرس فعلی",
+    "permanentAddress": "آدرس دایمی",
+    "mobileNumber": "شماره موبایل",
+    "emergencyContact": "شماره تماس اضطراری",
+    "email": "ایمیل",
+    "entryTestMarks": "نمرات امتحان کانکور",
+    "sponsor": "حامی مالی",
+    "classSection": "صنف / سکشن",
+    "term": "دوره / سمستر",
+    "specialization": "تخصص",
+    "enrollmentStatus": "وضعیت ثبت‌نام",
+    "admissionStatus": "وضعیت پذیرش",
+    "department": "دیپارتمنت / رشته",
+    "programSemester": "سمستر فعلی برنامه",
+    "previousSchool": "تحصیلات قبلی (مکتب / موسسه)",
+    "previousGraduationYear": "سال فراغت قبلی",
+    "advisor": "مشاور اکادمیک",
+    "gpa": "معدل تجمعی (GPA)",
+    "credits": "کریدیت‌های تکمیل‌شده"
+  },
+  "genderOptions": { "Male": "مرد", "Female": "زن", "Other": "دیگر" },
+  "admissionOptions": { "Approved": "منظور شده", "Pending": "در انتظار", "Rejected": "رد شده" },
+  "enrollmentOptions": { "Regular": "منظم", "Part-time": "نیمه‌وقت", "Probation": "آزمایشی", "Withdrawn": "انصراف داده" },
+  "none": "هیچ",
+  "select": "— انتخاب کنید —",
+  "creditsProgress": "{{completed}} از {{required}} کریدیت",
+  "creditsNoTarget": "{{completed}} کریدیت تکمیل شده",
+  "gpaScale": "{{gpa}} / ۴.۰",
+  "gpaNotAvailable": "هنوز موجود نیست",
+  "toasts": {
+    "saved": "پروفایل به‌روزرسانی شد.",
+    "contactSaved": "معلومات تماس به‌روزرسانی شد."
+  },
+  "documents": {
+    "typeHeader": "نوع",
+    "titleHeader": "عنوان",
+    "uploadedHeader": "بارگذاری شده",
+    "empty": "هنوز هیچ سندی بارگذاری نشده است.",
+    "uploadTitle": "بارگذاری یک سند",
+    "titlePlaceholder": "عنوان سند",
+    "upload": "بارگذاری",
+    "download": "دانلود",
+    "delete": "حذف",
+    "confirmDelete": "\"{{title}}\" حذف شود؟ این کار قابل بازگشت نیست.",
+    "types": {
+      "ID Scan": "اسکن تذکره",
+      "Certificate": "سند",
+      "Transcript": "ترانسکریپت",
+      "Passport Copy": "کاپی پاسپورت",
+      "Other": "دیگر"
+    },
+    "errors": {
+      "fileRequired": "یک فایل برای بارگذاری انتخاب کنید.",
+      "titleRequired": "عنوان ضروری است."
+    },
+    "toasts": {
+      "uploaded": "سند بارگذاری شد.",
+      "deleted": "سند حذف شد."
+    }
+  }
+}

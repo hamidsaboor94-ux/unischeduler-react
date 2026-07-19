@@ -1,0 +1,106 @@
+{
+  "gradebookPage": {
+    "title": "Gradebook",
+    "courseAria": "Select course",
+    "departmentAria": "Filter by department",
+    "allDepartments": "All departments",
+    "noCoursesYet": "No courses yet",
+    "addQuiz": "Add quiz column",
+    "exportExcel": "Export to Excel",
+    "categories": {
+      "assignment": "Assignment",
+      "quiz": "Quiz",
+      "midterm": "Midterm",
+      "exam": "Exam",
+      "final": "Final / Terminal"
+    },
+    "table": {
+      "studentId": "Student ID",
+      "student": "Student",
+      "total": "Total",
+      "average": "Average",
+      "letterGrade": "Letter grade"
+    },
+    "inProgress": "In progress",
+    "noStudentsEnrolled": "No students enrolled in this course yet.",
+    "deleteItemConfirm": "Delete \"{{name}}\"? All recorded scores for it will be removed too.",
+    "toasts": {
+      "itemAdded": "Column added.",
+      "itemDeleted": "Column removed.",
+      "pickCourse": "Select a course first.",
+      "exported": "Grade sheet exported.",
+      "scoreOutOfRange": "Score must be a number between 0 and {{max}}.",
+      "maxScoreInvalid": "Max score must be greater than 0."
+    },
+    "departmentSummary": {
+      "title": "Department overview",
+      "hint": "Class average across every course in scope — click a row to open its full gradebook above.",
+      "table": {
+        "course": "Course",
+        "students": "Students",
+        "graded": "Graded",
+        "average": "Class average"
+      },
+      "noCourses": "No courses in this scope yet.",
+      "noAverageYet": "—"
+    }
+  },
+  "myGradesPage": {
+    "title": "My Grades",
+    "noCourses": "You're not enrolled in any courses yet.",
+    "total": "Total",
+    "average": "Average",
+    "letterGrade": "Final grade",
+    "inProgress": "In progress",
+    "noItemsYet": "Your instructor hasn't set up a gradebook for this course yet.",
+    "notGradedYet": "Not graded yet",
+    "table": {
+      "item": "Item",
+      "score": "Score"
+    },
+    "notGraded": "Not graded yet"
+  },
+  "gradingScalePage": {
+    "title": "Grading Scale",
+    "panelTitle": "System-wide grading scale",
+    "panelSubtitle": "Defines how a final numeric average converts into a letter grade — applied automatically everywhere a grade is shown.",
+    "graduationPanelTitle": "Graduation requirement",
+    "graduationPanelSubtitle": "The total credits a student must complete to graduate — shown on the Student Profile page as credits completed vs. required."
+  },
+  "gradingScaleForm": {
+    "hint": "Add a band for every letter grade you use (A+/A-/B+ etc. all work) — the lowest one must start at 0 so every score maps to something.",
+    "labelPlaceholder": "e.g. A",
+    "minLabel": "Minimum score for {{label}}",
+    "minAndAbove": "at least",
+    "pointLabel": "Grade point for {{label}}",
+    "pointSuffix": "pts",
+    "addBand": "Add band",
+    "previewLabel": "Preview",
+    "previewTopBand": "{{min}} and above",
+    "previewRangeBand": "{{min}}–{{max}}",
+    "errors": {
+      "atLeastOne": "Add at least one grade band.",
+      "labelRequired": "Every band needs a label.",
+      "minRange": "Every band's minimum score must be a number between 0 and 100.",
+      "pointRange": "Every band needs a non-negative grade point value.",
+      "duplicateMin": "Two bands can't share the same minimum score.",
+      "lowestMustBeZero": "Your lowest band must start at 0, so every score maps to a grade."
+    },
+    "toasts": {
+      "saved": "Grading scale saved — existing final grades have been recalculated."
+    }
+  },
+  "graduationRequirementForm": {
+    "hint": "Set the total number of credits a student must complete to graduate. Leave blank to hide the \"required\" comparison on student profiles.",
+    "placeholder": "e.g. 130",
+    "inputLabel": "Required credits for graduation",
+    "creditsSuffix": "credits",
+    "errors": {
+      "positiveNumber": "Enter a positive number, or leave it blank."
+    },
+    "toasts": {
+      "saved": "Graduation requirement saved.",
+      "cleared": "Graduation requirement cleared."
+    }
+  }
+}

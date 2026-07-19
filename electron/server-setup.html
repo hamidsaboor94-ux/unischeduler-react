@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Set up UniScheduler</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(160deg, #1e1b4b 0%, #312e81 55%, #4c1d95 100%);
+      color: #e5e7eb;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .card {
+      width: 380px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 28px;
+      backdrop-filter: blur(6px);
+    }
+    .logo {
+      width: 52px; height: 52px; border-radius: 12px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; margin: 0 auto 14px;
+    }
+    h1 { font-size: 18px; text-align: center; font-weight: 600; }
+    p.sub { font-size: 12.5px; color: #a5b4fc; text-align: center; margin: 6px 0 20px; line-height: 1.5; }
+    .choice {
+      width: 100%; text-align: left; margin-top: 12px; padding: 14px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 10px; color: #f9fafb; cursor: pointer;
+    }
+    .choice:hover { border-color: #818cf8; background: rgba(0, 0, 0, 0.35); }
+    .choice .t { font-size: 13.5px; font-weight: 600; }
+    .choice .d { font-size: 11.5px; color: #a5b4fc; margin-top: 3px; line-height: 1.4; }
+    label { font-size: 12px; color: #c7d2fe; display: block; margin-bottom: 6px; margin-top: 14px; }
+    input[type="text"] {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px; color: #f9fafb;
+      font-family: Consolas, monospace; font-size: 12.5px;
+      padding: 10px; outline: none;
+      -webkit-user-select: text; user-select: text;
+    }
+    input[type="text"]:focus { border-color: #818cf8; }
+    button.primary {
+      width: 100%; margin-top: 14px; padding: 11px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white; border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    button.primary:hover { filter: brightness(1.1); }
+    button.primary:disabled { opacity: 0.55; cursor: default; }
+    .back { display: block; text-align: center; margin-top: 12px; font-size: 12px; color: #a5b4fc; cursor: pointer; }
+    .error {
+      display: none; margin-top: 12px; padding: 10px 12px;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 8px; font-size: 12px; color: #fecaca; line-height: 1.45;
+    }
+    .success { text-align: center; display: none; }
+    .success .check { font-size: 40px; margin-bottom: 10px; }
+    .hint { font-size: 11px; color: #818cf8; text-align: center; margin-top: 16px; line-height: 1.5; }
+    [data-view] { display: none; }
+    [data-view].active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">📅</div>
+    <h1>Set up UniScheduler</h1>
+
+    <div data-view="choose" class="active">
+      <p class="sub">Where should this app get its data?</p>
+      <button class="choice" id="choose-embedded">
+        <div class="t">💻 Use this computer only</div>
+        <div class="d">Runs its own local server and database. Good for a single admin machine.</div>
+      </button>
+      <button class="choice" id="choose-client">
+        <div class="t">🌐 Connect to a shared server</div>
+        <div class="d">Point this app at a UniScheduler server already running on your network, so every device shares the same data.</div>
+      </button>
+    </div>
+
+    <div data-view="connect">
+      <p class="sub">Enter the address of the shared UniScheduler server.</p>
+      <label for="server-url">Server address</label>
+      <input type="text" id="server-url" spellcheck="false" placeholder="192.168.1.50:4000" />
+      <button class="primary" id="test-connect">Test &amp; Connect</button>
+      <div id="error" class="error"></div>
+      <a class="back" id="back-link">&larr; Back</a>
+    </div>
+
+    <div data-view="success" class="success">
+      <div class="check">✅</div>
+      <h1 id="success-title">Ready</h1>
+      <p class="sub" style="margin-top:16px">Starting UniScheduler…</p>
+    </div>
+
+    <div class="hint active" data-view="choose">You can change this later by deleting server-config.json in the app's data folder and relaunching.</div>
+  </div>
+
+  <script>
+    function showView(name) {
+      document.querySelectorAll('[data-view]').forEach(el => {
+        const views = el.getAttribute('data-view').split(' ');
+        el.classList.toggle('active', views.includes(name));
+      });
+    }
+
+    document.getElementById('choose-embedded').addEventListener('click', async () => {
+      await window.serverConfig.save({ mode: 'embedded' });
+      document.getElementById('success-title').textContent = 'Starting on this computer';
+      showView('success');
+    });
+
+    document.getElementById('choose-client').addEventListener('click', () => showView('connect'));
+    document.getElementById('back-link').addEventListener('click', () => showView('choose'));
+
+    const urlInput = document.getElementById('server-url');
+    const testButton = document.getElementById('test-connect');
+    const errorBox = document.getElementById('error');
+
+    async function testAndConnect() {
+      const url = urlInput.value.trim();
+      if (!url) return;
+      testButton.disabled = true;
+      testButton.textContent = 'Testing…';
+      errorBox.style.display = 'none';
+      const result = await window.serverConfig.test(url);
+      if (result.ok) {
+        await window.serverConfig.save({ mode: 'client', serverUrl: result.base });
+        document.getElementById('success-title').textContent = 'Connected';
+        showView('success');
+      } else {
+        errorBox.textContent = result.error;
+        errorBox.style.display = 'block';
+        testButton.disabled = false;
+        testButton.textContent = 'Test & Connect';
+      }
+    }
+
+    testButton.addEventListener('click', testAndConnect);
+    urlInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); testAndConnect(); }
+    });
+  </script>
+</body>
+</html>

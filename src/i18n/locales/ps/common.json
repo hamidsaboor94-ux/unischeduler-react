@@ -1,0 +1,86 @@
+{
+  "appName": "UniScheduler",
+  "actions": {
+    "save": "خوندي کول",
+    "cancel": "لغوه کول",
+    "close": "بندول",
+    "edit": "سمول",
+    "delete": "ړنګول",
+    "remove": "لرې کول",
+    "add": "اضافه کول",
+    "create": "جوړول",
+    "update": "اپډیټ کول",
+    "submit": "سپارل",
+    "confirm": "تایید",
+    "back": "شاته",
+    "search": "لټون",
+    "loading": "پورته کیږي…",
+    "yes": "هو",
+    "no": "نه",
+    "undo": "بېرته کول",
+    "export": "صادرول",
+    "import": "وارول",
+    "download": "ډاونلوډ",
+    "upload": "اپلوډ",
+    "view": "کتل",
+    "logOut": "وتل",
+    "viewProfile": "پروفایل کتل",
+    "changePassword": "پټنوم بدلول",
+    "reset": "بیا تنظیمول"
+  },
+  "fields": {
+    "name": "نوم",
+    "fullName": "بشپړ نوم",
+    "email": "بریښنالیک",
+    "role": "رول",
+    "department": "څانګه",
+    "password": "پټنوم",
+    "currentPassword": "اوسنی پټنوم",
+    "newPassword": "نوی پټنوم",
+    "confirmPassword": "پټنوم تایید کړئ",
+    "date": "نېټه",
+    "time": "وخت",
+    "room": "خونه",
+    "course": "کورس",
+    "teacher": "ښوونکی",
+    "student": "زده کوونکی",
+    "semester": "سمستر",
+    "term": "دوره",
+    "status": "حالت"
+  },
+  "roles": {
+    "admin": "اډمین",
+    "faculty": "استاد",
+    "student": "زده کوونکی"
+  },
+  "days": {
+    "Mon": "دوشنبه",
+    "Tue": "سه‌شنبه",
+    "Wed": "چهارشنبه",
+    "Thu": "پنجشنبه",
+    "Fri": "جمعه",
+    "Sat": "شنبه",
+    "Sun": "یکشنبه"
+  },
+  "status": {
+    "unscheduled": "مهالویش نشوی",
+    "overCapacity": "له ظرفیت څخه ډېر",
+    "clash": "ټکر",
+    "confirmed": "تایید شوی",
+    "conflict": "ټکر",
+    "partial": "نیمګړی",
+    "available": "شتون لري"
+  },
+  "language": {
+    "label": "ژبه",
+    "english": "English",
+    "pashto": "پښتو",
+    "dari": "دری"
+  },
+  "theme": {
+    "switchToLight": "روښانه حالت ته اړول",
+    "switchToDark": "تیاره حالت ته اړول"
+  },
+  "noneYet": "تر اوسه هیڅ نشته",
+  "notApplicable": "—"
+}

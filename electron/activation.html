@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Activate UniScheduler</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(160deg, #1e1b4b 0%, #312e81 55%, #4c1d95 100%);
+      color: #e5e7eb;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .card {
+      width: 380px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 28px;
+      backdrop-filter: blur(6px);
+    }
+    .logo {
+      width: 52px; height: 52px; border-radius: 12px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; margin: 0 auto 14px;
+    }
+    h1 { font-size: 18px; text-align: center; font-weight: 600; }
+    p.sub { font-size: 12.5px; color: #a5b4fc; text-align: center; margin: 6px 0 20px; line-height: 1.5; }
+    label { font-size: 12px; color: #c7d2fe; display: block; margin-bottom: 6px; }
+    textarea {
+      width: 100%; height: 92px; resize: none;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px; color: #f9fafb;
+      font-family: Consolas, monospace; font-size: 11.5px;
+      padding: 10px; outline: none;
+      -webkit-user-select: text; user-select: text;
+    }
+    textarea:focus { border-color: #818cf8; }
+    button {
+      width: 100%; margin-top: 14px; padding: 11px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white; border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    button:hover { filter: brightness(1.1); }
+    button:disabled { opacity: 0.55; cursor: default; }
+    .error {
+      display: none; margin-top: 12px; padding: 10px 12px;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 8px; font-size: 12px; color: #fecaca; line-height: 1.45;
+    }
+    .success { text-align: center; display: none; }
+    .success .check { font-size: 40px; margin-bottom: 10px; }
+    .success .school { color: #a5b4fc; font-size: 13px; margin-top: 4px; }
+    .hint { font-size: 11px; color: #818cf8; text-align: center; margin-top: 16px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div id="form-view">
+      <div class="logo">📅</div>
+      <h1>Activate UniScheduler</h1>
+      <p class="sub">This copy of UniScheduler is licensed per school.<br />Paste the license key you received to continue.</p>
+      <label for="key">License key</label>
+      <textarea id="key" spellcheck="false" placeholder="UNISCHED1.…"></textarea>
+      <button id="activate">Activate</button>
+      <div id="error" class="error"></div>
+      <div class="hint">Activation happens on this computer only —<br />no internet connection is needed.</div>
+    </div>
+    <div id="success-view" class="success">
+      <div class="check">✅</div>
+      <h1>Activated</h1>
+      <div class="school" id="school"></div>
+      <p class="sub" style="margin-top:16px">Starting UniScheduler…</p>
+    </div>
+  </div>
+
+  <script>
+    const keyInput = document.getElementById('key');
+    const button = document.getElementById('activate');
+    const errorBox = document.getElementById('error');
+
+    async function activate() {
+      const key = keyInput.value.trim();
+      if (!key) return;
+      button.disabled = true;
+      errorBox.style.display = 'none';
+      const result = await window.licensing.activate(key);
+      if (result.ok) {
+        document.getElementById('form-view').style.display = 'none';
+        document.getElementById('school').textContent = 'Licensed to ' + result.school;
+        document.getElementById('success-view').style.display = 'block';
+      } else {
+        errorBox.textContent = result.error;
+        errorBox.style.display = 'block';
+        button.disabled = false;
+      }
+    }
+
+    button.addEventListener('click', activate);
+    keyInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); activate(); }
+    });
+  </script>
+</body>
+</html>

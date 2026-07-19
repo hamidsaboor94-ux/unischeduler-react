@@ -1,0 +1,122 @@
+{
+  "sidebar": {
+    "sections": {
+      "overview": "Overview",
+      "scheduling": "Scheduling",
+      "exams": "Exams",
+      "system": "System",
+      "myTeaching": "My teaching",
+      "courses": "Courses",
+      "admissions": "Admissions"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "reports": "Reports",
+      "timetable": "Timetable",
+      "rooms": "Rooms",
+      "courses": "Courses",
+      "teachers": "Teachers",
+      "departments": "Departments",
+      "semesters": "Semesters",
+      "examSchedule": "Exam Schedule",
+      "enrollment": "Enrollment",
+      "attendance": "Attendance",
+      "gradebook": "Gradebook",
+      "myGrades": "My Grades",
+      "conflicts": "Conflicts",
+      "users": "Users",
+      "auditLog": "Audit Log",
+      "backup": "Backup",
+      "branding": "Branding",
+      "gradingScale": "Grading Scale",
+      "myCourses": "My Courses",
+      "catalog": "Catalog",
+      "mySchedule": "My Schedule",
+      "myAttendance": "My Attendance",
+      "myProfile": "My Profile",
+      "admissions": "Applications"
+    },
+    "noTermsYet": "No terms yet"
+  },
+  "search": {
+    "placeholder": "Search courses or teachers…",
+    "ariaLabel": "Search courses and teachers",
+    "clear": "Clear search",
+    "course": "Course",
+    "teacher": "Teacher",
+    "noMatches": "No courses or teachers match \"{{query}}\""
+  },
+  "termDropdown": {
+    "loading": "Loading term…",
+    "selectSemester": "Select a semester",
+    "noTermsYet": "No terms yet",
+    "addSemester": "Add semester",
+    "ariaLabel": "Select semester"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet."
+  },
+  "modal": {
+    "areYouSure": "Are you sure?",
+    "editSlot": "Edit timetable slot",
+    "addSlot": "Add timetable slot",
+    "oneOffExceptions": "One-off exceptions",
+    "resetTimetable": "Reset timetable — {{label}}",
+    "pdfImportPreview": "Import timetable from PDF — review before confirming",
+    "pdfImportComplete": "Import complete",
+    "editRoom": "Edit room",
+    "addRoom": "Add room",
+    "editTeacher": "Edit teacher",
+    "addTeacher": "Add teacher",
+    "editDepartment": "Edit department",
+    "addDepartment": "Add department",
+    "editSemester": "Edit semester",
+    "addSemester": "Add semester",
+    "copyCoursesInto": "Copy courses into {{term}}",
+    "editCourse": "Edit course",
+    "addCourse": "Add course",
+    "assignDepartment": "Assign department",
+    "importCompletedWithErrors": "Import completed with errors",
+    "editExam": "Edit exam",
+    "scheduleExam": "Schedule exam",
+    "autoGenerateExamType": "Auto-generate exams",
+    "roster": "{{code}} roster",
+    "affectedStudents": "Affected students ({{count}})",
+    "createAccount": "Create account",
+    "accountCreated": "Account created",
+    "accountsCreated": "{{count}} account(s) created",
+    "resetPassword": "Reset password — {{name}}",
+    "myProfile": "My Profile",
+    "conflictDetail": "Conflict details",
+    "moveSlot": "Move — {{code}}",
+    "applicationStatusChange": "Update Status — {{name}}",
+    "applicationApprove": "Approve — {{name}}",
+    "closeDialog": "Close dialog"
+  },
+  "auth": {
+    "welcomeBack": "Welcome back",
+    "loginToOrg": "Log in to {{org}}",
+    "emailPlaceholder": "you@university.edu",
+    "passwordPlaceholder": "••••••••",
+    "signIn": "Sign in",
+    "noSelfRegistration": "No self-registration — an admin creates your account and gives you a temporary password.",
+    "applyPrompt": "Not a student yet?",
+    "applyLink": "Apply for admission"
+  },
+  "setPassword": {
+    "title": "Set a new password",
+    "hint": "This account is using a temporary password. Choose a new one to continue.",
+    "confirmNewPassword": "Confirm new password",
+    "newPasswordPlaceholder": "At least 8 characters",
+    "confirmPlaceholder": "Retype the password",
+    "submit": "Set password and continue",
+    "logOutInstead": "Log out instead",
+    "mismatch": "Passwords do not match."
+  },
+  "brandingSetup": {
+    "welcome": "Welcome to {{appName}}",
+    "hint": "Before you get started, let's set up your organization's branding. This appears throughout the app for everyone who uses it, and you can change it anytime from Settings.",
+    "saveAndContinue": "Save and continue"
+  }
+}

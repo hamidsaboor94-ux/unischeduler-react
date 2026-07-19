@@ -1,0 +1,1204 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Sidebar/toast/auth-screen branded navy — stays dark in both themes (the sidebar has
+     always been a dark rail regardless of the main content's theme), so these aren't
+     re-themed below. */
+  --navy: #0F1C3F;
+  --navy-mid: #162348;
+  --navy-light: #1A2951;
+  --navy-border: rgba(255,255,255,0.08);
+  --gold: #E8A84B;
+  --gold-dim: rgba(232,168,75,0.15);
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 14px;
+  --nav-w: 220px;
+
+  /* ---- Dark theme (the app's default look — see ThemeContext.jsx) ---- */
+  --accent: #6B97F0;
+  --accent-light: #8AAEF5;
+  --accent-dim: rgba(107,151,240,0.18);
+  /* Surface hierarchy: base = page/sidebar plane, card = one deliberate step above it (elevated
+     content), recessed = one step below base (pressed/inset states like hovered rows and tab
+     tracks). Base is pinned to --navy itself (not just a matching hex) so the page background
+     and the sidebar can never drift apart again; card reuses --navy-light for the same reason. */
+  --surface-base: var(--navy);
+  --surface-card: var(--navy-light);
+  --surface-recessed: #0A0E1C;
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.16);
+  --text-primary: #F1F4FC;
+  --text-secondary: #AEB6D1;
+  --text-muted: #7E88A8;
+  --success: #3DCB84;
+  --success-bg: rgba(61,203,132,0.14);
+  --warning: #E8A84B;
+  --warning-bg: rgba(232,168,75,0.14);
+  --danger: #E8756C;
+  --danger-bg: rgba(232,99,90,0.15);
+  --info: #5AA7E8;
+  --info-bg: rgba(90,167,232,0.14);
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-card-hover: 0 10px 24px rgba(0,0,0,0.45);
+  --chip-overlay: rgba(255,255,255,0.14);
+
+  /* Weekly Timetable course-card accent colors — see utils.js's PALETTE/COLOR_HEX for the
+     courseId -> hue assignment. 10 hues spread across the wheel so many different courses
+     stay visually distinguishable at once; bright/pastel-saturated here so they read clearly
+     as a left-border accent and as bold name text on dark cards. */
+  --course-blue: #60A5FA;
+  --course-teal: #2DD4BF;
+  --course-green: #4ADE80;
+  --course-lime: #A3E635;
+  --course-amber: #FBBF24;
+  --course-orange: #FB923C;
+  --course-rose: #FB7185;
+  --course-pink: #F472B6;
+  --course-purple: #C084FC;
+  --course-indigo: #818CF8;
+}
+
+:root[data-theme="light"] {
+  --accent: #4B7FE8;
+  --accent-light: #6B97F0;
+  --accent-dim: rgba(75,127,232,0.15);
+  --surface-base: #F4F6FB;
+  --surface-card: #FFFFFF;
+  --surface-recessed: #EDF0F8;
+  --border: rgba(15,28,63,0.1);
+  --border-strong: rgba(15,28,63,0.18);
+  --text-primary: #0F1C3F;
+  --text-secondary: #5A6580;
+  --text-muted: #8A93AA;
+  --success: #1B9E5A;
+  --success-bg: #E8F6EF;
+  --warning: #B87514;
+  --warning-bg: #FDF3E3;
+  --danger: #C0392B;
+  --danger-bg: #FDECEA;
+  --info: #185FA5;
+  --info-bg: #E6F1FB;
+  --shadow-card: 0 1px 2px rgba(15,28,63,0.05);
+  --shadow-card-hover: 0 8px 16px rgba(15,28,63,0.12);
+  --chip-overlay: rgba(0,0,0,0.12);
+
+  /* Darker/more saturated than the dark-theme set above so the same hues keep clear
+     contrast as bold text and a left-border accent on a white card. */
+  --course-blue: #2563EB;
+  --course-teal: #0D9488;
+  --course-green: #16A34A;
+  --course-lime: #65A30D;
+  --course-amber: #B45309;
+  --course-orange: #C2410C;
+  --course-rose: #BE123C;
+  --course-pink: #BE185D;
+  --course-purple: #7E22CE;
+  --course-indigo: #4338CA;
+}
+
+body { font-family: var(--font-sans, system-ui, sans-serif); font-size: 13px; color: var(--text-primary); background: var(--surface-base); }
+
+#app { display: flex; height: 100vh; min-height: 640px; }
+
+#sidebar {
+  width: var(--nav-w);
+  background: var(--navy);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-right: none;
+}
+
+.sidebar-brand {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid var(--navy-border);
+}
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.brand-icon {
+  width: 32px; height: 32px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.brand-name { font-size: 15px; font-weight: 500; color: #fff; letter-spacing: 0.01em; }
+.brand-sub { font-size: 11px; color: rgba(255,255,255,0.45); padding-inline-start: 42px; }
+
+.role-switcher {
+  display: flex;
+  margin: 12px 14px;
+  background: rgba(255,255,255,0.07);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 2px;
+}
+.role-btn {
+  flex: 1; padding: 5px 0;
+  font-size: 10px; font-weight: 500;
+  border: none; background: transparent;
+  color: rgba(255,255,255,0.45);
+  border-radius: 4px; cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.03em;
+}
+.role-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.nav-section { padding: 0 10px; margin-bottom: 18px; display: flex; flex-direction: column; gap: 2px; }
+.nav-section:first-of-type { margin-top: 8px; }
+.nav-label {
+  font-size: 9px; font-weight: 500;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0 8px; margin-bottom: 3px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: rgba(255,255,255,0.8);
+  font-size: 12.5px; font-weight: 400;
+  border: none; background: none; width: 100%; text-align: start;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease, font-size 0.15s ease;
+  position: relative;
+}
+.nav-item:hover {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.92);
+  font-size: 13px;
+  box-shadow: 0 0 0 1px var(--accent-dim), 0 0 14px var(--accent-dim);
+}
+.nav-item.active { background: var(--accent); color: #fff; font-weight: 500; }
+.nav-item i { font-size: 15px; flex-shrink: 0; width: 18px; }
+.nav-badge {
+  margin-inline-start: auto;
+  background: var(--danger);
+  color: #fff;
+  font-size: 9px; font-weight: 500;
+  padding: 1px 5px; border-radius: 8px;
+  min-width: 16px; text-align: center;
+}
+
+nav { flex: 1; padding: 4px 0; overflow-y: auto; }
+
+/* Every scrollable element in the app, current or future: native wheel/trackpad/drag/keyboard
+   scrolling stays fully functional, only the visible scrollbar track/thumb is hidden, across all
+   three engines (Firefox via scrollbar-width, legacy Edge/IE via -ms-overflow-style, WebKit/
+   Blink/Chromium Edge via ::-webkit-scrollbar). Applied to every element rather than a maintained
+   list of selectors, so nothing needs to be added here when a new scrollable area shows up.
+   Doesn't apply to native <select> dropdown popups — that listbox is an OS-drawn control outside
+   the page's DOM/CSSOM in every browser, so no CSS (this included) can reach it. */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebar-footer {
+  padding: 12px 18px;
+  border-top: 1px solid var(--navy-border);
+  display: flex; align-items: center; gap: 10px;
+}
+.avatar-sm {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 11px; font-weight: 500; flex-shrink: 0;
+}
+.footer-name { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.footer-role { font-size: 10px; color: rgba(255,255,255,0.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.footer-id { color: rgba(255,255,255,0.3); }
+.footer-profile-btn {
+  display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
+  background: none; border: none; padding: 0; margin: 0; text-align: start; cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.footer-profile-btn:hover .footer-name { color: #fff; }
+
+/* Student Profile page header — a bigger version of .avatar-sm (initials circle), plus the
+   name/idNumber/status-pill row and a member-since line, all in one flex row. */
+.avatar-lg {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 20px; font-weight: 600; flex-shrink: 0;
+}
+.profile-header-panel { display: flex; align-items: center; gap: 16px; }
+.profile-header-name { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+.profile-header-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+.profile-progress-bar {
+  margin-top: 8px; height: 6px; border-radius: 3px; overflow: hidden;
+  background: var(--surface-recessed);
+}
+.profile-progress-fill { height: 100%; background: var(--success); border-radius: 3px; }
+.profile-doc-upload {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 10px; margin-bottom: 12px;
+  background: var(--surface-recessed); border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.profile-doc-upload input[type="text"] { flex: 1; min-width: 140px; }
+
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--surface-base); }
+
+.topbar {
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--border);
+  padding: 0 22px;
+  height: 54px;
+  display: flex; align-items: center; gap: 14px;
+  flex-shrink: 0;
+}
+.topbar-breadcrumb { font-size: 11px; color: var(--text-muted); }
+.topbar-breadcrumb span { color: var(--text-primary); font-weight: 500; }
+.topbar h2 { font-size: 14px; font-weight: 500; flex: 1; margin-inline-start: 6px; color: var(--text-primary); }
+.topbar-divider { width: 1px; height: 18px; background: var(--border-strong); }
+
+.btn-primary {
+  display: flex; align-items: center; gap: 5px;
+  padding: 7px 13px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.btn-primary:hover { background: var(--accent-light); }
+.btn-primary i { font-size: 14px; }
+
+.btn-gold {
+  display: flex; align-items: center; gap: 5px;
+  padding: 7px 13px;
+  background: var(--gold);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-sm {
+  padding: 6px 11px;
+  background: var(--surface-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 11.5px; font-weight: 400;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+  transition: background 0.1s;
+}
+.btn-sm:hover { background: var(--surface-recessed); }
+
+#content { flex: 1; overflow-y: auto; padding: 18px 22px; }
+
+.dash-notice-panel { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.dash-notice {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px;
+  background: var(--danger-bg); border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  font-size: 12.5px; color: var(--danger);
+}
+.dash-notice i.ti-calendar-off { font-size: 17px; flex-shrink: 0; }
+.dash-notice-msg { flex: 1; }
+
+/* auto-fit rather than a fixed column count — admin sees 5 cards, other roles see 3; each
+   count fills the row evenly with no dangling empty columns either way. */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.stat-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.stat-accent-blue::before { background: var(--accent); }
+.stat-accent-green::before { background: var(--success); }
+.stat-accent-gold::before { background: var(--gold); }
+.stat-accent-red::before { background: var(--danger); }
+.stat-accent-purple::before { background: var(--course-purple); }
+.stat-card .s-icon {
+  width: 34px; height: 34px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; margin-bottom: 10px;
+}
+.s-blue   { background: var(--info-bg);    color: var(--info); }
+.s-green  { background: var(--success-bg); color: var(--success); }
+.s-gold   { background: var(--warning-bg); color: var(--warning); }
+.s-red    { background: var(--danger-bg);  color: var(--danger); }
+.s-purple { background: color-mix(in srgb, var(--course-purple) 16%, transparent); color: var(--course-purple); }
+.stat-label { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+.stat-value { font-size: 24px; font-weight: 500; color: var(--text-primary); line-height: 1.1; }
+.stat-sub { font-size: 11px; margin-top: 4px; }
+.ok  { color: var(--success); }
+.warn { color: var(--warning); }
+.bad  { color: var(--danger); }
+
+.panel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.panel {
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+}
+.panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.panel-title { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+.panel-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.chart-panel { margin-bottom: 14px; }
+
+/* Admin dashboard's "Today at a glance" — a one-line summary standing in for the old full
+   session-by-session list, so it reads in a glance instead of needing a scan. */
+.dash-glance-panel { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 14px; }
+.dash-glance-panel .panel-title { margin-bottom: 2px; }
+.dash-glance-summary { font-size: 12.5px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-all-clear {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px; color: var(--text-muted); font-size: 12px;
+}
+.dash-all-clear i { color: var(--success); font-size: 16px; }
+
+/* ============ Calendar (weekly timetable / my schedule) — card list per day ============ */
+.cal-wrap { display: flex; flex-direction: column; }
+.cal-row { display: flex; gap: 16px; }
+/* Plain text headers (no box/border) so the row reads as quiet labels above the cards rather
+   than a second layer of framed boxes — the cards below carry all the structure. Today is
+   marked with just its name in the accent color plus a small underline (see ::after). */
+.cal-header-row .cal-day-header {
+  flex: 1; text-align: center; font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  position: relative;
+  padding: 2px 4px 11px;
+  margin-bottom: 8px;
+}
+.cal-day-header.cal-today {
+  color: var(--accent);
+  font-weight: 700;
+}
+/* Small centered underline instead of a full colored box — enough to spot today at a glance
+   without adding another bordered element to the page. */
+.cal-day-header.cal-today::after {
+  content: ''; position: absolute; inset-inline-start: 50%; transform: translateX(-50%);
+  bottom: 0; width: 26px; height: 2px; border-radius: 2px; background: var(--accent);
+}
+[dir="rtl"] .cal-day-header.cal-today::after { transform: translateX(50%); }
+.cal-today-badge {
+  display: block; font-size: 8px; font-weight: 700; letter-spacing: 0.5px;
+  color: var(--accent-light); margin-bottom: 2px;
+}
+.cal-day-col { flex: 1; display: flex; flex-direction: column; gap: 9px; padding-top: 4px; }
+.cal-add-card {
+  border: 1px dashed var(--border-strong); border-radius: var(--radius-sm);
+  padding: 7px; text-align: center; font-size: 10.5px; color: var(--text-muted);
+  cursor: pointer; transition: all 0.12s;
+}
+.cal-add-card:hover { border-color: var(--accent); color: var(--accent); }
+
+
+/* Soft, borderless card: a subtle course-tint wash anchored at the leading edge fades into
+   the neutral surface within the card, and a thin accent strip sits on that same edge. Just
+   ~13% tint near the edge keeps each card gently color-coded without breaking the calm grid.
+   (Physical `to right` here is flipped for RTL below so the wash always hugs the leading edge.) */
+.slot {
+  position: relative; box-sizing: border-box; cursor: pointer;
+  border-radius: var(--radius); padding: 13px 14px 14px;
+  /* Direction is a custom prop (flipped for RTL below) so the wash always hugs the leading
+     edge — and so exception states can still override `background` wholesale without the RTL
+     rule's specificity getting in the way. */
+  background: linear-gradient(
+    var(--slot-wash-dir, to right),
+    color-mix(in srgb, var(--slot-hue, var(--accent)) 13%, var(--surface-card)) 0%,
+    var(--surface-card) 65%
+  );
+  border: none;
+  border-inline-start: 3px solid var(--slot-hue, var(--accent));
+  box-shadow: var(--shadow-card);
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+[dir="rtl"] .slot { --slot-wash-dir: to left; }
+@media (prefers-reduced-motion: reduce) { .slot { transition: none; } }
+.slot:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+}
+.slot:focus-visible { outline: 2px solid var(--slot-hue, var(--accent)); outline-offset: 2px; }
+
+/* Per-course accent — deterministic on courseId (see utils.js courseColor), so the same
+   course keeps the same color on every card, everywhere it appears. It drives only the thin
+   leading-edge strip (--slot-hue); the card surface and title stay neutral. */
+.slot-course-blue   { --slot-hue: var(--course-blue); }
+.slot-course-teal   { --slot-hue: var(--course-teal); }
+.slot-course-green  { --slot-hue: var(--course-green); }
+.slot-course-lime   { --slot-hue: var(--course-lime); }
+.slot-course-amber  { --slot-hue: var(--course-amber); }
+.slot-course-orange { --slot-hue: var(--course-orange); }
+.slot-course-rose   { --slot-hue: var(--course-rose); }
+.slot-course-pink   { --slot-hue: var(--course-pink); }
+.slot-course-purple { --slot-hue: var(--course-purple); }
+.slot-course-indigo { --slot-hue: var(--course-indigo); }
+.slot-conflict { --slot-hue: var(--danger); background: var(--danger-bg); }
+/* One-off exception states (date-aware weeks only) */
+.slot-suspended { --slot-hue: var(--danger); background: var(--danger-bg); border-inline-start-style: dashed; }
+.slot-suspended .slot-name { text-decoration: line-through; opacity: 0.75; }
+.slot-moved-away { --slot-hue: var(--info); background: var(--info-bg); border-inline-start-style: dashed; }
+.slot-moved-away .slot-name { text-decoration: line-through; opacity: 0.75; }
+.slot-moved-in { --slot-hue: var(--info); background: var(--info-bg); border-inline-start-style: dashed; }
+.slot-badge {
+  display: inline-block; margin-top: 4px; padding: 1px 7px; border-radius: 10px;
+  font-size: 9px; font-weight: 600; letter-spacing: 0.2px;
+}
+.slot-badge-cancelled { background: var(--danger-bg); color: var(--danger); }
+.slot-badge-moved { background: var(--info-bg); color: var(--info); border: 1px solid var(--info); }
+.cal-day-date { display: block; font-size: 9.5px; font-weight: 400; margin-top: 1px; opacity: 0.8; }
+.week-nav { display: flex; align-items: center; gap: 4px; margin-inline-start: 10px; }
+/* Prev/next week chevrons are physically drawn left/right — mirror them in RTL so "previous"
+   still visually points toward the start of reading order and "next" toward the end. */
+[dir="rtl"] .week-nav .ti-chevron-left,
+[dir="rtl"] .week-nav .ti-chevron-right { transform: scaleX(-1); }
+.week-nav-label { font-size: 11.5px; color: var(--text-secondary); white-space: nowrap; }
+.exception-list { display: flex; flex-direction: column; gap: 6px; }
+.exception-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 11.5px;
+}
+.exception-item .exception-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.slot-name {
+  position: relative; font-size: 14.5px; font-weight: 600; line-height: 1.3;
+  /* Neutral title — the leading accent edge is the one place color lives now, so the name
+     stays in the plain text color for a calm, uniform read across the whole grid. */
+  color: var(--text-primary);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.slot-meta { position: relative; margin-top: 7px; display: flex; flex-direction: column; gap: 4px; }
+.slot-meta-row {
+  display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--text-secondary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.slot-meta-row i { flex-shrink: 0; font-size: 11px; opacity: 0.7; }
+.slot-meta-row.slot-time { font-weight: 600; }
+.slot-meta-row.slot-time i { opacity: 0.85; }
+
+/* ---------- empty-state day — an intentional placeholder instead of blank space ---------- */
+.cal-day-empty {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; text-align: center; min-height: 100px; padding: 14px 8px;
+  color: var(--text-muted);
+}
+.cal-day-empty i { font-size: 18px; opacity: 0.35; }
+.cal-day-empty-title { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: var(--text-muted); }
+
+.alert-list { display: flex; flex-direction: column; gap: 8px; }
+.alert-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: 12px; cursor: pointer;
+  border: 1px solid transparent;
+  transition: border-color 0.12s;
+}
+.alert-item:hover { border-color: var(--border-strong); }
+.alert-warn   { background: var(--warning-bg); }
+.alert-danger { background: var(--danger-bg); }
+.alert-info   { background: var(--info-bg); }
+.alert-item i { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+.alert-warn  i { color: var(--warning); }
+.alert-danger i { color: var(--danger); }
+.alert-info   i { color: var(--info); }
+.alert-title { font-weight: 500; color: var(--text-primary); }
+.alert-desc  { color: var(--text-secondary); margin-top: 2px; font-size: 11px; }
+
+/* ============ Conflict detail modal ============ */
+.conflict-clash-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.conflict-clash-list .pill i { margin-inline-end: 4px; font-size: 11px; }
+.conflict-session-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.conflict-session-card {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 14px; background: var(--surface-base);
+}
+.conflict-session-card.is-moved { border-color: var(--info); }
+.conflict-session-tag {
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 6px;
+}
+.conflict-action-row { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.conflict-reschedule-form {
+  margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table th { padding: 7px 10px; text-align: start; font-weight: 500; font-size: 10.5px; color: var(--text-muted); border-bottom: 1px solid var(--border); background: var(--surface-card); position: sticky; top: 0; z-index: 1; }
+.data-table th.sortable { cursor: pointer; user-select: none; }
+.data-table th.sortable:hover { color: var(--text-primary); }
+.data-table th.sortable.sort-active { color: var(--accent-light); }
+.data-table th.sortable .sort-arrow { display: inline-block; margin-inline-start: 3px; opacity: 0.7; }
+.data-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); color: var(--text-primary); }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tbody tr { cursor: pointer; transition: background 0.08s; }
+.data-table tbody tr:hover td { background: var(--surface-recessed); }
+
+.pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 500; }
+.pill-green  { background: var(--success-bg); color: var(--success); }
+.pill-amber  { background: var(--warning-bg); color: var(--warning); }
+.pill-blue   { background: var(--info-bg);    color: var(--info); }
+.pill-red    { background: var(--danger-bg);  color: var(--danger); }
+.pill-gray   { background: var(--surface-recessed);   color: var(--text-secondary); }
+
+.cap-bar { height: 5px; border-radius: 3px; background: var(--border); width: 72px; margin-top: 4px; }
+.cap-fill { height: 100%; border-radius: 3px; }
+
+.exam-grid { display: flex; flex-direction: column; gap: 6px; }
+.exam-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px;
+  background: var(--surface-base);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  cursor: pointer; transition: all 0.1s;
+}
+.exam-row:hover { background: var(--surface-recessed); border-color: var(--border-strong); }
+.exam-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.exam-code { font-size: 10px; font-weight: 500; color: var(--text-muted); width: 58px; flex-shrink: 0; }
+.exam-name { flex: 1; font-weight: 500; color: var(--text-primary); font-size: 12px; }
+.exam-meta { font-size: 11px; color: var(--text-secondary); text-align: end; flex-shrink: 0; }
+
+/* Exam Schedule page's "All Scheduled Exams" card grid — reuses the .slot card shell/meta/
+   color-accent classes from WeeklyCalendar.jsx verbatim so exam cards read as the same visual
+   family as timetable course cards, per-course color included (see courseColor() in utils.js). */
+.exam-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.exam-card-grid .pill { margin-top: 8px; }
+.exam-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.exam-card-head .slot-name { flex: 1; min-width: 0; }
+/* Categorical (not semantic-status) label, so it gets its own fixed color per type rather than
+   reusing the .pill-{green,amber,red} status colors already used for the confirmed/clash/over-
+   capacity badge below it on the same card. */
+.exam-type-badge {
+  flex-shrink: 0; font-size: 8.5px; font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 8px; white-space: nowrap;
+}
+.exam-type-quiz    { background: var(--info-bg);    color: var(--info); }
+.exam-type-midterm { background: var(--warning-bg); color: var(--warning); }
+.exam-type-final   { background: color-mix(in srgb, var(--course-purple) 18%, transparent); color: var(--course-purple); }
+
+/* Program semester + session row, between the course name and the date/room/invigilator meta —
+   both inherited from the course's own timetable slot (see courseProgramSemester()/
+   courseSession() in utils.js), not stored on the exam itself. .slot-sem-badge is the same
+   class WeeklyCalendar's faculty timetable view already uses, kept visually consistent. */
+.exam-card-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.exam-card-badges .slot-sem-badge, .exam-card-badges .slot-session-badge { margin-top: 0; }
+.slot-session-badge {
+  display: inline-block;
+  font-size: 8.5px; font-weight: 600; letter-spacing: 0.2px;
+  padding: 1px 6px; border-radius: 8px;
+  background: var(--info-bg); color: var(--info);
+}
+
+/* Exam Schedule page's date-grouped layout — the exam period spans several weeks (unlike the
+   regular Timetable's single fixed week), so exams are sectioned into one collapsible group per
+   date instead of fixed weekday columns. Each group's .exam-card-grid below reuses the card
+   styles above verbatim. */
+.panel-header-actions { display: flex; gap: 8px; }
+.exam-date-groups { display: flex; flex-direction: column; gap: 18px; }
+.exam-date-header {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 9px 12px; cursor: pointer; font: inherit; color: var(--text-primary);
+  text-align: start; transition: border-color 0.12s;
+}
+.exam-date-header:hover { border-color: var(--border-strong); }
+.exam-date-header > i { color: var(--text-muted); font-size: 13px; flex-shrink: 0; }
+.exam-date-header-label { font-size: 12.5px; font-weight: 600; flex: 1; }
+.exam-date-header-count {
+  font-size: 10px; font-weight: 500; color: var(--text-muted);
+  background: var(--surface-recessed); padding: 2px 8px; border-radius: 10px; flex-shrink: 0;
+}
+.exam-date-header-unscheduled { border-color: color-mix(in srgb, var(--warning) 45%, var(--border)); }
+.exam-date-header-unscheduled .exam-date-header-label { color: var(--warning); }
+.exam-date-group .exam-card-grid { margin-top: 10px; }
+
+/* Each .section wraps its own .topbar + #content. #content's `flex:1; overflow-y:auto` (below)
+   only has any effect if ITS PARENT is a bounded flex column — otherwise the section just grows
+   to fit all its content and #main's `overflow:hidden` silently clips whatever doesn't fit the
+   viewport, with no scrollbar anywhere. Making the active section itself a flex column (and a
+   flex item of #main, via flex:1 + min-height:0) is what lets #content do the actual scrolling. */
+.section { display: none; }
+.section.active { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+
+#modal-overlay {
+  display: none; min-height: 480px;
+  background: rgba(10,16,40,0.55);
+  align-items: center; justify-content: center;
+  position: absolute; inset: 0; z-index: 100;
+}
+#modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--surface-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px; width: 380px; max-width: 90%;
+  /* Caps the modal to the viewport and makes it a flex column so #modal-body (below) can be the
+     one scrolling region, with the header and footer staying fixed/visible — otherwise a modal
+     with a lot of content (e.g. the PDF import preview) just grows past the screen edges with no
+     way to scroll down to its own footer buttons. */
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+.modal-box.modal-wide { width: 1080px; }
+#modal-body { flex: 1; min-height: 0; overflow-y: auto; }
+.modal-header, .modal-footer { flex-shrink: 0; }
+.pdf-import-scroll { max-height: 62vh; overflow-y: auto; }
+.pdf-import-lecturers-scroll { max-height: 220px; overflow-y: auto; margin-bottom: 14px; }
+.pdf-import-group { margin-bottom: 16px; }
+.pdf-import-group-title { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; }
+.pdf-import-table input, .pdf-import-table select {
+  width: 100%; padding: 5px 7px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  background: var(--surface-card); color: var(--text-primary); font-size: 11.5px; outline: none;
+}
+.pdf-import-table input:focus, .pdf-import-table select:focus { border-color: var(--accent); }
+.pdf-import-table td { padding: 5px 6px; }
+.pdf-import-row-invalid td { background: var(--danger-bg); }
+.pdf-import-summary { font-size: 12px; color: var(--text-primary); line-height: 1.6; margin-bottom: 10px; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 14px; }
+.modal-title { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+.modal-close { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 18px; line-height: 1; }
+.form-row { margin-bottom: 13px; }
+.form-label { font-size: 11px; font-weight: 500; color: var(--text-secondary); margin-bottom: 5px; }
+.form-row input, .form-row select {
+  width: 100%; padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  color: var(--text-primary); font-size: 13px;
+  outline: none;
+  transition: border-color 0.12s;
+}
+.form-row input:focus, .form-row select:focus { border-color: var(--accent); }
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-static { font-size: 12.5px; color: var(--text-primary); }
+.form-divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
+
+.tabs { display: flex; gap: 2px; background: var(--surface-recessed); border-radius: var(--radius-sm); padding: 2px; width: fit-content; }
+.tab { padding: 5px 13px; font-size: 11.5px; font-weight: 400; border: none; background: transparent; color: var(--text-muted); border-radius: 5px; cursor: pointer; transition: all 0.12s; }
+.tab.active { background: var(--surface-card); color: var(--text-primary); font-weight: 500; border: 1px solid var(--border-strong); }
+
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+#app-wrapper { position: relative; width: 100%; overflow: hidden; }
+
+.section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.section-header h3 { font-size: 13px; font-weight: 500; }
+/* ============ Added for interactivity ============ */
+.row-actions { display: flex; gap: 4px; justify-content: flex-end; }
+.icon-btn {
+  width: 26px; height: 26px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-card);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-secondary);
+  font-size: 13px; transition: all 0.12s;
+}
+.icon-btn:hover { background: var(--surface-recessed); color: var(--text-primary); }
+.icon-btn.danger:hover { background: var(--danger-bg); color: var(--danger); border-color: var(--danger); }
+
+/* Fixed bottom-right cluster: theme toggle, language switcher, notification bell — see
+   UtilityTray.jsx. Kept independent of the sidebar so it's visible/positioned identically on
+   every page. */
+.utility-tray {
+  position: fixed;
+  bottom: 18px; inset-inline-end: 18px;
+  display: flex; align-items: center; gap: 8px;
+  z-index: 70;
+}
+
+.slot { position: relative; }
+.slot-del {
+  position: absolute; top: 2px; inset-inline-end: 3px;
+  width: 14px; height: 14px; line-height: 14px; text-align: center;
+  border-radius: 50%; background: var(--chip-overlay); color: inherit;
+  font-size: 10px; cursor: pointer; opacity: 0; transition: opacity 0.12s;
+}
+.slot:hover .slot-del { opacity: 0.85; }
+.slot-del:hover { background: var(--danger); color: #fff; opacity: 1; }
+
+.slot-quick {
+  position: absolute; top: 2px; inset-inline-start: 3px;
+  width: 14px; height: 14px; line-height: 14px; text-align: center;
+  border-radius: 50%; background: var(--chip-overlay); color: inherit;
+  font-size: 10px; cursor: pointer; opacity: 0; transition: opacity 0.12s;
+}
+.slot:hover .slot-quick { opacity: 0.85; }
+.slot-quick:hover { background: var(--accent); color: #fff; opacity: 1; }
+[dir="rtl"] .slot-quick i { transform: scaleX(-1); }
+
+.slot-sem-badge {
+  display: inline-block; margin-top: 4px;
+  font-size: 8.5px; font-weight: 600; letter-spacing: 0.2px;
+  padding: 1px 6px; border-radius: 8px;
+  background: var(--chip-overlay); color: inherit;
+}
+
+/* A student's auto-computed final letter grade for this course — only rendered once one
+   exists (see WeeklyCalendar.jsx), so its presence alone signals "this course is done". */
+.slot-grade-badge {
+  display: inline-flex; width: fit-content; align-items: center;
+  margin-top: 4px;
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.2px;
+  padding: 1px 7px; border-radius: 8px;
+  background: var(--success-bg); color: var(--success);
+}
+
+/* Labeled quick-action footer row — role-specific (see WeeklyCalendar.jsx's quickActionsFor).
+   Collapsed to nothing by default to keep the default grid uncluttered, and slid open when the
+   card is hovered or holds keyboard focus (focus-within keeps it reachable without a mouse). */
+.slot-quick-actions {
+  display: flex; gap: 2px;
+  max-height: 0; margin-top: 0; padding-top: 0;
+  border-top: 1px solid transparent;
+  overflow: hidden; opacity: 0;
+  transition: max-height 0.18s ease, opacity 0.14s ease, margin-top 0.18s ease, padding-top 0.18s ease;
+}
+.slot:hover .slot-quick-actions,
+.slot:focus-within .slot-quick-actions {
+  max-height: 64px; opacity: 1;
+  margin-top: 9px; padding-top: 7px;
+  border-top-color: var(--border);
+}
+@media (prefers-reduced-motion: reduce) { .slot-quick-actions { transition: none; } }
+.slot-quick-action {
+  position: relative; flex: 1; min-width: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px;
+  padding: 4px 1px; border: none; background: transparent; cursor: pointer;
+  border-radius: var(--radius-sm); color: var(--text-primary);
+  font-family: inherit; transition: background 0.1s, color 0.1s;
+  min-height: 44px;
+}
+.slot-quick-action:hover { background: var(--surface-recessed); color: var(--text-primary); }
+.slot-quick-action i { font-size: 15px; }
+.slot-quick-action-label {
+  font-size: 8px; font-weight: 600; line-height: 1.2;
+  max-width: 100%; text-align: center;
+  white-space: normal; overflow-wrap: break-word; word-break: break-word;
+}
+.slot-quick-action.disabled { opacity: 0.35; cursor: not-allowed; }
+.slot-quick-action.disabled:hover { background: transparent; color: var(--text-muted); }
+.slot-quick-action-dot {
+  position: absolute; top: 1px; inset-inline-end: 12%;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); border: 1.5px solid var(--surface-card);
+}
+.slot-quick-action-dot.danger { background: var(--danger); }
+
+
+.checkbox-list { max-height: 160px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; }
+.checkbox-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 12.5px; }
+.checkbox-row input { width: auto; }
+.day-off-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 10px; }
+
+.roster-list { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.roster-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 9px; background: var(--surface-base); border-radius: var(--radius-sm); font-size: 12px; }
+.roster-id { color: var(--text-muted); font-size: 10.5px; margin-inline-end: 2px; }
+
+.highlight-flash { animation: flashHighlight 1.6s ease-out; }
+@keyframes flashHighlight {
+  0% { box-shadow: 0 0 0 3px var(--accent); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* bottom offset cleared to sit above .utility-tray (fixed bottom-right icon cluster) so toasts
+   stack upward from above it instead of covering it */
+#toast-container { position: fixed; bottom: 62px; inset-inline-end: 18px; display: flex; flex-direction: column; gap: 8px; z-index: 999; }
+.toast {
+  background: var(--navy); color: #fff;
+  padding: 10px 16px; border-radius: var(--radius);
+  font-size: 12.5px; box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  animation: toastIn 0.2s ease-out, toastOut 0.3s ease-in 2.7s forwards;
+  max-width: 320px;
+}
+.toast-error { background: var(--danger); animation: toastIn 0.2s ease-out, toastOut 0.3s ease-in 5.7s forwards; }
+.toast-warning { background: var(--warning); animation: toastIn 0.2s ease-out, toastOut 0.3s ease-in 4.7s forwards; }
+@keyframes toastIn { from { opacity:0; transform: translateY(8px);} to {opacity:1; transform:translateY(0);} }
+@keyframes toastOut { to { opacity:0; transform: translateY(-6px);} }
+
+/* ============ Notification bell / history ============ */
+.notif-wrap { position: relative; }
+.notif-badge {
+  position: absolute; top: -3px; inset-inline-end: -3px;
+  background: var(--danger); color: #fff;
+  font-size: 9px; line-height: 1; font-weight: 600;
+  min-width: 14px; height: 14px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px;
+}
+.notif-panel {
+  position: absolute; bottom: 44px; inset-inline-end: 0;
+  width: 300px; max-height: 360px; overflow-y: auto;
+  background: var(--surface-card); color: var(--text-primary);
+  border: 1px solid var(--border-strong); border-radius: var(--radius);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  z-index: 80;
+}
+.notif-panel-header { padding: 10px 14px; font-size: 11.5px; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+.notif-panel-list { padding: 4px; }
+.notif-item { padding: 8px 10px; border-radius: var(--radius-sm); font-size: 12px; border-inline-start: 3px solid var(--text-muted); margin-bottom: 2px; }
+.notif-item.error { border-inline-start-color: var(--danger); }
+.notif-item.warning { border-inline-start-color: var(--warning); }
+.notif-item.info { border-inline-start-color: var(--success); }
+.notif-item.alert { border-inline-start-color: var(--danger); background: var(--danger-bg); }
+
+/* ============ Language switcher (sidebar) — reuses .notif-wrap/.notif-panel positioning ============ */
+.lang-panel { width: 170px; }
+.lang-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; padding: 8px 12px; border: none; background: none; cursor: pointer;
+  color: var(--text-primary); font-family: inherit; font-size: 12.5px; text-align: start;
+}
+.lang-item:hover { background: var(--surface-recessed); }
+.lang-item.active { color: var(--accent); font-weight: 500; }
+.lang-item i { font-size: 13px; }
+
+/* ============ Attendance ============ */
+.attendance-status-group { display: inline-flex; gap: 4px; }
+.attendance-status-btn {
+  padding: 4px 10px; border-radius: 20px; font-size: 10.5px; font-weight: 500;
+  border: 1px solid var(--border-strong); background: var(--surface-card); color: var(--text-muted);
+  cursor: pointer; transition: all 0.12s;
+}
+.attendance-status-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+.attendance-status-btn.present.active { background: var(--success-bg); border-color: var(--success); color: var(--success); }
+.attendance-status-btn.absent.active { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
+.attendance-status-btn.late.active { background: var(--warning-bg); border-color: var(--gold); color: var(--warning); }
+.notif-item-time { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.notif-empty { padding: 16px 14px; font-size: 11.5px; color: var(--text-muted); text-align: center; }
+
+.form-row select[multiple] { height: auto; }
+.field-hint { font-size: 10.5px; color: var(--text-muted); margin-top: 3px; }
+.modal-danger-btn {
+  padding: 7px 13px; border-radius: var(--radius-sm); border: 1px solid var(--danger);
+  background: var(--danger-bg); color: var(--danger); font-size: 12px; font-weight: 500; cursor: pointer;
+  margin-inline-end: auto;
+}
+.modal-danger-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ============ Auth screen ============ */
+/* Uses --surface-base (not a hardcoded navy) so the backdrop actually follows the theme —
+   in dark mode --surface-base already equals navy, so this is a no-op there; light mode gets
+   its own proper light backdrop instead of a dark page around a light card. */
+.auth-screen {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-base);
+}
+.auth-box {
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card-hover);
+  padding: 34px 30px;
+  width: 380px; max-width: 90%;
+}
+.auth-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.auth-brand .brand-name { font-size: 17px; font-weight: 500; color: var(--text-primary); }
+.auth-form .form-row { margin-bottom: 14px; }
+/* A plain inline text link rendered as a <button> (so it's keyboard/click accessible without
+   navigating anywhere) — used for "Apply for admission" / "Back to login" on the auth screen. */
+.link-button {
+  background: none; border: none; padding: 0; margin: 0; cursor: pointer;
+  color: var(--accent); font-size: inherit; font-family: inherit;
+}
+.link-button:hover { text-decoration: underline; }
+.auth-error {
+  display: flex; align-items: center; gap: 5px;
+  color: var(--danger); font-size: 11.5px; margin: -4px 0 10px; min-height: 15px;
+}
+.auth-error i { font-size: 13px; }
+
+/* Hero logo — a bigger, standalone treatment distinct from the small sidebar/branding-screen
+   .brand-icon this reuses elsewhere, with a slow, understated breathing pulse: a gentle scale
+   plus a soft glow that grows and fades, never a hard flash. */
+.auth-logo-wrap { display: flex; justify-content: center; margin-bottom: 18px; }
+.auth-logo {
+  width: 68px; height: 68px;
+  border-radius: 16px;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 26px; font-weight: 600;
+  overflow: hidden;
+  animation: authLogoPulse 3.6s ease-in-out infinite;
+}
+.auth-logo img { width: 100%; height: 100%; object-fit: cover; }
+@keyframes authLogoPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent); }
+  50% { transform: scale(1.045); box-shadow: 0 0 20px 4px color-mix(in srgb, var(--accent) 32%, transparent); }
+}
+
+.auth-heading { text-align: center; margin-bottom: 24px; }
+.auth-heading h1 { font-size: 21px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.auth-heading p { font-size: 12.5px; color: var(--text-secondary); }
+
+/* Distinct from the shared .form-row input (which sits flush with the card surface elsewhere
+   in the app) — a slightly recessed fill gives the auth form's inputs real visual separation
+   from the card behind them. */
+.auth-form input {
+  background: var(--surface-recessed);
+}
+
+@keyframes authShake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+.auth-box.shake { animation: authShake 0.45s cubic-bezier(.36, .07, .19, .97); }
+@media (prefers-reduced-motion: reduce) {
+  .auth-logo { animation: none; }
+  .auth-box.shake { animation: none; }
+}
+
+.logo-picker { display: flex; align-items: center; gap: 14px; }
+.logo-preview {
+  width: 60px; height: 60px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 20px; font-weight: 600; overflow: hidden;
+}
+.logo-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ============ Small selects (topbar / sidebar) ============ */
+.select-sm {
+  padding: 6px 14px;
+  background: var(--surface-base);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+}
+.select-sm:hover { border-color: var(--accent); color: var(--text-primary); }
+.select-sm:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* ============ Semester dropdown (sidebar) ============ */
+/* A custom (non-native) dropdown: native <select> popups render on their own
+   OS layer, so they can't be themed to match the sidebar and always overlay
+   the nav below instead of pushing it down. This version is a plain in-flow
+   element, so it inherits the sidebar's dark theme and expanding it pushes
+   the nav items down instead of covering them. */
+/* ============ Global search (sidebar) ============ */
+.global-search { position: relative; margin: 12px 14px 10px; }
+.global-search-icon {
+  position: absolute; inset-inline-start: 10px; top: 50%; transform: translateY(-50%);
+  font-size: 13px; color: rgba(255,255,255,0.4); pointer-events: none;
+}
+.global-search-input {
+  width: 100%; padding-block: 6px; padding-inline: 30px 26px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--navy-border);
+  border-radius: var(--radius-sm);
+  color: rgba(255,255,255,0.85);
+  font-size: 11.5px; font-family: inherit;
+}
+.global-search-input::placeholder { color: rgba(255,255,255,0.35); }
+.global-search-input:focus { outline: none; background: rgba(255,255,255,0.1); border-color: var(--accent); }
+.global-search-clear {
+  position: absolute; inset-inline-end: 6px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer;
+  padding: 3px; display: flex; align-items: center;
+}
+.global-search-clear:hover { color: rgba(255,255,255,0.8); }
+.global-search-results {
+  position: absolute; left: 0; right: 0; top: calc(100% + 4px);
+  background: #1E2333;
+  border: 1px solid var(--navy-border);
+  border-radius: var(--radius-sm);
+  max-height: 320px; overflow-y: auto;
+  z-index: 40;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.4);
+}
+.global-search-item {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: start;
+  padding: 7px 10px; border: none; background: none; cursor: pointer;
+  color: rgba(255,255,255,0.7); font-family: inherit;
+}
+.global-search-item:hover, .global-search-item.active { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.95); }
+.global-search-item-icon { font-size: 14px; flex-shrink: 0; color: rgba(255,255,255,0.4); }
+.global-search-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.global-search-item-primary { font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.global-search-item-primary strong { color: var(--accent-light); font-weight: 700; }
+.global-search-item-secondary { font-size: 9.5px; color: rgba(255,255,255,0.35); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.global-search-item-kind { font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.3); flex-shrink: 0; }
+.global-search-empty { padding: 12px 10px; font-size: 11px; color: rgba(255,255,255,0.4); text-align: center; }
+
+.term-dropdown { margin: 12px 14px; }
+.term-dropdown-toggle {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--navy-border);
+  border-radius: var(--radius-sm);
+  color: rgba(255,255,255,0.85);
+  font-size: 11.5px; font-family: inherit;
+  cursor: pointer;
+}
+.term-dropdown-toggle:hover { background: rgba(255,255,255,0.1); }
+.term-dropdown-toggle span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.term-dropdown-chevron { font-size: 13px; flex-shrink: 0; transition: transform 0.15s; color: rgba(255,255,255,0.5); }
+.term-dropdown.open .term-dropdown-chevron { transform: rotate(180deg); }
+.term-dropdown-list {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.18s ease;
+}
+.term-dropdown.open .term-dropdown-list { max-height: 280px; overflow-y: auto; }
+.term-dropdown-item {
+  display: block; width: 100%; text-align: start;
+  padding: 7px 10px; margin-top: 4px;
+  border-radius: var(--radius-sm);
+  border: none; background: none;
+  color: rgba(255,255,255,0.65);
+  font-size: 11.5px; font-family: inherit;
+  cursor: pointer;
+}
+.term-dropdown-item:hover, .term-dropdown-item:focus-visible { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.9); outline: none; }
+.term-dropdown-item.active { background: var(--accent-dim); color: var(--accent-light); font-weight: 500; }
+.term-dropdown-item.add-item { color: var(--accent-light); display: flex; align-items: center; gap: 6px; }
+.term-dropdown-item.add-item:hover { background: var(--accent-dim); }
+
+/* ============ Waitlist / seats ============ */
+.seats-full { color: var(--danger); }
+
+/* ============ Loading indicators ============ */
+#loading-bar {
+  position: fixed; top: 0; inset-inline-start: 0; height: 3px; width: 0;
+  background: var(--accent);
+  z-index: 200;
+  opacity: 0;
+  transition: width 0.3s ease, opacity 0.2s ease;
+}
+#loading-bar.active { opacity: 1; width: 70%; }
+#loading-bar.done { width: 100%; transition: width 0.15s ease, opacity 0.3s ease 0.1s; opacity: 0; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: -2px;
+}
+.btn-sm .spinner, .btn-primary.btn-loading .spinner { border-color: var(--border-strong); border-top-color: var(--text-primary); }
+.btn-primary.btn-loading .spinner, .btn-gold.btn-loading .spinner { border-color: rgba(255,255,255,0.4); border-top-color: #fff; }
+button.btn-loading { pointer-events: none; opacity: 0.75; }
+
+/* ============ Responsive / mobile ============ */
+/* Only the calendar panels need horizontal scroll (.cal-wrap has a hard min-width that can't shrink
+   below it) — scoped to .panel-cal specifically, rather than every .panel, because giving an element
+   overflow-x without overflow-y makes the browser auto-compute overflow-y: auto too (a CSS spec
+   compatibility rule), which would make ordinary data-table panels an extra (never-actually-scrolling)
+   scroll container — and that breaks position:sticky table headers, which resolve against the
+   nearest scroll container instead of the real one (#content). */
+.panel-cal { overflow-x: auto; }
+.cal-wrap { min-width: 780px; }
+
+#sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 10px; inset-inline-start: 10px;
+  z-index: 70;
+  width: 36px; height: 36px;
+  align-items: center; justify-content: center;
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 18px;
+  cursor: pointer;
+}
+#sidebar-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 55;
+}
+
+@media (max-width: 860px) {
+  #sidebar-toggle { display: flex; }
+
+  #sidebar {
+    position: fixed;
+    top: 0; bottom: 0; inset-inline-start: 0;
+    z-index: 60;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.25);
+  }
+  [dir="rtl"] #sidebar { transform: translateX(100%); }
+  #app.sidebar-open #sidebar { transform: translateX(0); }
+  #app.sidebar-open #sidebar-overlay { display: block; }
+
+  #main { width: 100%; }
+
+  .topbar { flex-wrap: wrap; height: auto; min-height: 54px; padding-block: 10px; padding-inline: 54px 16px; gap: 8px; }
+  .topbar h2 { flex-basis: 100%; order: -1; margin-inline-start: 0; }
+  .topbar-actions { flex-wrap: wrap; width: 100%; }
+  .topbar-actions input, .topbar-actions select { flex: 1 1 auto; min-width: 0; }
+
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .panel-row { grid-template-columns: 1fr; }
+  .form-row-2 { grid-template-columns: 1fr; }
+
+  #content { padding: 14px; }
+}
+
+@media (max-width: 480px) {
+  .stat-grid { grid-template-columns: 1fr; }
+}
+
+/* Print — introduced for the Student Profile page's Print button (no print styles existed
+   before this). Hides app chrome (sidebar, utility tray, loading bar, any .no-print control)
+   and forces a plain ink-friendly palette on the panels regardless of the active theme, so the
+   printout reads like a clean document rather than a screenshot of the app. */
+@media print {
+  #sidebar, #sidebar-toggle, #sidebar-overlay, .utility-tray, #loading-bar, .no-print { display: none !important; }
+  #app, #main { display: block !important; height: auto !important; overflow: visible !important; }
+  #content { overflow: visible !important; padding: 0 !important; }
+  body, #app-wrapper, #app, .section.active { background: #fff !important; }
+  .topbar { border-bottom: 2px solid #000; color: #000; background: #fff !important; }
+  .topbar h2, .topbar i { color: #000 !important; }
+  .panel {
+    background: #fff !important; color: #000 !important;
+    border: 1px solid #ccc !important; box-shadow: none !important;
+    break-inside: avoid; margin-bottom: 10px !important;
+  }
+  .panel-title, .form-label, .stat-label { color: #000 !important; }
+  .form-static, .stat-value, .field-hint, .data-table, .profile-header-name { color: #111 !important; }
+  .pill { border: 1px solid #999; background: #fff !important; color: #000 !important; }
+  .avatar-lg { background: #333 !important; color: #fff !important; }
+}

@@ -1,0 +1,154 @@
+{
+  "dashboard": {
+    "title": "Dashboard",
+    "newCourse": "New Course",
+    "autoSchedule": "Auto-Schedule",
+    "dismiss": "Dismiss",
+    "fullView": "Full view",
+    "statCards": {
+      "myCourses": "My Courses",
+      "totalCourses": "Total Courses",
+      "liveCount": "Live count",
+      "enrolledStudents": "Enrolled Students",
+      "uniqueStudents": "unique students",
+      "scheduledExams": "Scheduled Exams",
+      "unscheduledCount": "{{count}} unscheduled",
+      "totalFaculty": "Faculty",
+      "activeConflicts": "Active Conflicts",
+      "needsReview": "Needs review"
+    },
+    "todayPanel": {
+      "title": "Today — {{day}}",
+      "subtitle": "Timetable snapshot",
+      "empty": "No classes scheduled for today."
+    },
+    "todayGlance": {
+      "title": "Today at a Glance — {{day}}",
+      "classesCount_one": "{{count}} class today",
+      "classesCount_other": "{{count}} classes today",
+      "cancelledCount_one": "{{count}} cancelled",
+      "cancelledCount_other": "{{count}} cancelled",
+      "nextIn": "next class in {{minutes}} min",
+      "allDone": "no more classes today",
+      "noClasses": "No classes today"
+    },
+    "needsAttention": {
+      "title": "Needs Attention",
+      "subtitle": "Open items requiring admin action",
+      "viewAllConflicts": "View all {{count}} conflicts",
+      "overLimitTitle": "{{name}} is over the credit limit",
+      "overLimitDesc": "{{total}} credits enrolled — limit is {{limit}}",
+      "overLimitPill": "Over limit",
+      "viewAllOverLimit": "View all {{count}} students over limit",
+      "unscheduledExamsTitle_one": "{{count}} exam not yet scheduled",
+      "unscheduledExamsTitle_other": "{{count}} exams not yet scheduled",
+      "unscheduledExamsDesc": "Pick a date and room to finalize the exam schedule.",
+      "noTeacherTitle_one": "{{count}} course has no teacher assigned",
+      "noTeacherTitle_other": "{{count}} courses have no teacher assigned",
+      "noTeacherDesc": "Assign an instructor so students know who's teaching.",
+      "actionPill": "Action needed",
+      "allClear": "All caught up — nothing needs your attention right now."
+    },
+    "upcomingExams": {
+      "title": "Upcoming Exams",
+      "subtitle": "Next scheduled sittings",
+      "manageAll": "Manage all",
+      "nameWithStatus": "{{name}} — {{status}}",
+      "meta_one": "{{date}} · {{time}} · {{room}} · {{count}} student",
+      "meta_other": "{{date}} · {{time}} · {{room}} · {{count}} students"
+    }
+  },
+  "reports": {
+    "title": "Reports & Analytics",
+    "noTermSelected": "No term selected — create a term first.",
+    "scopeNotice": "Room utilization, course popularity, and teacher workload are scoped to <strong>{{term}}</strong>. Enrollment trends span every term.",
+    "currentTermFallback": "the current term",
+    "termFallback": "Term {{id}}",
+    "chartTitles": {
+      "roomUtilization": "Room Utilization",
+      "mostPopular": "Most Popular Courses",
+      "leastPopular": "Least Popular Courses",
+      "teacherWorkload": "Teacher Workload",
+      "enrollmentTrends": "Enrollment Trends"
+    },
+    "chartSubtitles": {
+      "roomUtilization": "Weekly hours booked per room, broken down by day",
+      "byEnrollment": "By current enrollment",
+      "teacherWorkload": "Sections taught and scheduled weekly hours",
+      "enrollmentTrends": "Total enrolled students per term, across all semesters"
+    },
+    "empty": {
+      "rooms": "No rooms scheduled this term.",
+      "courses": "No courses this term.",
+      "teachers": "No teachers assigned to sections this term.",
+      "terms": "No terms yet."
+    },
+    "axis": {
+      "hoursPerWeek": "Hours / week",
+      "sections": "Sections"
+    },
+    "tooltip": {
+      "hours_one": "{{count}} hr",
+      "hours_other": "{{count}} hrs"
+    },
+    "legend": {
+      "enrolled": "Enrolled",
+      "weeklyHours": "Weekly hours",
+      "sections": "Sections",
+      "enrolledStudents": "Enrolled students"
+    }
+  },
+  "profile": {
+    "studentId": "Student ID",
+    "facultyId": "Faculty ID",
+    "adminId": "Admin ID",
+    "genericId": "ID",
+    "editNameEmail": "Edit name/email",
+    "memberSince": "Member since",
+    "confirmNewPassword": "Confirm new password",
+    "newPasswordPlaceholder": "At least 8 characters",
+    "errors": {
+      "nameRequired": "Name is required.",
+      "emailRequired": "Email is required.",
+      "currentPasswordRequired": "Enter your current password.",
+      "newPasswordTooShort": "New password must be at least 8 characters.",
+      "passwordsDontMatch": "New passwords do not match.",
+      "newPasswordSameAsCurrent": "New password must be different from your current password."
+    },
+    "toasts": {
+      "profileUpdated": "Profile updated.",
+      "passwordChanged": "Password changed."
+    }
+  },
+  "brandingSettings": {
+    "title": "Branding",
+    "panelTitle": "Organization branding",
+    "panelSubtitle": "Shown in the sidebar, browser tab, and login screen for everyone",
+    "saveChanges": "Save changes"
+  },
+  "brandingForm": {
+    "orgNameLabel": "University / organization name",
+    "orgNamePlaceholder": "e.g. Springfield University",
+    "logoLabel": "Logo",
+    "logoPreviewAlt": "Logo preview",
+    "replaceImage": "Replace image",
+    "uploadImage": "Upload image",
+    "removeLogo": "Remove logo",
+    "logoHint": "PNG, JPEG, SVG, or WebP, up to 2 MB. Without one, initials are generated automatically from the name above.",
+    "brandColorLabel": "Brand color",
+    "brandColorHint": "Used for buttons, highlights, and the logo placeholder throughout the app.",
+    "emailDomainLabel": "Auto-generated student email domain",
+    "emailDomainHint": "New student accounts approved through Admissions get an email like studentid@this-domain. Change this to your real domain whenever you have one.",
+    "skipForNow": "Skip for now",
+    "errors": {
+      "invalidType": "Logo must be a PNG, JPEG, SVG, or WebP image.",
+      "tooLarge": "Logo must be under 2 MB.",
+      "nameRequired": "Please enter your organization name.",
+      "invalidEmailDomain": "Enter a valid domain, e.g. student.university.edu"
+    },
+    "toasts": {
+      "logoRemoved": "Logo removed.",
+      "brandingSaved": "Branding saved."
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sed -i \"s/9230/9231/\" \"/c/Users/LEMON_~1/AppData/Local/Temp/claude/c--Users-LEMON-Soft-Desktop-UniScheduler-react/f9eb7f8b-2bf9-448e-97ad-8837ce914d2d/scratchpad/edit-teacher-repro.mjs\" 2>/dev/null; echo done)",
+      "Bash(sed -i \"s/courseCode/courseName/g; s/course.code, name: 'E2E Cancel Test Course'/code: 'E2E' + stamp, name: courseNameVal/\" \"/c/Users/LEMON_~1/AppData/Local/Temp/claude/c--Users-LEMON-Soft-Desktop-UniScheduler-react/f9eb7f8b-2bf9-448e-97ad-8837ce914d2d/scratchpad/cancel-class-e2e.mjs\" 2>&1 | head -5 *)",
+      "Bash(npx oxlint *)",
+      "Bash(curl -s -m 3 http://localhost:4000/api/ping)",
+      "Bash(curl -s -m 3 -o /dev/null -w \"vite:%{http_code}\\\\n\" http://localhost:5173/)",
+      "Bash(curl -s -m 3 -o /dev/null -w \"assignments route \\(unauth expect 401\\):%{http_code}\\\\n\" http://localhost:4000/api/assignments?courseId=1)",
+      "Bash(node smoke1-discover.mjs)",
+      "Bash(node smoke2-e2e.mjs)",
+      "Bash(node smoke3-cleanup.mjs)",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('en/timetable.json','utf8'\\)\\); console.log\\('OK'\\)\")",
+      "Bash(node --check src/gradingScale.js)",
+      "Bash(node --check src/routes/enrollments.js)",
+      "Bash(node --check src/routes/settings.js)",
+      "Bash(node --check src/routes/grades.js)",
+      "Bash(mkdir -p \"/c/Users/LEMON_~1/AppData/Local/Temp/edge-cdp-examgen\" *)",
+      "Bash(mkdir -p \"/c/Users/LEMON_~1/AppData/Local/Temp/edge-cdp-examtype\" *)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\LEMON_~1\\AppData\\Local\\Temp\\claude\\c--Users-LEMON-Soft-Desktop-UniScheduler-react\\f9eb7f8b-2bf9-448e-97ad-8837ce914d2d\\scratchpad",
+      "C:\\Users\\LEMON_~1\\AppData\\Local\\Temp"
+    ]
+  }
+}

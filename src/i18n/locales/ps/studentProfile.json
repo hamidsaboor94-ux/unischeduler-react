@@ -1,0 +1,88 @@
+{
+  "title": "د زده کوونکي پروفایل",
+  "noStudentSelected": "د یو زده کوونکي پروفایل د کارونکو له پاڼې پرانیزئ ترڅو دلته یې وګورئ.",
+  "notFound": "د دې زده کوونکي پروفایل ونه موندل شو.",
+  "print": "چاپول",
+  "editProfile": "پروفایل سمول",
+  "editContact": "د اړیکې معلومات سمول",
+  "adminEditHint": "یوازې اډمین کولی شي دا ساحې سم کړي.",
+  "memberSince": "د غړیتوب نېټه: {{date}}",
+  "sections": {
+    "personal": "شخصي مالومات",
+    "address": "د پتې مالومات",
+    "contact": "د اړیکې مالومات",
+    "academic": "رسمي / علمي مالومات",
+    "educational": "تحصیلي مالومات",
+    "documents": "رسمي اسناد"
+  },
+  "fields": {
+    "studentId": "د زده کوونکي شمېره",
+    "fullName": "بشپړ نوم",
+    "fatherName": "د پلار نوم",
+    "grandfatherName": "د نیکه نوم",
+    "gender": "جنسیت",
+    "dateOfBirth": "د زېږېدنې نېټه",
+    "nationality": "تابعیت",
+    "nationalId": "د تذکرې شمېره",
+    "passportNumber": "د پاسپورت شمېره",
+    "presentAddress": "اوسنی پته",
+    "permanentAddress": "دایمي پته",
+    "mobileNumber": "د موبایل شمېره",
+    "emergencyContact": "د بیړني اړیکې شمېره",
+    "email": "بریښنالیک",
+    "entryTestMarks": "د کانکور/داخلې ازموینې نمرې",
+    "sponsor": "تمویل کوونکی",
+    "classSection": "ټولګی / برخه",
+    "term": "دوره / سمستر",
+    "specialization": "تخصص",
+    "enrollmentStatus": "د شمولیت حالت",
+    "admissionStatus": "د منلو حالت",
+    "department": "دیپارتمنت / رشته",
+    "programSemester": "اوسنی د پروګرام سمستر",
+    "previousSchool": "پخوانۍ زده کړه (ښوونځی / موسسه)",
+    "previousGraduationYear": "د پخوانۍ فراغت کال",
+    "advisor": "علمي سلاکار",
+    "gpa": "ټولیز اوسط (GPA)",
+    "credits": "بشپړ شوي کریډیټونه"
+  },
+  "genderOptions": { "Male": "نارینه", "Female": "ښځینه", "Other": "نور" },
+  "admissionOptions": { "Approved": "منل شوی", "Pending": "په تمه", "Rejected": "رد شوی" },
+  "enrollmentOptions": { "Regular": "منظم", "Part-time": "پاره وخت", "Probation": "ازموینیز حالت", "Withdrawn": "بېرون شوی" },
+  "none": "هیڅ",
+  "select": "— وټاکئ —",
+  "creditsProgress": "{{completed}} د {{required}} کریډیټونو څخه",
+  "creditsNoTarget": "{{completed}} کریډیټونه بشپړ شوي",
+  "gpaScale": "{{gpa}} / ۴.۰",
+  "gpaNotAvailable": "لا تر اوسه شتون نلري",
+  "toasts": {
+    "saved": "پروفایل تازه شو.",
+    "contactSaved": "د اړیکې مالومات تازه شول."
+  },
+  "documents": {
+    "typeHeader": "ډول",
+    "titleHeader": "سرلیک",
+    "uploadedHeader": "اپلوډ شوی",
+    "empty": "لا تر اوسه هیڅ سند اپلوډ شوی نه دی.",
+    "uploadTitle": "یو سند اپلوډ کړئ",
+    "titlePlaceholder": "د سند سرلیک",
+    "upload": "اپلوډول",
+    "download": "ډاونلوډول",
+    "delete": "ړنګول",
+    "confirmDelete": "\"{{title}}\" ړنګ کړئ؟ دا بیرته نشي کیدی.",
+    "types": {
+      "ID Scan": "د تذکرې سکن",
+      "Certificate": "سند",
+      "Transcript": "ټرانسکرپت",
+      "Passport Copy": "د پاسپورت کاپي",
+      "Other": "نور"
+    },
+    "errors": {
+      "fileRequired": "د اپلوډ لپاره یوه فایل وټاکئ.",
+      "titleRequired": "سرلیک اړین دی."
+    },
+    "toasts": {
+      "uploaded": "سند اپلوډ شو.",
+      "deleted": "سند ړنګ شو."
+    }
+  }
+}

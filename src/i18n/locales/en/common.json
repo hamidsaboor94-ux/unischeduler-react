@@ -1,0 +1,86 @@
+{
+  "appName": "UniScheduler",
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "edit": "Edit",
+    "delete": "Delete",
+    "remove": "Remove",
+    "add": "Add",
+    "create": "Create",
+    "update": "Update",
+    "submit": "Submit",
+    "confirm": "Confirm",
+    "back": "Back",
+    "search": "Search",
+    "loading": "Loading…",
+    "yes": "Yes",
+    "no": "No",
+    "undo": "Undo",
+    "export": "Export",
+    "import": "Import",
+    "download": "Download",
+    "upload": "Upload",
+    "view": "View",
+    "logOut": "Log out",
+    "viewProfile": "View profile",
+    "changePassword": "Change password",
+    "reset": "Reset"
+  },
+  "fields": {
+    "name": "Name",
+    "fullName": "Full name",
+    "email": "Email",
+    "role": "Role",
+    "department": "Department",
+    "password": "Password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "date": "Date",
+    "time": "Time",
+    "room": "Room",
+    "course": "Course",
+    "teacher": "Teacher",
+    "student": "Student",
+    "semester": "Semester",
+    "term": "Term",
+    "status": "Status"
+  },
+  "roles": {
+    "admin": "Admin",
+    "faculty": "Faculty",
+    "student": "Student"
+  },
+  "days": {
+    "Mon": "Monday",
+    "Tue": "Tuesday",
+    "Wed": "Wednesday",
+    "Thu": "Thursday",
+    "Fri": "Friday",
+    "Sat": "Saturday",
+    "Sun": "Sunday"
+  },
+  "status": {
+    "unscheduled": "Unscheduled",
+    "overCapacity": "Over capacity",
+    "clash": "Clash",
+    "confirmed": "Confirmed",
+    "conflict": "Conflict",
+    "partial": "Partial",
+    "available": "Available"
+  },
+  "language": {
+    "label": "Language",
+    "english": "English",
+    "pashto": "پښتو",
+    "dari": "دری"
+  },
+  "theme": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
+  },
+  "noneYet": "None yet",
+  "notApplicable": "—"
+}

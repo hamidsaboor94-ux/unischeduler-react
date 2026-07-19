@@ -1,0 +1,197 @@
+{
+  "roomsPage": {
+    "title": "د خونو مدیریت",
+    "searchAriaLabel": "د خونو لټون",
+    "searchPlaceholder": "خونې وپلټئ…",
+    "addRoom": "خونه اضافه کړئ",
+    "columns": {
+      "type": "ډول",
+      "capacity": "ظرفیت",
+      "equipment": "تجهیزات"
+    },
+    "editAria": "خونه {{name}} سمول",
+    "deleteAria": "خونه {{name}} ړنګول",
+    "confirmDelete": "خونه {{name}} ړنګه شي؟ دا کار بیرته نه شي کیدای.",
+    "toastRemoved": "خونه لرې شوه"
+  },
+  "roomForm": {
+    "nameLabel": "د خونې نوم",
+    "namePlaceholder": "لکه د D110 خونه",
+    "typeLabel": "ډول",
+    "capacityLabel": "ظرفیت",
+    "equipmentLabel": "تجهیزات",
+    "equipmentPlaceholder": "لکه پروجیکتر، تخته",
+    "types": {
+      "lectureHall": "لیکچر تالار",
+      "examHall": "د ازموینې تالار",
+      "classroom": "ټولګی",
+      "computerLab": "کمپیوټر لابراتوار",
+      "scienceLab": "ساینس لابراتوار"
+    },
+    "validateName": "مهرباني وکړئ د خونې نوم ولیکئ.",
+    "confirmDelete": "خونه {{name}} ړنګه شي؟",
+    "toastRemoved": "خونه لرې شوه"
+  },
+  "coursesPage": {
+    "title": "د کورسونو مدیریت",
+    "searchAriaLabel": "کورسونه پلټل",
+    "searchPlaceholder": "کورسونه وپلټئ…",
+    "allDepartments": "ټولې څانګې",
+    "noDepartment": "بې څانګې",
+    "allInstructors": "ټول ښوونکي",
+    "allCredits": "ټول کریډیټونه",
+    "creditsOption_one": "{{count}} کریډیټ",
+    "creditsOption_other": "{{count}} کریډیټونه",
+    "assignDepartment": "څانګه وټاکئ",
+    "addCourse": "کورس اضافه کړئ",
+    "columns": {
+      "code": "کوډ",
+      "name": "د کورس نوم",
+      "dept": "څانګه",
+      "credits": "کریډیټونه",
+      "instructor": "ښوونکی"
+    },
+    "csvEnrolled": "شامل شوي",
+    "csvCapacity": "ظرفیت",
+    "statusOverEnrolled": "زیات شامل شوي",
+    "statusActive": "فعال",
+    "deleteAria": "کورس {{code}} ړنګول",
+    "confirmDelete": "کورس {{code}} ړنګ شي؟ دا به د دې د مهال ویش وختونه، ازموینې، او شمولیتونه هم لرې کړي.",
+    "toastRemoved": "کورس لرې شو",
+    "toastExported": "کورسونه صادر شول.",
+    "toastCsvNoRows": "د CSV فایل کې کوم ډاټا قطارونه نشته.",
+    "toastCsvMissingColumns": "CSV باید د کوډ، د کورس نوم، څانګه، او کریډیټونو کالمونه ولري.",
+    "toastSelectSemester": "مخکې له کورسونو له لیږد وړاندې یو سمستر وټاکئ.",
+    "toastImported_one": "{{count}} کورس دننه شو.",
+    "toastImported_other": "{{count}} کورسونه دننه شول.",
+    "toastImportedFailed_one": " {{count}} قطار پاتې راغی.",
+    "toastImportedFailed_other": " {{count}} قطارونه پاتې راغلل.",
+    "importErrorsTitle": "دننه کول د غلطیو سره بشپړ شول",
+    "importErrorsRowLabel": "قطار",
+    "toastAddDeptFirst": "لومړی یوه څانګه اضافه کړئ.",
+    "toastNoCoursesMatch": "له اوسنیو فلټرونو سره هیڅ کورس مطابقت نه لري."
+  },
+  "courseForm": {
+    "codeLabel": "د کورس کوډ",
+    "codePlaceholder": "لکه CS401",
+    "nameLabel": "د کورس نوم",
+    "namePlaceholder": "لکه ماشین زده کړه",
+    "departmentLabel": "څانګه",
+    "creditsLabel": "کریډیټونه",
+    "instructorLabel": "ښوونکی",
+    "primaryRoomLabel": "اصلي خونه",
+    "maxStudentsLabel": "زیاته حده زده کوونکي",
+    "termLabel": "دوره",
+    "prerequisitesLabel": "مخکینۍ اړتیاوې",
+    "noOtherCourses": "لا تر اوسه بل کورس نشته.",
+    "saveFirstHint": "لومړی کورس خوندي کړئ، بیا یې د مخکینیو اړتیاوو ټاکلو لپاره بیا خلاص کړئ.",
+    "validateRequired": "د کورس کوډ او نوم اړین دي.",
+    "confirmDelete": "کورس {{code}} ړنګ شي؟ دا به د دې د مهال ویش وختونه، ازموینې، او شمولیتونه هم لرې کړي.",
+    "toastRemoved": "کورس لرې شو",
+    "toastSaved": "خوندي شو."
+  },
+  "teachersPage": {
+    "title": "د ښوونکو مدیریت",
+    "searchAriaLabel": "ښوونکي د نوم یا د ښوونکي پیژندنې شمېرې له مخې پلټل",
+    "searchPlaceholder": "نوم یا د ښوونکي پیژندنه ولټوئ…",
+    "addTeacher": "ښوونکی اضافه کړئ",
+    "columns": {
+      "facultyId": "د ښوونکي پیژندنه",
+      "courses": "ښودل شوي کورسونه",
+      "sessions": "اونیزې ناستې"
+    },
+    "noCourses": "هیڅ",
+    "deleteAria": "ښوونکی {{name}} ړنګول",
+    "confirmDelete": "ښوونکی {{name}} ړنګ شي؟",
+    "toastRemoved": "ښوونکی لرې شو"
+  },
+  "teacherForm": {
+    "facultyIdLabel": "د ښوونکي پیژندنه",
+    "facultyIdUnassigned": "نه ده ټاکل شوې — دې ښوونکي لا تر اوسه د دننه کیدو حساب نلري",
+    "fullNameLabel": "بشپړ نوم",
+    "fullNamePlaceholder": "لکه ډاکټر سمیت",
+    "noDepartment": "— بې څانګې —",
+    "validateName": "مهرباني وکړئ یو نوم ولیکئ.",
+    "confirmDelete": "ښوونکی {{name}} ړنګ شي؟",
+    "toastRemoved": "ښوونکی لرې شو"
+  },
+  "departmentsPage": {
+    "title": "د څانګو مدیریت",
+    "addDepartment": "څانګه اضافه کړئ",
+    "columns": {
+      "courses": "کورسونه",
+      "teachers": "ښوونکي"
+    },
+    "deleteAria": "څانګه {{name}} ړنګول",
+    "confirmDelete": "څانګه {{name}} ړنګه شي؟",
+    "toastRemoved": "څانګه لرې شوه"
+  },
+  "departmentForm": {
+    "nameLabel": "د څانګې نوم",
+    "namePlaceholder": "لکه کیمیا",
+    "validateName": "مهرباني وکړئ د څانګې نوم ولیکئ.",
+    "confirmDelete": "څانګه {{name}} ړنګه شي؟",
+    "toastRemoved": "څانګه لرې شوه"
+  },
+  "bulkAssignDept": {
+    "description_one": "دا به {{count}} کورس ته څانګه وټاکي — هر هغه کورس چې د اوسنیو لټون/فلټرونو سره سم د کورسونو په مخ کې دي.",
+    "description_other": "دا به {{count}} کورسونو ته څانګه وټاکي — هر هغه کورس چې د اوسنیو لټون/فلټرونو سره سم د کورسونو په مخ کې دي.",
+    "none": "— هیڅ —",
+    "assign": "وټاکئ",
+    "toastPickDepartment": "یوه څانګه وټاکئ.",
+    "toastAssigned_one": "څانګه {{count}} کورس ته وټاکل شوه.",
+    "toastAssigned_other": "څانګه {{count}} کورسونو ته وټاکل شوه."
+  },
+  "semestersPage": {
+    "title": "د سمسترونو مدیریت",
+    "addSemester": "سمستر اضافه کړئ",
+    "columns": {
+      "start": "پیل",
+      "end": "پای",
+      "creditLimit": "د کریډیټ حد"
+    },
+    "creditsValue_one": "{{count}} کریډیټ",
+    "creditsValue_other": "{{count}} کریډیټونه",
+    "active": "فعال",
+    "inactive": "غیرفعال",
+    "setActive": "فعال کول",
+    "copyCoursesTitle": "له بل سمستر څخه کورسونه کاپي کول",
+    "copyCoursesIn": "کورسونه دننه کاپي کړئ",
+    "deleteAria": "سمستر {{name}} ړنګول",
+    "confirmDelete": "سمستر {{name}} ړنګ شي؟",
+    "toastRemoved": "سمستر لرې شو",
+    "toastActiveUpdated": "فعال سمستر تازه شو."
+  },
+  "termForm": {
+    "nameLabel": "د سمستر نوم",
+    "namePlaceholder": "لکه د 2026 پاییز",
+    "startDateLabel": "د پیل نېټه",
+    "endDateLabel": "د پای نېټه",
+    "setActiveLabel": "دا د فعال سمستر په توګه وټاکئ",
+    "nonTeachingDaysLabel": "غیر ښوونیزې ورځې",
+    "nonTeachingDaysHint": "ټولګي به په دې ورځو کې د دې سمستر لپاره مهال ویش نشي (لکه که جمعه ستاسو د اونۍ رخصتي وي نو هغه ونښلوئ).",
+    "creditLimitLabel": "د هر زده کوونکي کریډیټ حد",
+    "creditLimitPlaceholder": "بې حده",
+    "creditLimitHint": "ټول کریډیټونه چې یو زده کوونکی یې په دې سمستر کې شامل کیدای شي. د پرانستې حد لپاره خالي پرېږدئ.",
+    "examStartDateLabel": "د امتحان دورې پیل",
+    "examEndDateLabel": "د امتحان دورې پای",
+    "examRangeHint": "د امتحان مهال‌ویش پاڼې په \"په خپله جوړول\" کې د امتحان نېټو ټاکلو لپاره کارول کیږي. که خالي پرېږدئ، د سمستر وروستۍ دوه اونۍ به په ډیفالټ ډول وکارول شي.",
+    "validateExamRange": "د امتحان دورې پای نېټه د پیل نېټې نه دمخه نشي کیدای.",
+    "validateName": "مهرباني وکړئ د سمستر نوم ولیکئ.",
+    "confirmDelete": "سمستر {{name}} ړنګ شي؟",
+    "toastRemoved": "سمستر لرې شو",
+    "toastSaved": "خوندي شو."
+  },
+  "rolloverForm": {
+    "copyFromLabel": "کورسونه ترې کاپي کړئ",
+    "none": "— هیڅ —",
+    "hint": "هر کورس چې په ټاکل شوي سمستر کې دی به {{target}} ته کاپي شي. هغه کورسونه چې کوډ یې دمخه په {{target}} کې کارول شوی دی به پریښودل شي او راپور به یې ورکړل شي.",
+    "copyCourses": "کورسونه کاپي کړئ",
+    "courseLabel": "کورس {{code}}",
+    "toastPickSemester": "د کاپي کولو لپاره یو سمستر وټاکئ.",
+    "toastCopied_one": "{{count}} کورس کاپي شو.",
+    "toastCopied_other": "{{count}} کورسونه کاپي شول.",
+    "toastSkipped_one": " {{count}} پریښودل شو.",
+    "toastSkipped_other": " {{count}} پریښودل شول."
+  }
+}

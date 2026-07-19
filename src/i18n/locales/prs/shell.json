@@ -1,0 +1,122 @@
+{
+  "sidebar": {
+    "sections": {
+      "overview": "نمای کلی",
+      "scheduling": "برنامه‌ریزی",
+      "exams": "امتحانات",
+      "system": "سیستم",
+      "myTeaching": "تدریس من",
+      "courses": "کورس‌ها",
+      "admissions": "پذیرش"
+    },
+    "nav": {
+      "dashboard": "داشبورد",
+      "reports": "راپورها",
+      "timetable": "جدول اوقات",
+      "rooms": "اتاق‌ها",
+      "courses": "کورس‌ها",
+      "teachers": "استادان",
+      "departments": "دیپارتمنت‌ها",
+      "semesters": "سمستر‌ها",
+      "examSchedule": "جدول امتحانات",
+      "enrollment": "ثبت‌نام",
+      "attendance": "حاضری",
+      "gradebook": "نمرات",
+      "myGrades": "نمرات من",
+      "conflicts": "تداخل‌ها",
+      "users": "کاربران",
+      "auditLog": "ثبت وقایع",
+      "backup": "بکپ",
+      "branding": "برندسازی",
+      "gradingScale": "معیار نمرات",
+      "myCourses": "کورس‌های من",
+      "catalog": "کاتالوگ",
+      "mySchedule": "برنامه من",
+      "myAttendance": "حاضری من",
+      "myProfile": "پروفایل من",
+      "admissions": "درخواست‌ها"
+    },
+    "noTermsYet": "هنوز سمستری وجود ندارد"
+  },
+  "search": {
+    "placeholder": "جستجوی کورس‌ها یا استادان…",
+    "ariaLabel": "جستجوی کورس‌ها و استادان",
+    "clear": "پاک کردن جستجو",
+    "course": "کورس",
+    "teacher": "استاد",
+    "noMatches": "هیچ کورس یا استادی با \"{{query}}\" مطابقت ندارد"
+  },
+  "termDropdown": {
+    "loading": "در حال بارگذاری سمستر…",
+    "selectSemester": "یک سمستر انتخاب کنید",
+    "noTermsYet": "هنوز سمستری وجود ندارد",
+    "addSemester": "افزودن سمستر",
+    "ariaLabel": "انتخاب سمستر"
+  },
+  "notifications": {
+    "title": "اعلان‌ها",
+    "empty": "هنوز اعلانی وجود ندارد."
+  },
+  "modal": {
+    "areYouSure": "آیا مطمئن هستید؟",
+    "editSlot": "ویرایش وقت جدول",
+    "addSlot": "افزودن وقت جدول",
+    "oneOffExceptions": "استثناهای یک‌باره",
+    "resetTimetable": "بازنشانی جدول اوقات — {{label}}",
+    "pdfImportPreview": "وارد کردن جدول اوقات از PDF — بررسی پیش از تأیید",
+    "pdfImportComplete": "وارد کردن تکمیل شد",
+    "editRoom": "ویرایش اتاق",
+    "addRoom": "افزودن اتاق",
+    "editTeacher": "ویرایش استاد",
+    "addTeacher": "افزودن استاد",
+    "editDepartment": "ویرایش دیپارتمنت",
+    "addDepartment": "افزودن دیپارتمنت",
+    "editSemester": "ویرایش سمستر",
+    "addSemester": "افزودن سمستر",
+    "copyCoursesInto": "کاپی کردن کورس‌ها به {{term}}",
+    "editCourse": "ویرایش کورس",
+    "addCourse": "افزودن کورس",
+    "assignDepartment": "تخصیص دیپارتمنت",
+    "importCompletedWithErrors": "وارد کردن با خطاها تکمیل شد",
+    "editExam": "ویرایش امتحان",
+    "scheduleExam": "برنامه‌ریزی امتحان",
+    "autoGenerateExamType": "تولید خودکار امتحانات",
+    "roster": "فهرست {{code}}",
+    "affectedStudents": "محصلان متأثر ({{count}})",
+    "createAccount": "ایجاد حساب",
+    "accountCreated": "حساب ایجاد شد",
+    "accountsCreated": "{{count}} حساب ایجاد شد",
+    "resetPassword": "بازنشانی رمز عبور — {{name}}",
+    "myProfile": "پروفایل من",
+    "conflictDetail": "جزئیات تداخل",
+    "moveSlot": "انتقال — {{code}}",
+    "applicationStatusChange": "به‌روزرسانی وضعیت — {{name}}",
+    "applicationApprove": "منظور کردن — {{name}}",
+    "closeDialog": "بستن دیالوگ"
+  },
+  "auth": {
+    "welcomeBack": "خوش آمدید",
+    "loginToOrg": "ورود به {{org}}",
+    "emailPlaceholder": "you@university.edu",
+    "passwordPlaceholder": "••••••••",
+    "signIn": "ورود",
+    "noSelfRegistration": "ثبت‌نام خودکار وجود ندارد — یک ادمین حساب شما را ایجاد کرده و یک رمز عبور موقت به شما می‌دهد.",
+    "applyPrompt": "هنوز محصل نیستید؟",
+    "applyLink": "درخواست پذیرش"
+  },
+  "setPassword": {
+    "title": "تعیین رمز عبور جدید",
+    "hint": "این حساب از یک رمز عبور موقت استفاده می‌کند. برای ادامه یک رمز جدید انتخاب کنید.",
+    "confirmNewPassword": "تأیید رمز عبور جدید",
+    "newPasswordPlaceholder": "حداقل ۸ کاراکتر",
+    "confirmPlaceholder": "رمز عبور را دوباره وارد کنید",
+    "submit": "تعیین رمز عبور و ادامه",
+    "logOutInstead": "در عوض خارج شوید",
+    "mismatch": "رمزهای عبور مطابقت ندارند."
+  },
+  "brandingSetup": {
+    "welcome": "به {{appName}} خوش آمدید",
+    "hint": "قبل از شروع، بیایید برندسازی مؤسسه شما را تنظیم کنیم. این در سراسر اپلیکیشن برای همه کسانی که از آن استفاده می‌کنند نمایش داده می‌شود و شما می‌توانید در هر زمان از تنظیمات آن را تغییر دهید.",
+    "saveAndContinue": "ذخیره و ادامه"
+  }
+}

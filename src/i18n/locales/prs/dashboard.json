@@ -1,0 +1,154 @@
+{
+  "dashboard": {
+    "title": "دشبورد",
+    "newCourse": "کورس جدید",
+    "autoSchedule": "ترتیب خودکار",
+    "dismiss": "رد کردن",
+    "fullView": "نمایش کامل",
+    "statCards": {
+      "myCourses": "کورس‌های من",
+      "totalCourses": "مجموع کورس‌ها",
+      "liveCount": "شمار زنده",
+      "enrolledStudents": "محصلان ثبت‌نام شده",
+      "uniqueStudents": "محصلان یکتا",
+      "scheduledExams": "امتحانات ترتیب شده",
+      "unscheduledCount": "{{count}} ترتیب نشده",
+      "totalFaculty": "استادان",
+      "activeConflicts": "تداخلات فعال",
+      "needsReview": "نیاز به بازبینی دارد"
+    },
+    "todayPanel": {
+      "title": "امروز — {{day}}",
+      "subtitle": "نمای جدول اوقات",
+      "empty": "هیچ صنفی برای امروز ترتیب نشده است."
+    },
+    "todayGlance": {
+      "title": "نمای امروز — {{day}}",
+      "classesCount_one": "{{count}} صنف امروز",
+      "classesCount_other": "{{count}} صنف امروز",
+      "cancelledCount_one": "{{count}} لغو شده",
+      "cancelledCount_other": "{{count}} لغو شده",
+      "nextIn": "صنف بعدی در {{minutes}} دقیقه",
+      "allDone": "صنف دیگری امروز نیست",
+      "noClasses": "امروز هیچ صنفی نیست"
+    },
+    "needsAttention": {
+      "title": "نیاز به توجه",
+      "subtitle": "موارد باز که نیاز به اقدام ادمین دارند",
+      "viewAllConflicts": "مشاهده هر {{count}} تداخل",
+      "overLimitTitle": "{{name}} از حد اعتبار تجاوز کرده است",
+      "overLimitDesc": "{{total}} اعتبار ثبت‌نام شده — حد {{limit}} است",
+      "overLimitPill": "بیش از حد",
+      "viewAllOverLimit": "مشاهده هر {{count}} محصل بیش از حد",
+      "unscheduledExamsTitle_one": "{{count}} امتحان هنوز ترتیب نشده",
+      "unscheduledExamsTitle_other": "{{count}} امتحان هنوز ترتیب نشده",
+      "unscheduledExamsDesc": "برای تکمیل جدول امتحانات، تاریخ و اتاق را انتخاب کنید.",
+      "noTeacherTitle_one": "{{count}} کورس استاد ندارد",
+      "noTeacherTitle_other": "{{count}} کورس استاد ندارند",
+      "noTeacherDesc": "یک استاد تعیین کنید تا محصلان بدانند چه کسی درس می‌دهد.",
+      "actionPill": "نیاز به اقدام",
+      "allClear": "همه چیز مرتب است — در حال حاضر هیچ موردی نیاز به توجه شما ندارد."
+    },
+    "upcomingExams": {
+      "title": "امتحانات آینده",
+      "subtitle": "نشست‌های ترتیب شده بعدی",
+      "manageAll": "مدیریت همه",
+      "nameWithStatus": "{{name}} — {{status}}",
+      "meta_one": "{{date}} · {{time}} · {{room}} · {{count}} محصل",
+      "meta_other": "{{date}} · {{time}} · {{room}} · {{count}} محصل"
+    }
+  },
+  "reports": {
+    "title": "راپورها و تحلیل",
+    "noTermSelected": "هیچ سمستر انتخاب نشده — نخست یک سمستر ایجاد کنید.",
+    "scopeNotice": "استفاده از اتاق‌ها، محبوبیت کورس‌ها، و حجم کاری استادان به <strong>{{term}}</strong> محدود است. روند ثبت‌نام همه سمسترها را در بر می‌گیرد.",
+    "currentTermFallback": "سمستر جاری",
+    "termFallback": "سمستر {{id}}",
+    "chartTitles": {
+      "roomUtilization": "استفاده از اتاق",
+      "mostPopular": "محبوب‌ترین کورس‌ها",
+      "leastPopular": "کم‌محبوب‌ترین کورس‌ها",
+      "teacherWorkload": "حجم کاری استاد",
+      "enrollmentTrends": "روند ثبت‌نام"
+    },
+    "chartSubtitles": {
+      "roomUtilization": "ساعات هفته‌وار رزرو شده هر اتاق، تفکیک شده بر اساس روز",
+      "byEnrollment": "بر اساس ثبت‌نام فعلی",
+      "teacherWorkload": "بخش‌های تدریس شده و ساعات هفته‌وار ترتیب شده",
+      "enrollmentTrends": "مجموع محصلان ثبت‌نام شده در هر سمستر، در سراسر تمام سمسترها"
+    },
+    "empty": {
+      "rooms": "هیچ اتاقی در این سمستر ترتیب نشده است.",
+      "courses": "هیچ کورسی در این سمستر وجود ندارد.",
+      "teachers": "هیچ استادی به بخش‌ها در این سمستر تخصیص نیافته است.",
+      "terms": "هنوز هیچ سمستری وجود ندارد."
+    },
+    "axis": {
+      "hoursPerWeek": "ساعت / هفته",
+      "sections": "بخش‌ها"
+    },
+    "tooltip": {
+      "hours_one": "{{count}} ساعت",
+      "hours_other": "{{count}} ساعت"
+    },
+    "legend": {
+      "enrolled": "ثبت‌نام شده",
+      "weeklyHours": "ساعات هفته‌وار",
+      "sections": "بخش‌ها",
+      "enrolledStudents": "محصلان ثبت‌نام شده"
+    }
+  },
+  "profile": {
+    "studentId": "نمبر محصل",
+    "facultyId": "نمبر استاد",
+    "adminId": "نمبر ادمین",
+    "genericId": "شناسه",
+    "editNameEmail": "ویرایش نام/ایمیل",
+    "memberSince": "عضویت از",
+    "confirmNewPassword": "تایید رمز عبور جدید",
+    "newPasswordPlaceholder": "حداقل ۸ حرف",
+    "errors": {
+      "nameRequired": "نام الزامی است.",
+      "emailRequired": "ایمیل الزامی است.",
+      "currentPasswordRequired": "رمز عبور فعلی خود را وارد کنید.",
+      "newPasswordTooShort": "رمز عبور جدید باید حداقل ۸ حرف باشد.",
+      "passwordsDontMatch": "رمزهای عبور جدید مطابقت ندارند.",
+      "newPasswordSameAsCurrent": "رمز عبور جدید باید با رمز عبور فعلی شما متفاوت باشد."
+    },
+    "toasts": {
+      "profileUpdated": "پروفایل به‌روزرسانی شد.",
+      "passwordChanged": "رمز عبور تغییر کرد."
+    }
+  },
+  "brandingSettings": {
+    "title": "برندسازی",
+    "panelTitle": "برندسازی موسسه",
+    "panelSubtitle": "در سایدبار، تب مرورگر، و صفحه ورود برای همه نمایش داده می‌شود",
+    "saveChanges": "ذخیره تغییرات"
+  },
+  "brandingForm": {
+    "orgNameLabel": "نام پوهنتون / موسسه",
+    "orgNamePlaceholder": "مثلاً: پوهنتون سپرینگ‌فیلد",
+    "logoLabel": "لوگو",
+    "logoPreviewAlt": "پیش‌نمایش لوگو",
+    "replaceImage": "تعویض تصویر",
+    "uploadImage": "بارگذاری تصویر",
+    "removeLogo": "حذف لوگو",
+    "logoHint": "PNG، JPEG، SVG یا WebP، حداکثر ۲ مگابایت. بدون آن، حروف اول به‌صورت خودکار از نام بالا ساخته می‌شود.",
+    "brandColorLabel": "رنگ برند",
+    "brandColorHint": "برای دکمه‌ها، برجسته‌سازی‌ها، و جای‌گزین لوگو در سراسر برنامه استفاده می‌شود.",
+    "emailDomainLabel": "دامنه ایمیل خودکار محصلین",
+    "emailDomainHint": "حساب‌های محصل جدید که از طریق پذیرش تایید می‌شوند، ایمیلی مانند studentid@این-دامنه دریافت می‌کنند. هر زمان دامنه واقعی خود را داشتید، این را تغییر دهید.",
+    "skipForNow": "فعلاً رد شو",
+    "errors": {
+      "invalidType": "لوگو باید تصویر PNG، JPEG، SVG یا WebP باشد.",
+      "tooLarge": "لوگو باید کمتر از ۲ مگابایت باشد.",
+      "nameRequired": "لطفاً نام موسسه خود را وارد کنید.",
+      "invalidEmailDomain": "یک دامنه معتبر وارد کنید، مثلاً student.university.edu"
+    },
+    "toasts": {
+      "logoRemoved": "لوگو حذف شد.",
+      "brandingSaved": "برندسازی ذخیره شد."
+    }
+  }
+}

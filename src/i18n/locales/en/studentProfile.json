@@ -1,0 +1,88 @@
+{
+  "title": "Student Profile",
+  "noStudentSelected": "Open a student's profile from Users to view it here.",
+  "notFound": "This student's profile could not be found.",
+  "print": "Print",
+  "editProfile": "Edit Profile",
+  "editContact": "Edit Contact Info",
+  "adminEditHint": "Only an admin can edit these fields.",
+  "memberSince": "Member since {{date}}",
+  "sections": {
+    "personal": "Personal Details",
+    "address": "Address Details",
+    "contact": "Contact Details",
+    "academic": "Official / Academic Information",
+    "educational": "Educational Information",
+    "documents": "Official Documents"
+  },
+  "fields": {
+    "studentId": "Student ID",
+    "fullName": "Full Name",
+    "fatherName": "Father's Name",
+    "grandfatherName": "Grandfather's Name",
+    "gender": "Gender",
+    "dateOfBirth": "Date of Birth",
+    "nationality": "Nationality",
+    "nationalId": "National ID / Tazkira Number",
+    "passportNumber": "Passport Number",
+    "presentAddress": "Present Address",
+    "permanentAddress": "Permanent Address",
+    "mobileNumber": "Mobile Number",
+    "emergencyContact": "Emergency Contact Number",
+    "email": "Email",
+    "entryTestMarks": "Entry Test Marks",
+    "sponsor": "Sponsor",
+    "classSection": "Class / Section",
+    "term": "Term / Semester",
+    "specialization": "Specialization",
+    "enrollmentStatus": "Enrollment Status",
+    "admissionStatus": "Admission Status",
+    "department": "Department / Major",
+    "programSemester": "Current Program Semester",
+    "previousSchool": "Previous Education (School / Institution)",
+    "previousGraduationYear": "Previous Graduation Year",
+    "advisor": "Academic Advisor",
+    "gpa": "Cumulative GPA",
+    "credits": "Credits Completed"
+  },
+  "genderOptions": { "Male": "Male", "Female": "Female", "Other": "Other" },
+  "admissionOptions": { "Approved": "Approved", "Pending": "Pending", "Rejected": "Rejected" },
+  "enrollmentOptions": { "Regular": "Regular", "Part-time": "Part-time", "Probation": "Probation", "Withdrawn": "Withdrawn" },
+  "none": "None",
+  "select": "— Select —",
+  "creditsProgress": "{{completed}} of {{required}} credits",
+  "creditsNoTarget": "{{completed}} credits completed",
+  "gpaScale": "{{gpa}} / 4.0",
+  "gpaNotAvailable": "Not yet available",
+  "toasts": {
+    "saved": "Profile updated.",
+    "contactSaved": "Contact info updated."
+  },
+  "documents": {
+    "typeHeader": "Type",
+    "titleHeader": "Title",
+    "uploadedHeader": "Uploaded",
+    "empty": "No documents uploaded yet.",
+    "uploadTitle": "Upload a document",
+    "titlePlaceholder": "Document title",
+    "upload": "Upload",
+    "download": "Download",
+    "delete": "Delete",
+    "confirmDelete": "Delete \"{{title}}\"? This cannot be undone.",
+    "types": {
+      "ID Scan": "ID Scan",
+      "Certificate": "Certificate",
+      "Transcript": "Transcript",
+      "Passport Copy": "Passport Copy",
+      "Other": "Other"
+    },
+    "errors": {
+      "fileRequired": "Choose a file to upload.",
+      "titleRequired": "A title is required."
+    },
+    "toasts": {
+      "uploaded": "Document uploaded.",
+      "deleted": "Document deleted."
+    }
+  }
+}

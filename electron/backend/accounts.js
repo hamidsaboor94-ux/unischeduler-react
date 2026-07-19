@@ -1,0 +1,45 @@
+const bcrypt = require('bcryptjs');
+const { run, nextIdNumberForRole } = require('./db');
+const { generateTempPassword } = require('./tempPassword');
+
+/**
+ * Creates one user with a random temporary password (hashed at rest) and, for
+ * faculty, a linked teacher record — the single account-creation path in the
+ * app. Used by manual admin creation, bulk import, and the PDF timetable
+ * importer's auto-created faculty accounts, so every account (however it
+ * originated) behaves identically: never emailed, temp password returned once
+ * for the caller to hand over, and `mustChangePassword` forces a real password
+ * on first login.
+ *
+ * Pass `teacherId` to link the new account to an EXISTING (bare, login-less)
+ * teacher record instead of creating a new one — used when the PDF importer
+ * matches a lecturer name to a teacher that was added without ever getting a
+ * login.
+ *
+ * Caller must already have validated name/email/role and checked no account
+ * exists with that email.
+ */
+async function createAccountWithTempPassword({ name, email, role, departmentId, teacherId }) {
+  const tempPassword = generateTempPassword();
+  const passwordHash = bcrypt.hashSync(tempPassword, 8);
+  const idNumber = await nextIdNumberForRole(role);
+  const result = await run(
+    'INSERT INTO users (name, email, passwordHash, role, mustChangePassword, idNumber) VALUES (?, ?, ?, ?, 1, ?)',
+    [name, email, passwordHash, role, idNumber]
+  );
+  let resolvedTeacherId = teacherId ?? null;
+  if (role === 'faculty') {
+    if (teacherId) {
+      await run('UPDATE teachers SET userId = ? WHERE id = ?', [result.id, teacherId]);
+    } else {
+      const teacherResult = await run(
+        'INSERT INTO teachers (name, departmentId, userId) VALUES (?, ?, ?)',
+        [name, departmentId ?? null, result.id]
+      );
+      resolvedTeacherId = teacherResult.id;
+    }
+  }
+  return { id: result.id, name, email, role, tempPassword, teacherId: resolvedTeacherId, idNumber };
+}
+
+module.exports = { createAccountWithTempPassword };

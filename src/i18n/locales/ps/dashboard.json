@@ -1,0 +1,154 @@
+{
+  "dashboard": {
+    "title": "ډشبورډ",
+    "newCourse": "نوی کورس",
+    "autoSchedule": "اتومات مهالویش",
+    "dismiss": "لرې کول",
+    "fullView": "بشپړه لیدنه",
+    "statCards": {
+      "myCourses": "زما کورسونه",
+      "totalCourses": "ټول کورسونه",
+      "liveCount": "ژوندی شمېر",
+      "enrolledStudents": "شامل شوي زده کوونکي",
+      "uniqueStudents": "ځانګړي زده کوونکي",
+      "scheduledExams": "مهالویش شوي امتحانونه",
+      "unscheduledCount": "{{count}} نامهالویش شوي",
+      "totalFaculty": "استادان",
+      "activeConflicts": "فعالې شخړې",
+      "needsReview": "بیاکتنې ته اړتیا لري"
+    },
+    "todayPanel": {
+      "title": "نن — {{day}}",
+      "subtitle": "د مهالویش لنډیز",
+      "empty": "نن ورځ لپاره هیڅ ټولګی مهالویش شوی نه دی."
+    },
+    "todayGlance": {
+      "title": "نن ورځ لنډیز — {{day}}",
+      "classesCount_one": "{{count}} ټولګی نن",
+      "classesCount_other": "{{count}} ټولګي نن",
+      "cancelledCount_one": "{{count}} لغوه شوی",
+      "cancelledCount_other": "{{count}} لغوه شوي",
+      "nextIn": "راتلونکی ټولګی په {{minutes}} دقیقو کې",
+      "allDone": "نور ټولګي نن نشته",
+      "noClasses": "نن ورځ هیڅ ټولګی نشته"
+    },
+    "needsAttention": {
+      "title": "پاملرنې ته اړتیا",
+      "subtitle": "خلاص شیان چې د اډمین کړنې ته اړتیا لري",
+      "viewAllConflicts": "ټول {{count}} شخړې وګورئ",
+      "overLimitTitle": "{{name}} د کریډیټ حد نه ډېر دی",
+      "overLimitDesc": "{{total}} کریډیټونه شامل شوي — حد {{limit}} دی",
+      "overLimitPill": "له حد ډېر",
+      "viewAllOverLimit": "ټول {{count}} زده کوونکي وګورئ چې له حد ډېر دي",
+      "unscheduledExamsTitle_one": "{{count}} امتحان لا تر اوسه مهالویش شوی نه دی",
+      "unscheduledExamsTitle_other": "{{count}} امتحانونه لا تر اوسه مهالویش شوي نه دي",
+      "unscheduledExamsDesc": "د امتحان مهالویش بشپړولو لپاره نیټه او خونه وټاکئ.",
+      "noTeacherTitle_one": "{{count}} کورس هیڅ استاد نه لري",
+      "noTeacherTitle_other": "{{count}} کورسونه هیڅ استاد نه لري",
+      "noTeacherDesc": "یو استاد وټاکئ ترڅو زده کوونکي پوه شي چې څوک ورته درس ورکوي.",
+      "actionPill": "کړنې ته اړتیا",
+      "allClear": "ټول سم دي — اوس مهال هیڅ شی ستاسو پاملرنې ته اړتیا نلري."
+    },
+    "upcomingExams": {
+      "title": "راتلونکي امتحانونه",
+      "subtitle": "راتلونکي مهالویش شوي ناستې",
+      "manageAll": "ټول اداره کړئ",
+      "nameWithStatus": "{{name}} — {{status}}",
+      "meta_one": "{{date}} · {{time}} · {{room}} · {{count}} زده کوونکی",
+      "meta_other": "{{date}} · {{time}} · {{room}} · {{count}} زده کوونکي"
+    }
+  },
+  "reports": {
+    "title": "راپورونه او شننه",
+    "noTermSelected": "هیڅ سمستر نه دی ټاکل شوی — لومړی یو سمستر جوړ کړئ.",
+    "scopeNotice": "د خونو کارونه، د کورسونو شهرت، او د ښوونکو کاري بار د <strong>{{term}}</strong> لپاره ځانګړي شوي دي. د شمولیت رجحانات ټول سمسترونه پوښي.",
+    "currentTermFallback": "اوسنی سمستر",
+    "termFallback": "سمستر {{id}}",
+    "chartTitles": {
+      "roomUtilization": "د خونې کارونه",
+      "mostPopular": "خورا مشهور کورسونه",
+      "leastPopular": "لږ مشهور کورسونه",
+      "teacherWorkload": "د ښوونکي کاري بار",
+      "enrollmentTrends": "د شمولیت رجحانات"
+    },
+    "chartSubtitles": {
+      "roomUtilization": "د هرې خونې اونیزې ساعتونه، د ورځې له مخې ویشل شوي",
+      "byEnrollment": "د اوسني شمولیت له مخې",
+      "teacherWorkload": "ښوول شوي برخې او مهالویش شوي اونیزې ساعتونه",
+      "enrollmentTrends": "د هر سمستر ټول شامل شوي زده کوونکي، د ټولو سمسترونو په اوږدو کې"
+    },
+    "empty": {
+      "rooms": "پدې سمستر کې هیڅ خونه مهالویش شوې نه ده.",
+      "courses": "پدې سمستر کې هیڅ کورس نشته.",
+      "teachers": "پدې سمستر کې هیڅ ښوونکی د برخو سره نه دی ټاکل شوی.",
+      "terms": "تر اوسه هیڅ سمستر نشته."
+    },
+    "axis": {
+      "hoursPerWeek": "ساعتونه / اونۍ",
+      "sections": "برخې"
+    },
+    "tooltip": {
+      "hours_one": "{{count}} ساعت",
+      "hours_other": "{{count}} ساعته"
+    },
+    "legend": {
+      "enrolled": "شامل شوي",
+      "weeklyHours": "اونیزې ساعتونه",
+      "sections": "برخې",
+      "enrolledStudents": "شامل شوي زده کوونکي"
+    }
+  },
+  "profile": {
+    "studentId": "د زده کوونکي پیژندپاڼه",
+    "facultyId": "د ښوونکي پیژندپاڼه",
+    "adminId": "د اډمین پیژندپاڼه",
+    "genericId": "پیژندپاڼه",
+    "editNameEmail": "نوم/بریښنالیک سم کړئ",
+    "memberSince": "غړیتوب راهیسې",
+    "confirmNewPassword": "نوی پټنوم تایید کړئ",
+    "newPasswordPlaceholder": "لږ تر لږه 8 توري",
+    "errors": {
+      "nameRequired": "نوم اړین دی.",
+      "emailRequired": "بریښنالیک اړین دی.",
+      "currentPasswordRequired": "خپل اوسنی پټنوم دننه کړئ.",
+      "newPasswordTooShort": "نوی پټنوم باید لږ تر لږه 8 توري ولري.",
+      "passwordsDontMatch": "نوي پټنومونه سره سمون نه خوري.",
+      "newPasswordSameAsCurrent": "نوی پټنوم باید له ستاسو اوسني پټنوم سره توپیر ولري."
+    },
+    "toasts": {
+      "profileUpdated": "پروفایل تازه شو.",
+      "passwordChanged": "پټنوم بدل شو."
+    }
+  },
+  "brandingSettings": {
+    "title": "برانډینګ",
+    "panelTitle": "د موسسې برانډینګ",
+    "panelSubtitle": "د ټولو لپاره په سایډبار، براوزر ټب، او ننوتنې پاڼه کې ښودل کیږي",
+    "saveChanges": "بدلونونه خوندي کړئ"
+  },
+  "brandingForm": {
+    "orgNameLabel": "پوهنتون / موسسې نوم",
+    "orgNamePlaceholder": "لکه: سپرینګ فیلډ پوهنتون",
+    "logoLabel": "لوگو",
+    "logoPreviewAlt": "د لوگو مخکتنه",
+    "replaceImage": "انځور بدل کړئ",
+    "uploadImage": "انځور اپلوډ کړئ",
+    "removeLogo": "لوگو لرې کړئ",
+    "logoHint": "PNG، JPEG، SVG، یا WebP، تر 2 MB پورې. پرته له دې، توري به له پورتني نوم نه پخپله جوړ شي.",
+    "brandColorLabel": "د برانډ رنګ",
+    "brandColorHint": "د تڼیو، ځلانده ټکو، او د لوگو ځای ناستي لپاره په ټول اپلیکیشن کې کارول کیږي.",
+    "emailDomainLabel": "د زده کوونکو خپلکاره بریښنالیک ډومین",
+    "emailDomainHint": "د منلو له لارې تصویب شوي نوي زده کوونکي حسابونه داسې بریښنالیک ترلاسه کوي: studentid@دا-ډومین. کله چې خپل ریښتینی ډومین ولرئ، دا بدل کړئ.",
+    "skipForNow": "اوس مهال پرېږده",
+    "errors": {
+      "invalidType": "لوگو باید PNG, JPEG, SVG یا WebP انځور وي.",
+      "tooLarge": "لوگو باید تر 2 MB کم وي.",
+      "nameRequired": "مهرباني وکړئ د خپلې موسسې نوم ولیکئ.",
+      "invalidEmailDomain": "یو سم ډومین ولیکئ، لکه student.university.edu"
+    },
+    "toasts": {
+      "logoRemoved": "لوگو لرې شو.",
+      "brandingSaved": "برانډینګ خوندي شو."
+    }
+  }
+}

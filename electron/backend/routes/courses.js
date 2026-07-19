@@ -1,0 +1,190 @@
+const express = require('express');
+const { all, get, run, logAudit } = require('../db');
+const { requireAuth, requireRole } = require('../middleware/auth');
+const asyncHandler = require('../middleware/asyncHandler');
+const { runOrFriendlyError } = require('./crudRouter');
+const { isPositiveInt } = require('../validate');
+const { canManageCourse, courseScopeClause } = require('../ownership');
+
+const router = express.Router();
+const FIELDS = ['code', 'name', 'departmentId', 'credits', 'teacherId', 'roomId', 'maxStudents', 'termId'];
+
+function validateCourse(body) {
+  if (body.credits !== undefined && !isPositiveInt(body.credits)) return 'Credits must be a positive number.';
+  if (body.maxStudents !== undefined && !isPositiveInt(body.maxStudents)) return 'Max students must be a positive number.';
+  return null;
+}
+
+router.get('/', requireAuth, asyncHandler(async (req, res) => {
+  const clauses = [];
+  const params = [];
+  if (req.query.termId) { clauses.push('termId = ?'); params.push(req.query.termId); }
+  if (req.query.departmentId) { clauses.push('departmentId = ?'); params.push(req.query.departmentId); }
+  // Students browse the full catalog to find courses to enroll in; faculty
+  // only ever manage their own assigned classes, so their list is scoped.
+  const scope = await courseScopeClause(req);
+  if (scope) { clauses.push(scope.clause); params.push(...scope.params); }
+  const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+  const rows = await all(`SELECT * FROM courses ${where}`, params);
+  res.json(rows);
+}));
+
+router.get('/:id', requireAuth, asyncHandler(async (req, res) => {
+  const row = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
+  if (!row) return res.status(404).json({ error: 'Not found' });
+  if (req.user.role === 'faculty' && !(await canManageCourse(req, row))) {
+    return res.status(403).json({ error: 'You do not have access to this course.' });
+  }
+  res.json(row);
+}));
+
+router.post('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+  if (!req.body.code || !req.body.name) return res.status(400).json({ error: 'Course code and name are required' });
+  const validationErr = validateCourse(req.body);
+  if (validationErr) return res.status(400).json({ error: validationErr });
+  const existing = await get('SELECT id FROM courses WHERE code = ? AND termId IS ?', [req.body.code, req.body.termId ?? null]);
+  if (existing) return res.status(409).json({ error: `Course code ${req.body.code} already exists in this term` });
+  const cols = FIELDS.filter(f => req.body[f] !== undefined);
+  const result = await runOrFriendlyError(res, 'courses', () => run(
+    `INSERT INTO courses (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`,
+    cols.map(c => req.body[c])
+  ));
+  if (result === undefined) return;
+  const row = await get('SELECT * FROM courses WHERE id = ?', [result.id]);
+  await logAudit(req.user, 'create', 'courses', result.id, req.body);
+  res.status(201).json(row);
+}));
+
+router.post('/bulk-import', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+  const { rows, termId } = req.body;
+  if (!Array.isArray(rows) || !rows.length) return res.status(400).json({ error: 'No rows provided' });
+  if (!termId) return res.status(400).json({ error: 'termId is required' });
+
+  const departments = await all('SELECT id, name FROM departments');
+  const teachers = await all('SELECT id, name FROM teachers');
+  const rooms = await all('SELECT id, name FROM rooms');
+  const byName = (list) => new Map(list.map(x => [x.name.trim().toLowerCase(), x.id]));
+  const deptByName = byName(departments);
+  const teacherByName = byName(teachers);
+  const roomByName = byName(rooms);
+
+  const created = [];
+  const errors = [];
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const rowNum = i + 1;
+    if (!r.code || !r.name) { errors.push({ row: rowNum, error: 'Code and name are required' }); continue; }
+    if (!r.department) { errors.push({ row: rowNum, error: 'Department is required' }); continue; }
+    const departmentId = deptByName.get(String(r.department).trim().toLowerCase());
+    if (!departmentId) { errors.push({ row: rowNum, error: `Unknown department "${r.department}"` }); continue; }
+    const credits = Number(r.credits);
+    if (!isPositiveInt(credits)) { errors.push({ row: rowNum, error: 'Credits must be a positive number' }); continue; }
+    const teacherId = r.instructor ? teacherByName.get(String(r.instructor).trim().toLowerCase()) : undefined;
+    if (r.instructor && !teacherId) { errors.push({ row: rowNum, error: `Unknown instructor "${r.instructor}"` }); continue; }
+    const roomId = r.room ? roomByName.get(String(r.room).trim().toLowerCase()) : undefined;
+    if (r.room && !roomId) { errors.push({ row: rowNum, error: `Unknown room "${r.room}"` }); continue; }
+    const maxStudents = r.maxStudents !== undefined && r.maxStudents !== '' ? Number(r.maxStudents) : undefined;
+    if (maxStudents !== undefined && !isPositiveInt(maxStudents)) { errors.push({ row: rowNum, error: 'Max students must be a positive number' }); continue; }
+    const existing = await get('SELECT id FROM courses WHERE code = ? AND termId IS ?', [r.code, termId]);
+    if (existing) { errors.push({ row: rowNum, error: `Course code ${r.code} already exists in this term` }); continue; }
+
+    const cols = ['code', 'name', 'departmentId', 'credits', 'termId'];
+    const vals = [r.code, r.name, departmentId, credits, termId];
+    if (teacherId) { cols.push('teacherId'); vals.push(teacherId); }
+    if (roomId) { cols.push('roomId'); vals.push(roomId); }
+    if (maxStudents !== undefined) { cols.push('maxStudents'); vals.push(maxStudents); }
+    const result = await run(`INSERT INTO courses (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`, vals);
+    created.push({ row: rowNum, id: result.id, code: r.code });
+  }
+  if (created.length) await logAudit(req.user, 'bulk-import', 'courses', null, { count: created.length, codes: created.map(c => c.code) });
+  res.status(200).json({ created, errors });
+}));
+
+router.put('/:id', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+  const existing = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
+  if (!existing) return res.status(404).json({ error: 'Not found' });
+  if (!(await canManageCourse(req, existing))) return res.status(403).json({ error: 'You do not have access to this course.' });
+  if (req.user.role === 'faculty' && req.body.teacherId !== undefined && Number(req.body.teacherId) !== existing.teacherId) {
+    return res.status(403).json({ error: 'Faculty cannot reassign a course to a different instructor.' });
+  }
+  const cols = FIELDS.filter(f => req.body[f] !== undefined);
+  if (!cols.length) return res.status(400).json({ error: 'No fields to update' });
+  const validationErr = validateCourse(req.body);
+  if (validationErr) return res.status(400).json({ error: validationErr });
+  if (cols.includes('code')) {
+    const current = await get('SELECT termId FROM courses WHERE id = ?', [req.params.id]);
+    const effectiveTermId = cols.includes('termId') ? req.body.termId : current?.termId;
+    const clash = await get('SELECT id FROM courses WHERE code = ? AND termId IS ? AND id != ?', [req.body.code, effectiveTermId ?? null, req.params.id]);
+    if (clash) return res.status(409).json({ error: `Course code ${req.body.code} already exists in this term` });
+  }
+  const result = await runOrFriendlyError(res, 'courses', () => run(
+    `UPDATE courses SET ${cols.map(c => `${c} = ?`).join(', ')} WHERE id = ?`,
+    [...cols.map(c => req.body[c]), req.params.id]
+  ));
+  if (result === undefined) return;
+  const row = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
+  if (!row) return res.status(404).json({ error: 'Not found' });
+  await logAudit(req.user, 'update', 'courses', req.params.id, req.body);
+  res.json(row);
+}));
+
+router.delete('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+  const id = req.params.id;
+  await run('DELETE FROM course_prerequisites WHERE courseId = ? OR prerequisiteCourseId = ?', [id, id]);
+  await run('DELETE FROM timetable_slots WHERE courseId = ?', [id]);
+  await run('DELETE FROM exams WHERE courseId = ?', [id]);
+  await run('DELETE FROM enrollments WHERE courseId = ?', [id]);
+  await run('DELETE FROM courses WHERE id = ?', [id]);
+  await logAudit(req.user, 'delete', 'courses', id, null);
+  res.status(204).end();
+}));
+
+router.get('/:id/prerequisites', requireAuth, asyncHandler(async (req, res) => {
+  const rows = await all(
+    `SELECT c.* FROM course_prerequisites cp JOIN courses c ON c.id = cp.prerequisiteCourseId WHERE cp.courseId = ?`,
+    [req.params.id]
+  );
+  res.json(rows);
+}));
+
+router.post('/:id/prerequisites', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+  const course = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
+  if (!course) return res.status(404).json({ error: 'Not found' });
+  if (!(await canManageCourse(req, course))) return res.status(403).json({ error: 'You do not have access to this course.' });
+  const { prerequisiteCourseId } = req.body;
+  if (!prerequisiteCourseId) return res.status(400).json({ error: 'prerequisiteCourseId required' });
+  if (Number(prerequisiteCourseId) === Number(req.params.id)) {
+    return res.status(400).json({ error: 'A course cannot be its own prerequisite' });
+  }
+  await run(
+    'INSERT INTO course_prerequisites (courseId, prerequisiteCourseId) VALUES (?, ?) ON CONFLICT (courseId, prerequisiteCourseId) DO NOTHING',
+    [req.params.id, prerequisiteCourseId]
+  );
+  res.status(201).json({ courseId: Number(req.params.id), prerequisiteCourseId: Number(prerequisiteCourseId) });
+}));
+
+router.delete('/:id/prerequisites/:prereqId', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+  const course = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
+  if (!course) return res.status(404).json({ error: 'Not found' });
+  if (!(await canManageCourse(req, course))) return res.status(403).json({ error: 'You do not have access to this course.' });
+  await run(
+    'DELETE FROM course_prerequisites WHERE courseId = ? AND prerequisiteCourseId = ?',
+    [req.params.id, req.params.prereqId]
+  );
+  res.status(204).end();
+}));
+
+router.get('/:id/roster', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+  const course = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
+  if (!course) return res.status(404).json({ error: 'Not found' });
+  if (!(await canManageCourse(req, course))) return res.status(403).json({ error: 'You do not have access to this course.' });
+  const rows = await all(
+    `SELECT e.id as enrollmentId, e.status, e.grade, e.createdAt, u.id as studentId, u.name, u.email, u.idNumber
+     FROM enrollments e JOIN users u ON u.id = e.studentId
+     WHERE e.courseId = ? ORDER BY e.createdAt`,
+    [req.params.id]
+  );
+  res.json(rows);
+}));
+
+module.exports = router;

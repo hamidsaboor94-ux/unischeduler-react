@@ -1,0 +1,127 @@
+{
+  "form": {
+    "title": "Apply to {{org}}",
+    "hint": "Fill in your details below. An admissions officer will review your application and contact you with next steps.",
+    "personalEmailLabel": "Personal Email",
+    "personalEmailHint": "The email you're applying with — we'll send any updates and, if accepted, your new university login here.",
+    "desiredDepartmentLabel": "Desired Department / Program",
+    "entryTestHint": "Leave blank if you haven't taken an entry test yet.",
+    "documentsLabel": "Supporting Documents",
+    "documentsHint": "ID scans, certificates, transcripts, etc. PDF, PNG, or JPEG — you can select multiple files.",
+    "submit": "Submit Application",
+    "submittedTitle": "Application submitted",
+    "submittedBody": "Thank you for applying to {{org}}. We've received your application and will contact you at the email you provided with any updates.",
+    "backToLogin": "Back to login",
+    "errors": {
+      "fullNameRequired": "Full name is required.",
+      "emailRequired": "A personal email is required.",
+      "departmentRequired": "Please choose a desired department."
+    }
+  },
+  "adminForm": {
+    "title": "Enter Application",
+    "submit": "Create Application"
+  },
+  "page": {
+    "title": "Admissions",
+    "newApplication": "Enter Application",
+    "tabs": {
+      "all": "All",
+      "pending": "Pending"
+    },
+    "statusFilterAria": "Filter by status",
+    "allStatuses": "All statuses",
+    "table": {
+      "applicant": "Applicant",
+      "department": "Desired Department",
+      "submitted": "Submitted",
+      "status": "Status",
+      "source": "Source"
+    },
+    "source": {
+      "public": "Public form",
+      "admin": "Staff entry"
+    },
+    "empty": "No applications match this filter.",
+    "backToList": "Back to Applications"
+  },
+  "detail": {
+    "entryTestScore": "Entry Test Score",
+    "notScored": "Not yet scored",
+    "decisionNote": "Decision Note",
+    "decidedBy": "Decided by {{name}} on {{date}}",
+    "createdOn": "Submitted {{date}}",
+    "changeStatus": "Change Status",
+    "approve": "Approve",
+    "alreadyAccepted": "This application has already been accepted — a student account was created.",
+    "viewStudentProfile": "View Student Profile"
+  },
+  "statusChangeModal": {
+    "title": "Update Application Status — {{name}}",
+    "statusLabel": "New Status",
+    "noteLabel": "Note (optional)",
+    "notePlaceholder": "Shown to the applicant by email for Rejected / Waitlisted / Entry Test Scheduled.",
+    "save": "Update Status",
+    "toasts": {
+      "updated": "Application status updated.",
+      "emailSent": "Status update emailed to the applicant.",
+      "emailFailed": "Status updated, but the email could not be sent: {{reason}}"
+    }
+  },
+  "approveModal": {
+    "title": "Approve Application — {{name}}",
+    "hint": "This creates a real student account, copies every field from this application into their Student Profile, and emails their new credentials.",
+    "departmentLabel": "Department",
+    "semesterLabel": "Starting Program Semester",
+    "confirm": "Approve & Create Account"
+  },
+  "credentialsBanner": {
+    "emailSent": "Credential email sent to the applicant's personal email.",
+    "emailFailed": "Could not send the credential email ({{reason}}) — share the credentials below with the applicant manually."
+  },
+  "dashboard": {
+    "pendingApplications": "Pending Applications",
+    "awaitingReview": "awaiting review",
+    "needsAttentionTitle": "{{count}} new application(s) awaiting review",
+    "needsAttentionDesc": "Review and decide on pending admissions applications."
+  },
+  "reports": {
+    "panelTitle": "Admissions",
+    "panelSubtitle": "Application volume and outcomes, across every term.",
+    "total": "Total Applications",
+    "accepted": "Accepted",
+    "rejected": "Rejected",
+    "pending": "Pending",
+    "acceptanceRate": "Acceptance Rate",
+    "notAvailable": "Not yet available"
+  },
+  "statuses": {
+    "Submitted": "Submitted",
+    "Under Review": "Under Review",
+    "Entry Test Scheduled": "Entry Test Scheduled",
+    "Waitlisted": "Waitlisted",
+    "Accepted": "Accepted",
+    "Rejected": "Rejected"
+  },
+  "documents": {
+    "uploadTitle": "Attach a document",
+    "titlePlaceholder": "Document title",
+    "upload": "Upload",
+    "download": "Download",
+    "delete": "Delete",
+    "empty": "No documents attached.",
+    "confirmDelete": "Delete \"{{title}}\"? This cannot be undone.",
+    "types": {
+      "ID Scan": "ID Scan",
+      "Certificate": "Certificate",
+      "Transcript": "Transcript",
+      "Passport Copy": "Passport Copy",
+      "Other": "Other"
+    }
+  },
+  "toasts": {
+    "created": "Application created.",
+    "approved": "Application approved — student account created.",
+    "notificationBody": "New application submitted by {{name}}."
+  }
+}

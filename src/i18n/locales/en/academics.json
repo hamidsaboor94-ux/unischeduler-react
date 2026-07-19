@@ -1,0 +1,297 @@
+{
+  "examsPage": {
+    "title": "Exam Schedule",
+    "tabs": {
+      "all": "All exams",
+      "week": "This week",
+      "issues": "Issues only"
+    },
+    "scheduleExam": "Schedule exam",
+    "autoGenerate": "Auto-generate",
+    "stats": {
+      "scheduled": {
+        "label": "Scheduled",
+        "sub": "of {{count}} exams"
+      },
+      "unscheduled": {
+        "label": "Unscheduled",
+        "sub": "pending rooms"
+      },
+      "studentClashes": {
+        "label": "Student clashes",
+        "sub": "across {{count}} slot(s)"
+      },
+      "capacityIssues": {
+        "label": "Capacity issues",
+        "sub": "rooms overbooked"
+      }
+    },
+    "table": {
+      "heading": "All Scheduled Exams"
+    },
+    "autoGenResult": {
+      "title": "Auto-generate results",
+      "dismiss": "Dismiss",
+      "summary": "{{type}} exams — created {{created}} new, scheduled {{scheduled}} with a date, time, room and invigilator.",
+      "needsInvigilator": "Scheduled, but no invigilator was free at this date/time — assign one manually."
+    },
+    "typeFilter": {
+      "all": "All types",
+      "aria": "Filter by exam type"
+    },
+    "semesterFilter": {
+      "all": "All semesters",
+      "aria": "Filter by program semester"
+    },
+    "sessionFilter": {
+      "all": "All sessions",
+      "aria": "Filter by session"
+    },
+    "semBadge": "Sem {{n}}",
+    "session": {
+      "morning": "Morning",
+      "evening": "Evening"
+    },
+    "card": {
+      "notScheduled": "Not yet scheduled",
+      "students_one": "{{count}} student",
+      "students_other": "{{count}} students",
+      "invigilator": "{{name}} (Invigilator)",
+      "empty": "No exams match this filter."
+    },
+    "dateGroups": {
+      "unscheduled": "Not yet scheduled",
+      "count_one": "{{count}} exam",
+      "count_other": "{{count}} exams",
+      "collapseAll": "Collapse all",
+      "expandAll": "Expand all"
+    }
+  },
+  "autoGenerateTypeForm": {
+    "label": "Exam type to generate",
+    "hint": "Only exams of this type will be created and scheduled — exams of other types are left untouched.",
+    "generate": "Generate"
+  },
+  "examForm": {
+    "type": "Exam type",
+    "types": {
+      "quiz": "Quiz",
+      "midterm": "Midterm",
+      "final": "Final"
+    },
+    "startTime": "Start time",
+    "duration": "Duration",
+    "invigilator": "Invigilator",
+    "noneOption": "— None —",
+    "deleteConfirm": "Delete this exam?",
+    "toastDeleted": "Exam removed",
+    "durations": {
+      "min30": "30 minutes",
+      "hour1": "1 hour",
+      "hour1_5": "1.5 hours",
+      "hour2": "2 hours",
+      "hour2_5": "2.5 hours",
+      "hour3": "3 hours"
+    }
+  },
+  "enrollmentPage": {
+    "title": "Student Enrollment",
+    "searchAria": "Search enrollment by name or student ID",
+    "searchPlaceholder": "Search name or student ID…",
+    "refresh": "Refresh",
+    "overviewTitle": "Course Enrollment Overview",
+    "tabs": {
+      "byCourse": "By course",
+      "byStudent": "By student"
+    },
+    "courseTable": {
+      "course": "Course",
+      "instructor": "Instructor",
+      "capacity": "Capacity",
+      "enrolled": "Enrolled",
+      "fillRate": "Fill rate",
+      "waitlist": "Waitlist"
+    },
+    "studentTable": {
+      "studentId": "Student ID",
+      "student": "Student",
+      "courses": "Courses",
+      "totalCredits": "Total credits",
+      "none": "None",
+      "waitlistedCode": "{{code}} (WL)"
+    }
+  },
+  "rosterModal": {
+    "gradeSaved": "Grade saved.",
+    "pickStudentFirst": "Pick a student first.",
+    "courseFullWaitlisted": "Course is full — added to the waitlist.",
+    "studentEnrolled": "Student enrolled.",
+    "removeConfirm": "Remove {{name}} from this course?",
+    "removeAriaLabel": "Remove {{name}} from this course",
+    "removed": "Removed",
+    "rosterExported": "Roster exported.",
+    "csv": {
+      "studentId": "Student ID",
+      "name": "Name",
+      "email": "Email",
+      "status": "Status",
+      "grade": "Grade"
+    },
+    "noStudents": "No students enrolled yet.",
+    "gradeNone": "— Grade —",
+    "enrollExisting": "Enroll an existing student",
+    "selectStudent": "— Select a student —",
+    "addToCourse": "Add to course",
+    "exportCsv": "Export CSV",
+    "waitlistPill": "Waitlist"
+  },
+  "studentListModal": {
+    "studentFallback": "Student #{{id}}"
+  },
+  "attendancePage": {
+    "title": "Attendance",
+    "courseAria": "Course",
+    "noCoursesYet": "No courses yet",
+    "takeAttendance": "Take attendance",
+    "takeAttendanceHint": "Pick the session date — reopening a past date shows what was already recorded, so you can correct it.",
+    "sessionDate": "Session date",
+    "session": "Session",
+    "noSlotHint": "This course has no timetable slot yet — add one on the Timetable page before taking attendance.",
+    "table": {
+      "student": "Student",
+      "status": "Status"
+    },
+    "saveAttendance": "Save attendance",
+    "noStudentsEnrolled": "No students enrolled in this course yet.",
+    "historyTitle": "History",
+    "filterAria": "Filter history by student",
+    "filterPlaceholder": "Filter by student…",
+    "historyTable": {
+      "date": "Date",
+      "student": "Student",
+      "status": "Status"
+    },
+    "loading": "Loading…",
+    "noHistory": "No attendance recorded yet for this course.",
+    "toasts": {
+      "pickDate": "Pick a session date first.",
+      "noSlot": "This course has no timetable slot yet — add one on the Timetable page first.",
+      "noStudents": "No students enrolled in this course.",
+      "saved": "Attendance saved."
+    }
+  },
+  "attendanceStatus": {
+    "present": "Present",
+    "absent": "Absent",
+    "late": "Late"
+  },
+  "myAttendancePage": {
+    "title": "My Attendance",
+    "loading": "Loading…",
+    "summary": "{{present}} present · {{absent}} absent · {{late}} late — {{pct}}% attendance",
+    "table": {
+      "date": "Date",
+      "status": "Status"
+    },
+    "empty": "No attendance has been recorded for you yet."
+  },
+  "mySchedulePage": {
+    "title": "My Schedule",
+    "allDays": "All days",
+    "exportCalendar": "Export calendar (.ics)",
+    "calendarExported": "Calendar exported.",
+    "myCoursesTitle": "My Courses",
+    "myCoursesHint": "All semesters — the calendar above only shows the currently selected semester",
+    "creditsWithLimit": "{{current}} / {{limit}} credits",
+    "creditsNoLimit": "{{current}} credits",
+    "table": {
+      "code": "Code",
+      "courseName": "Course Name",
+      "semester": "Semester",
+      "credits": "Credits",
+      "status": "Status",
+      "grade": "Grade"
+    },
+    "otherTerm": "Other term",
+    "waitlisted": "Waitlisted",
+    "enrolled": "Enrolled",
+    "gradeInProgress": "In progress",
+    "withdrawAriaLabel": "Withdraw from {{code}}",
+    "withdrawn": "Withdrawn",
+    "emptyState": "You're not enrolled in anything yet — visit the Catalog to register."
+  },
+  "assignmentsPanel": {
+    "hint": "Visible to every student enrolled in this course.",
+    "addAssignment": "Add Assignment",
+    "title": "Title",
+    "description": "Description (optional)",
+    "dueDate": "Due date",
+    "maxMarksLabel": "Max marks (optional)",
+    "post": "Post assignment",
+    "posted": "Assignment posted.",
+    "titleRequired": "Title is required.",
+    "dueDateRequired": "Due date is required.",
+    "empty": "No assignments posted yet.",
+    "due": "Due {{date}}",
+    "maxMarks": "{{n}} marks",
+    "submittedCount": "{{count}}/{{total}} submitted",
+    "marksSaved": "Marks saved."
+  },
+  "submissionsPanel": {
+    "student": "Student",
+    "status": "Status",
+    "marks": "Marks",
+    "feedback": "Feedback",
+    "notSubmitted": "Not submitted",
+    "submittedAt": "Submitted {{date}}",
+    "graded": "Graded: {{marks}}/{{max}}",
+    "feedbackLabel": "Feedback",
+    "attachSomething": "Attach a file or write a response before submitting.",
+    "submitted": "Submitted.",
+    "submit": "Submit",
+    "resubmit": "Resubmit",
+    "textResponsePlaceholder": "Optional written response…"
+  },
+  "materialsPanel": {
+    "title": "Materials",
+    "hint": "Files posted for this course, visible to every enrolled student.",
+    "materialTitle": "Title",
+    "file": "File",
+    "post": "Post material",
+    "posted": "Material posted.",
+    "titleRequired": "Title is required.",
+    "fileRequired": "Choose a file to upload.",
+    "empty": "No materials posted yet."
+  },
+  "announcementsPanel": {
+    "hint": "A short text notice visible to every student enrolled in this course.",
+    "placeholder": "e.g. Class moved to Lab 2 tomorrow",
+    "post": "Post announcement",
+    "posted": "Announcement posted.",
+    "messageRequired": "Write a message before posting.",
+    "empty": "No announcements posted yet."
+  },
+  "catalogPage": {
+    "title": "Course Catalog",
+    "searchAria": "Search catalog",
+    "searchPlaceholder": "Search courses…",
+    "allDepartments": "All departments",
+    "creditsWithLimit": "{{current}} / {{limit}} credits",
+    "creditsNoLimit": "{{current}} credits",
+    "table": {
+      "code": "Code",
+      "courseName": "Course Name",
+      "dept": "Dept.",
+      "credits": "Credits",
+      "instructor": "Instructor",
+      "capacity": "Capacity"
+    },
+    "enrolled": "Enrolled",
+    "waitlisted": "Waitlisted",
+    "register": "Register",
+    "toasts": {
+      "waitlisted": "Course is full — added to the waitlist.",
+      "registered": "Registered."
+    }
+  }
+}

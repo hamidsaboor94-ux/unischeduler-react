@@ -1,0 +1,297 @@
+{
+  "examsPage": {
+    "title": "جدول امتحانات",
+    "tabs": {
+      "all": "همه امتحانات",
+      "week": "این هفته",
+      "issues": "فقط مشکلات"
+    },
+    "scheduleExam": "ترتیب امتحان",
+    "autoGenerate": "تولید خودکار",
+    "stats": {
+      "scheduled": {
+        "label": "ترتیب شده",
+        "sub": "از {{count}} امتحان"
+      },
+      "unscheduled": {
+        "label": "ترتیب نشده",
+        "sub": "منتظر اتاق"
+      },
+      "studentClashes": {
+        "label": "تداخل محصلین",
+        "sub": "در {{count}} وقت"
+      },
+      "capacityIssues": {
+        "label": "مشکلات ظرفیت",
+        "sub": "اتاق‌های پُرشده"
+      }
+    },
+    "table": {
+      "heading": "همه امتحانات ترتیب شده"
+    },
+    "autoGenResult": {
+      "title": "نتایج تولید خودکار",
+      "dismiss": "رد کردن",
+      "summary": "امتحانات {{type}} — {{created}} جدید ایجاد شد، {{scheduled}} با تاریخ، وقت، اتاق و ناظر ترتیب شد.",
+      "needsInvigilator": "ترتیب شد، اما هیچ ناظر آزادی در این تاریخ/وقت موجود نبود — یکی را به صورت دستی تعیین کنید."
+    },
+    "typeFilter": {
+      "all": "همه انواع",
+      "aria": "فلتر کردن براساس نوع امتحان"
+    },
+    "semesterFilter": {
+      "all": "همه سمسترها",
+      "aria": "فلتر کردن براساس سمستر تحصیلی"
+    },
+    "sessionFilter": {
+      "all": "همه اوقات",
+      "aria": "فلتر کردن براساس وقت"
+    },
+    "semBadge": "سمستر {{n}}",
+    "session": {
+      "morning": "صبح",
+      "evening": "شام"
+    },
+    "card": {
+      "notScheduled": "هنوز ترتیب نشده",
+      "students_one": "{{count}} محصل",
+      "students_other": "{{count}} محصل",
+      "invigilator": "{{name}} (ناظر)",
+      "empty": "هیچ امتحانی با این فلتر مطابقت ندارد."
+    },
+    "dateGroups": {
+      "unscheduled": "هنوز ترتیب نشده",
+      "count_one": "{{count}} امتحان",
+      "count_other": "{{count}} امتحان",
+      "collapseAll": "جمع کردن همه",
+      "expandAll": "باز کردن همه"
+    }
+  },
+  "autoGenerateTypeForm": {
+    "label": "نوع امتحان برای تولید",
+    "hint": "فقط امتحانات این نوع ایجاد و ترتیب می‌شوند — امتحانات انواع دیگر دست‌نخورده باقی می‌مانند.",
+    "generate": "تولید"
+  },
+  "examForm": {
+    "type": "نوع امتحان",
+    "types": {
+      "quiz": "کویز",
+      "midterm": "امتحان میان‌ترم",
+      "final": "امتحان نهایی"
+    },
+    "startTime": "وقت شروع",
+    "duration": "دیرنگ",
+    "invigilator": "ناظر",
+    "noneOption": "— هیچ‌کدام —",
+    "deleteConfirm": "این امتحان حذف شود؟",
+    "toastDeleted": "امتحان حذف شد",
+    "durations": {
+      "min30": "30 دقیقه",
+      "hour1": "1 ساعت",
+      "hour1_5": "1.5 ساعت",
+      "hour2": "2 ساعت",
+      "hour2_5": "2.5 ساعت",
+      "hour3": "3 ساعت"
+    }
+  },
+  "enrollmentPage": {
+    "title": "ثبت‌نام محصلین",
+    "searchAria": "جستجوی ثبت‌نام به اساس نام یا شماره محصل",
+    "searchPlaceholder": "جستجوی نام یا شماره محصل…",
+    "refresh": "تازه‌سازی",
+    "overviewTitle": "دید کلی ثبت‌نام کورس‌ها",
+    "tabs": {
+      "byCourse": "به اساس کورس",
+      "byStudent": "به اساس محصل"
+    },
+    "courseTable": {
+      "course": "کورس",
+      "instructor": "استاد",
+      "capacity": "ظرفیت",
+      "enrolled": "ثبت‌نام شده",
+      "fillRate": "میزان پُری",
+      "waitlist": "لیست انتظار"
+    },
+    "studentTable": {
+      "studentId": "شماره محصل",
+      "student": "محصل",
+      "courses": "کورس‌ها",
+      "totalCredits": "مجموع کریدیت‌ها",
+      "none": "هیچ",
+      "waitlistedCode": "{{code}} (لیست انتظار)"
+    }
+  },
+  "rosterModal": {
+    "gradeSaved": "نمره ذخیره شد.",
+    "pickStudentFirst": "لطفاً اول یک محصل را انتخاب کنید.",
+    "courseFullWaitlisted": "کورس پُر است — به لیست انتظار اضافه شد.",
+    "studentEnrolled": "محصل ثبت‌نام شد.",
+    "removeConfirm": "{{name}} از این کورس حذف شود؟",
+    "removeAriaLabel": "حذف {{name}} از این کورس",
+    "removed": "حذف شد",
+    "rosterExported": "لیست صادر شد.",
+    "csv": {
+      "studentId": "شماره محصل",
+      "name": "نام",
+      "email": "ایمیل",
+      "status": "وضعیت",
+      "grade": "نمره"
+    },
+    "noStudents": "تا حال هیچ محصلی ثبت‌نام نشده.",
+    "gradeNone": "— نمره —",
+    "enrollExisting": "ثبت‌نام یک محصل موجود",
+    "selectStudent": "— یک محصل را انتخاب کنید —",
+    "addToCourse": "افزودن به کورس",
+    "exportCsv": "صادرات CSV",
+    "waitlistPill": "لیست انتظار"
+  },
+  "studentListModal": {
+    "studentFallback": "محصل #{{id}}"
+  },
+  "attendancePage": {
+    "title": "حاضری",
+    "courseAria": "کورس",
+    "noCoursesYet": "تا حال هیچ کورسی نیست",
+    "takeAttendance": "اخذ حاضری",
+    "takeAttendanceHint": "تاریخ جلسه را انتخاب کنید — بازکردن یک تاریخ گذشته آنچه قبلاً ثبت شده را نشان می‌دهد، تا بتوانید آن را تصحیح کنید.",
+    "sessionDate": "تاریخ جلسه",
+    "session": "جلسه",
+    "noSlotHint": "این کورس هنوز وقت جدول‌زمانی ندارد — قبل از اخذ حاضری یکی را در صفحه جدول‌زمانی اضافه کنید.",
+    "table": {
+      "student": "محصل",
+      "status": "وضعیت"
+    },
+    "saveAttendance": "ذخیره حاضری",
+    "noStudentsEnrolled": "تا حال هیچ محصلی در این کورس ثبت‌نام نشده.",
+    "historyTitle": "سابقه",
+    "filterAria": "فیلتر سابقه به اساس محصل",
+    "filterPlaceholder": "فیلتر به اساس محصل…",
+    "historyTable": {
+      "date": "تاریخ",
+      "student": "محصل",
+      "status": "وضعیت"
+    },
+    "loading": "در حال بارگذاری…",
+    "noHistory": "تا حال هیچ حاضری برای این کورس ثبت نشده.",
+    "toasts": {
+      "pickDate": "لطفاً اول تاریخ جلسه را انتخاب کنید.",
+      "noSlot": "این کورس هنوز وقت جدول‌زمانی ندارد — اول یکی را در صفحه جدول‌زمانی اضافه کنید.",
+      "noStudents": "هیچ محصلی در این کورس ثبت‌نام نشده.",
+      "saved": "حاضری ذخیره شد."
+    }
+  },
+  "attendanceStatus": {
+    "present": "حاضر",
+    "absent": "غایب",
+    "late": "دیر رسیده"
+  },
+  "myAttendancePage": {
+    "title": "حاضری من",
+    "loading": "در حال بارگذاری…",
+    "summary": "{{present}} حاضر · {{absent}} غایب · {{late}} دیر رسیده — {{pct}}٪ حاضری",
+    "table": {
+      "date": "تاریخ",
+      "status": "وضعیت"
+    },
+    "empty": "تا حال هیچ حاضری برای شما ثبت نشده."
+  },
+  "mySchedulePage": {
+    "title": "جدول من",
+    "allDays": "همه روزها",
+    "exportCalendar": "صادرات تقویم (.ics)",
+    "calendarExported": "تقویم صادر شد.",
+    "myCoursesTitle": "کورس‌های من",
+    "myCoursesHint": "همه سمسترها — تقویم بالا فقط سمستر انتخاب شده فعلی را نشان می‌دهد",
+    "creditsWithLimit": "{{current}} / {{limit}} کریدیت",
+    "creditsNoLimit": "{{current}} کریدیت",
+    "table": {
+      "code": "کود",
+      "courseName": "نام کورس",
+      "semester": "سمستر",
+      "credits": "کریدیت‌ها",
+      "status": "وضعیت",
+      "grade": "نمره"
+    },
+    "otherTerm": "سمستر دیگر",
+    "waitlisted": "در لیست انتظار",
+    "enrolled": "ثبت‌نام شده",
+    "gradeInProgress": "در حال جریان",
+    "withdrawAriaLabel": "انصراف از {{code}}",
+    "withdrawn": "انصراف داده شد",
+    "emptyState": "شما تا حال در هیچ کورسی ثبت‌نام نکرده‌اید — برای ثبت‌نام به کتالوگ مراجعه کنید."
+  },
+  "assignmentsPanel": {
+    "hint": "برای هر دانشجوی ثبت‌نام شده در این کورس قابل دید است.",
+    "addAssignment": "وظیفه اضافه کنید",
+    "title": "عنوان",
+    "description": "توضیحات (اختیاری)",
+    "dueDate": "تاریخ تسلیمی",
+    "maxMarksLabel": "حد اکثر نمرات (اختیاری)",
+    "post": "نشر وظیفه",
+    "posted": "وظیفه نشر شد.",
+    "titleRequired": "عنوان الزامی است.",
+    "dueDateRequired": "تاریخ تسلیمی الزامی است.",
+    "empty": "تا حال وظیفه‌ای نشر نشده است.",
+    "due": "تسلیمی {{date}}",
+    "maxMarks": "{{n}} نمره",
+    "submittedCount": "{{count}}/{{total}} تسلیم شده",
+    "marksSaved": "نمرات ذخیره شد."
+  },
+  "submissionsPanel": {
+    "student": "دانشجو",
+    "status": "وضعیت",
+    "marks": "نمرات",
+    "feedback": "بازخورد",
+    "notSubmitted": "تسلیم نشده",
+    "submittedAt": "تسلیم شده {{date}}",
+    "graded": "نمره‌دهی شده: {{marks}}/{{max}}",
+    "feedbackLabel": "بازخورد",
+    "attachSomething": "پیش از تسلیم یک فایل ضمیمه کنید یا پاسخ بنویسید.",
+    "submitted": "تسلیم شد.",
+    "submit": "تسلیم کنید",
+    "resubmit": "دوباره تسلیم کنید",
+    "textResponsePlaceholder": "پاسخ نوشتاری اختیاری…"
+  },
+  "materialsPanel": {
+    "title": "مواد",
+    "hint": "فایل‌های آپلود شده برای این کورس، برای هر دانشجوی ثبت‌نام شده قابل دید است.",
+    "materialTitle": "عنوان",
+    "file": "فایل",
+    "post": "نشر ماده",
+    "posted": "ماده نشر شد.",
+    "titleRequired": "عنوان الزامی است.",
+    "fileRequired": "یک فایل برای آپلود انتخاب کنید.",
+    "empty": "تا حال موادی نشر نشده است."
+  },
+  "announcementsPanel": {
+    "hint": "یک اعلان کوتاه متنی که برای هر دانشجوی ثبت‌نام شده در این کورس قابل دید است.",
+    "placeholder": "مثلاً: صنف به لابراتوار 2 فردا انتقال یافت",
+    "post": "نشر اعلان",
+    "posted": "اعلان نشر شد.",
+    "messageRequired": "پیش از نشر یک پیام بنویسید.",
+    "empty": "تا حال اعلانی نشر نشده است."
+  },
+  "catalogPage": {
+    "title": "کتالوگ کورس‌ها",
+    "searchAria": "جستجو در کتالوگ",
+    "searchPlaceholder": "جستجوی کورس‌ها…",
+    "allDepartments": "همه دیپارتمنت‌ها",
+    "creditsWithLimit": "{{current}} / {{limit}} کریدیت",
+    "creditsNoLimit": "{{current}} کریدیت",
+    "table": {
+      "code": "کود",
+      "courseName": "نام کورس",
+      "dept": "دیپارتمنت",
+      "credits": "کریدیت‌ها",
+      "instructor": "استاد",
+      "capacity": "ظرفیت"
+    },
+    "enrolled": "ثبت‌نام شده",
+    "waitlisted": "در لیست انتظار",
+    "register": "ثبت‌نام",
+    "toasts": {
+      "waitlisted": "کورس پُر است — به لیست انتظار اضافه شد.",
+      "registered": "ثبت‌نام شد."
+    }
+  }
+}

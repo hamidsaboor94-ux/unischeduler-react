@@ -1,0 +1,297 @@
+{
+  "examsPage": {
+    "title": "د ازموینې مهالویش",
+    "tabs": {
+      "all": "ټولې ازموینې",
+      "week": "دا اونۍ",
+      "issues": "یوازې ستونزې"
+    },
+    "scheduleExam": "د ازموینې مهالویش جوړول",
+    "autoGenerate": "خپلکاره جوړول",
+    "stats": {
+      "scheduled": {
+        "label": "مهالویش شوې",
+        "sub": "له {{count}} ازموینو څخه"
+      },
+      "unscheduled": {
+        "label": "بې مهالویشه",
+        "sub": "د خونې په تمه"
+      },
+      "studentClashes": {
+        "label": "د زده کوونکو ټکر",
+        "sub": "په {{count}} وخت(ونو) کې"
+      },
+      "capacityIssues": {
+        "label": "د ظرفیت ستونزې",
+        "sub": "ډکې شوې خونې"
+      }
+    },
+    "table": {
+      "heading": "ټولې مهالویش شوې ازموینې"
+    },
+    "autoGenResult": {
+      "title": "د خپلکاره جوړونې پایلې",
+      "dismiss": "لرې کول",
+      "summary": "{{type}} ازموینې — {{created}} نوې جوړې شوې، {{scheduled}} د نېټې، وخت، خونې او څارونکي سره مهالویش شوې.",
+      "needsInvigilator": "مهالویش شوې، خو په دې نېټه/وخت کې هیڅ آزاد څارونکی و نه موندل شو — په لاسي ډول یو وټاکئ."
+    },
+    "typeFilter": {
+      "all": "ټول ډولونه",
+      "aria": "د ازموینې ډول له مخې فلټر کول"
+    },
+    "semesterFilter": {
+      "all": "ټول سمسترونه",
+      "aria": "د ښوونیز سمستر له مخې فلټر کول"
+    },
+    "sessionFilter": {
+      "all": "ټولې دورې",
+      "aria": "د دورې له مخې فلټر کول"
+    },
+    "semBadge": "سمستر {{n}}",
+    "session": {
+      "morning": "سهار",
+      "evening": "ماښام"
+    },
+    "card": {
+      "notScheduled": "لا تر اوسه مهالویش شوې نه ده",
+      "students_one": "{{count}} زده کوونکی",
+      "students_other": "{{count}} زده کوونکي",
+      "invigilator": "{{name}} (څارونکی)",
+      "empty": "دې فلټر سره هیڅ ازموینه سمون نه خوري."
+    },
+    "dateGroups": {
+      "unscheduled": "لا تر اوسه مهالویش شوې نه ده",
+      "count_one": "{{count}} ازموینه",
+      "count_other": "{{count}} ازموینې",
+      "collapseAll": "ټول را ټولول",
+      "expandAll": "ټول خپرول"
+    }
+  },
+  "autoGenerateTypeForm": {
+    "label": "د جوړولو لپاره د ازموینې ډول",
+    "hint": "یوازې د دې ډول ازموینې به جوړې او مهالویش شي — د نورو ډولونو ازموینې به بدلې نشي.",
+    "generate": "جوړول"
+  },
+  "examForm": {
+    "type": "د ازموینې ډول",
+    "types": {
+      "quiz": "کوییز",
+      "midterm": "منځنۍ ازموینه",
+      "final": "پایله ازموینه"
+    },
+    "startTime": "د پیل وخت",
+    "duration": "موده",
+    "invigilator": "څارونکی",
+    "noneOption": "— هیڅ یو —",
+    "deleteConfirm": "دا ازموینه ړنګه شي؟",
+    "toastDeleted": "ازموینه لرې شوه",
+    "durations": {
+      "min30": "30 دقیقې",
+      "hour1": "1 ساعت",
+      "hour1_5": "1.5 ساعته",
+      "hour2": "2 ساعته",
+      "hour2_5": "2.5 ساعته",
+      "hour3": "3 ساعته"
+    }
+  },
+  "enrollmentPage": {
+    "title": "د زده کوونکو نومليکنه",
+    "searchAria": "د نوم یا زده کوونکي شمېرې له مخې د نومليکنې لټون",
+    "searchPlaceholder": "د نوم یا زده کوونکي شمېرې لټون…",
+    "refresh": "تازه کول",
+    "overviewTitle": "د کورس د نومليکنې کتنه",
+    "tabs": {
+      "byCourse": "د کورس له مخې",
+      "byStudent": "د زده کوونکي له مخې"
+    },
+    "courseTable": {
+      "course": "کورس",
+      "instructor": "ښوونکی",
+      "capacity": "ظرفیت",
+      "enrolled": "نوم لیکل شوي",
+      "fillRate": "د ډکېدو کچه",
+      "waitlist": "د تمې لیست"
+    },
+    "studentTable": {
+      "studentId": "د زده کوونکي شمېره",
+      "student": "زده کوونکی",
+      "courses": "کورسونه",
+      "totalCredits": "ټول کریډیټونه",
+      "none": "هیڅ",
+      "waitlistedCode": "{{code}} (د تمې لیست)"
+    }
+  },
+  "rosterModal": {
+    "gradeSaved": "نمره خوندي شوه.",
+    "pickStudentFirst": "لومړی یو زده کوونکی وټاکئ.",
+    "courseFullWaitlisted": "کورس ډک دی — د تمې لیست ته اضافه شو.",
+    "studentEnrolled": "زده کوونکی نومول شو.",
+    "removeConfirm": "{{name}} له دې کورس څخه لرې شي؟",
+    "removeAriaLabel": "{{name}} له دې کورس څخه لرې کول",
+    "removed": "لرې شو",
+    "rosterExported": "لیست صادر شو.",
+    "csv": {
+      "studentId": "د زده کوونکي شمېره",
+      "name": "نوم",
+      "email": "بریښنالیک",
+      "status": "حالت",
+      "grade": "نمره"
+    },
+    "noStudents": "تر اوسه هیڅ زده کوونکی نومول شوی نه دی.",
+    "gradeNone": "— نمره —",
+    "enrollExisting": "یو موجود زده کوونکی نوملیکل",
+    "selectStudent": "— یو زده کوونکی وټاکئ —",
+    "addToCourse": "کورس ته اضافه کول",
+    "exportCsv": "CSV صادرول",
+    "waitlistPill": "د تمې لیست"
+  },
+  "studentListModal": {
+    "studentFallback": "زده کوونکی #{{id}}"
+  },
+  "attendancePage": {
+    "title": "حاضري",
+    "courseAria": "کورس",
+    "noCoursesYet": "تر اوسه هیڅ کورس نشته",
+    "takeAttendance": "حاضري اخیستل",
+    "takeAttendanceHint": "د غونډې نېټه وټاکئ — د تېرې نېټې بیا خلاصول هغه څه ښیي چې مخکې ثبت شوي، نو تاسو یې سمولی شئ.",
+    "sessionDate": "د غونډې نېټه",
+    "session": "غونډه",
+    "noSlotHint": "دې کورس لا تر اوسه د مهالویش وخت نه لري — د حاضرۍ اخیستلو دمخه یې د مهالویش پاڼه کې اضافه کړئ.",
+    "table": {
+      "student": "زده کوونکی",
+      "status": "حالت"
+    },
+    "saveAttendance": "حاضري خوندي کول",
+    "noStudentsEnrolled": "تر اوسه دې کورس کې هیڅ زده کوونکی نومول شوی نه دی.",
+    "historyTitle": "پخوانۍ سابقه",
+    "filterAria": "د زده کوونکي له مخې د سابقې فلټر",
+    "filterPlaceholder": "د زده کوونکي له مخې فلټر…",
+    "historyTable": {
+      "date": "نېټه",
+      "student": "زده کوونکی",
+      "status": "حالت"
+    },
+    "loading": "بار کول…",
+    "noHistory": "دې کورس لپاره تر اوسه هیڅ حاضري ثبت شوې نه ده.",
+    "toasts": {
+      "pickDate": "لومړی د غونډې نېټه وټاکئ.",
+      "noSlot": "دې کورس لا تر اوسه د مهالویش وخت نه لري — لومړی یې د مهالویش پاڼه کې اضافه کړئ.",
+      "noStudents": "دې کورس کې هیڅ زده کوونکی نومول شوی نه دی.",
+      "saved": "حاضري خوندي شوه."
+    }
+  },
+  "attendanceStatus": {
+    "present": "حاضر",
+    "absent": "غیرحاضر",
+    "late": "ناوخته"
+  },
+  "myAttendancePage": {
+    "title": "زما حاضري",
+    "loading": "بار کول…",
+    "summary": "{{present}} حاضر · {{absent}} غیرحاضر · {{late}} ناوخته — {{pct}}٪ حاضري",
+    "table": {
+      "date": "نېټه",
+      "status": "حالت"
+    },
+    "empty": "تر اوسه ستاسو لپاره هیڅ حاضري ثبت شوې نه ده."
+  },
+  "mySchedulePage": {
+    "title": "زما مهالویش",
+    "allDays": "ټولې ورځې",
+    "exportCalendar": "کلیزار صادرول (.ics)",
+    "calendarExported": "کلیزار صادر شو.",
+    "myCoursesTitle": "زما کورسونه",
+    "myCoursesHint": "ټول سمسترونه — پورتنی کلیزار یوازې اوسنی ټاکل شوی سمستر ښیي",
+    "creditsWithLimit": "{{current}} / {{limit}} کریډیټونه",
+    "creditsNoLimit": "{{current}} کریډیټونه",
+    "table": {
+      "code": "کوډ",
+      "courseName": "د کورس نوم",
+      "semester": "سمستر",
+      "credits": "کریډیټونه",
+      "status": "حالت",
+      "grade": "نمره"
+    },
+    "otherTerm": "بل سمستر",
+    "waitlisted": "د تمې لیست کې",
+    "enrolled": "نوم لیکل شوی",
+    "gradeInProgress": "روان دی",
+    "withdrawAriaLabel": "له {{code}} څخه ایستل",
+    "withdrawn": "ایستل شو",
+    "emptyState": "تاسو تر اوسه په هیڅ کورس کې نومول شوي نه یاست — د نوملیکنې لپاره کتالوګ ته لاړ شئ."
+  },
+  "assignmentsPanel": {
+    "hint": "د دې کورس هر یو نومول شوی زده کوونکي ته د لیدو وړ دی.",
+    "addAssignment": "دنده اضافه کړئ",
+    "title": "سرلیک",
+    "description": "توضیحات (اختیاري)",
+    "dueDate": "د تسلیمۍ نېټه",
+    "maxMarksLabel": "اعظمي نمرې (اختیاري)",
+    "post": "دنده خپره کړئ",
+    "posted": "دنده خپره شوه.",
+    "titleRequired": "سرلیک اړین دی.",
+    "dueDateRequired": "د تسلیمۍ نېټه اړینه ده.",
+    "empty": "تر اوسه هیڅ دنده نه ده خپره شوې.",
+    "due": "تسلیمي نېټه {{date}}",
+    "maxMarks": "{{n}} نمرې",
+    "submittedCount": "{{count}}/{{total}} سپارل شوي",
+    "marksSaved": "نمرې خوندي شوې."
+  },
+  "submissionsPanel": {
+    "student": "زده کوونکی",
+    "status": "حالت",
+    "marks": "نمرې",
+    "feedback": "نظر",
+    "notSubmitted": "تسلیم نشوی",
+    "submittedAt": "تسلیم شوی {{date}}",
+    "graded": "ارزول شوی: {{marks}}/{{max}}",
+    "feedbackLabel": "نظر",
+    "attachSomething": "له تسلیمۍ مخکې یوه فایل یا ځواب ولیکئ.",
+    "submitted": "تسلیم شو.",
+    "submit": "وسپارئ",
+    "resubmit": "بیا وسپارئ",
+    "textResponsePlaceholder": "اختیاري لیکلی ځواب…"
+  },
+  "materialsPanel": {
+    "title": "مواد",
+    "hint": "دا کورس ته اپلوډ شوي فایلونه، د هر نومول شوي زده کوونکي لپاره لیدلی کیږي.",
+    "materialTitle": "سرلیک",
+    "file": "فایل",
+    "post": "موادول خپور کړئ",
+    "posted": "مواد خپور شول.",
+    "titleRequired": "سرلیک اړین دی.",
+    "fileRequired": "د اپلوډ لپاره یو فایل غوره کړئ.",
+    "empty": "تر اوسه هیڅ مواد نه دي خپاره شوي."
+  },
+  "announcementsPanel": {
+    "hint": "یو لنډ متن اعلان چې د دې کورس هر نومول شوي زده کوونکي ته لیدلی کیږي.",
+    "placeholder": "لکه: ټولګی سبا لابراتوار 2 ته لېږدول شو",
+    "post": "اعلان خپور کړئ",
+    "posted": "اعلان خپور شو.",
+    "messageRequired": "له خپرولو مخکې یو پیغام ولیکئ.",
+    "empty": "تر اوسه هیڅ اعلان نه دی خپور شوی."
+  },
+  "catalogPage": {
+    "title": "د کورسونو کتالوګ",
+    "searchAria": "کتالوګ کې لټون",
+    "searchPlaceholder": "کورسونه ولټوئ…",
+    "allDepartments": "ټول څانګې",
+    "creditsWithLimit": "{{current}} / {{limit}} کریډیټونه",
+    "creditsNoLimit": "{{current}} کریډیټونه",
+    "table": {
+      "code": "کوډ",
+      "courseName": "د کورس نوم",
+      "dept": "څانګه",
+      "credits": "کریډیټونه",
+      "instructor": "ښوونکی",
+      "capacity": "ظرفیت"
+    },
+    "enrolled": "نوم لیکل شوی",
+    "waitlisted": "د تمې لیست کې",
+    "register": "نوم لیکل",
+    "toasts": {
+      "waitlisted": "کورس ډک دی — د تمې لیست ته اضافه شو.",
+      "registered": "نوم لیکل شو."
+    }
+  }
+}

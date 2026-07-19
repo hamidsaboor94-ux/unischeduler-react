@@ -1,0 +1,197 @@
+{
+  "roomsPage": {
+    "title": "مدیریت اتاق‌ها",
+    "searchAriaLabel": "جستجوی اتاق‌ها",
+    "searchPlaceholder": "اتاق‌ها را جستجو کنید…",
+    "addRoom": "افزودن اتاق",
+    "columns": {
+      "type": "نوعیت",
+      "capacity": "ظرفیت",
+      "equipment": "تجهیزات"
+    },
+    "editAria": "ویرایش اتاق {{name}}",
+    "deleteAria": "حذف اتاق {{name}}",
+    "confirmDelete": "اتاق {{name}} حذف شود؟ این کار قابل بازگشت نیست.",
+    "toastRemoved": "اتاق حذف شد"
+  },
+  "roomForm": {
+    "nameLabel": "نام اتاق",
+    "namePlaceholder": "مثلاً اتاق D110",
+    "typeLabel": "نوعیت",
+    "capacityLabel": "ظرفیت",
+    "equipmentLabel": "تجهیزات",
+    "equipmentPlaceholder": "مثلاً پروژکتر، تخته",
+    "types": {
+      "lectureHall": "تالار سخنرانی",
+      "examHall": "تالار امتحان",
+      "classroom": "صنف",
+      "computerLab": "لابراتوار کمپیوتر",
+      "scienceLab": "لابراتوار ساینس"
+    },
+    "validateName": "لطفاً نام اتاق را وارد کنید.",
+    "confirmDelete": "اتاق {{name}} حذف شود؟",
+    "toastRemoved": "اتاق حذف شد"
+  },
+  "coursesPage": {
+    "title": "مدیریت کورس‌ها",
+    "searchAriaLabel": "جستجوی کورس‌ها",
+    "searchPlaceholder": "کورس‌ها را جستجو کنید…",
+    "allDepartments": "همه دیپارتمنت‌ها",
+    "noDepartment": "بدون دیپارتمنت",
+    "allInstructors": "همه استادان",
+    "allCredits": "همه کریدت‌ها",
+    "creditsOption_one": "{{count}} کریدت",
+    "creditsOption_other": "{{count}} کریدت",
+    "assignDepartment": "تعیین دیپارتمنت",
+    "addCourse": "افزودن کورس",
+    "columns": {
+      "code": "کود",
+      "name": "نام کورس",
+      "dept": "دیپارتمنت",
+      "credits": "کریدت‌ها",
+      "instructor": "استاد"
+    },
+    "csvEnrolled": "شامل شده",
+    "csvCapacity": "ظرفیت",
+    "statusOverEnrolled": "بیش از ظرفیت",
+    "statusActive": "فعال",
+    "deleteAria": "حذف کورس {{code}}",
+    "confirmDelete": "کورس {{code}} حذف شود؟ این کار وقت‌های جدول زمانی، امتحانات، و شمولیت‌های آن را نیز حذف می‌کند.",
+    "toastRemoved": "کورس حذف شد",
+    "toastExported": "کورس‌ها صادر شدند.",
+    "toastCsvNoRows": "فایل CSV هیچ ردیف دیتا ندارد.",
+    "toastCsvMissingColumns": "CSV باید ستون‌های کود، نام کورس، دیپارتمنت، و کریدت را داشته باشد.",
+    "toastSelectSemester": "قبل از وارد کردن کورس‌ها یک سمستر انتخاب کنید.",
+    "toastImported_one": "{{count}} کورس وارد شد.",
+    "toastImported_other": "{{count}} کورس وارد شد.",
+    "toastImportedFailed_one": " {{count}} ردیف ناکام شد.",
+    "toastImportedFailed_other": " {{count}} ردیف ناکام شد.",
+    "importErrorsTitle": "وارد کردن با خطاها تکمیل شد",
+    "importErrorsRowLabel": "ردیف",
+    "toastAddDeptFirst": "ابتدا یک دیپارتمنت اضافه کنید.",
+    "toastNoCoursesMatch": "هیچ کورسی با فیلترهای فعلی مطابقت ندارد."
+  },
+  "courseForm": {
+    "codeLabel": "کود کورس",
+    "codePlaceholder": "مثلاً CS401",
+    "nameLabel": "نام کورس",
+    "namePlaceholder": "مثلاً یادگیری ماشین",
+    "departmentLabel": "دیپارتمنت",
+    "creditsLabel": "کریدت‌ها",
+    "instructorLabel": "استاد",
+    "primaryRoomLabel": "اتاق اصلی",
+    "maxStudentsLabel": "حداکثر محصلین",
+    "termLabel": "دوره",
+    "prerequisitesLabel": "پیش‌نیازها",
+    "noOtherCourses": "هنوز کورس دیگری وجود ندارد.",
+    "saveFirstHint": "ابتدا کورس را ذخیره کنید، سپس آن را دوباره باز کنید تا پیش‌نیازها را تعیین کنید.",
+    "validateRequired": "کود و نام کورس لازمی است.",
+    "confirmDelete": "کورس {{code}} حذف شود؟ این کار وقت‌های جدول زمانی، امتحانات، و شمولیت‌های آن را نیز حذف می‌کند.",
+    "toastRemoved": "کورس حذف شد",
+    "toastSaved": "ذخیره شد."
+  },
+  "teachersPage": {
+    "title": "مدیریت استادان",
+    "searchAriaLabel": "جستجوی استادان با نام یا شماره هویت استادی",
+    "searchPlaceholder": "نام یا شماره هویت استادی را جستجو کنید…",
+    "addTeacher": "افزودن استاد",
+    "columns": {
+      "facultyId": "شماره هویت استادی",
+      "courses": "کورس‌های تدریس شده",
+      "sessions": "جلسات هفته‌وار"
+    },
+    "noCourses": "هیچ",
+    "deleteAria": "حذف استاد {{name}}",
+    "confirmDelete": "استاد {{name}} حذف شود؟",
+    "toastRemoved": "استاد حذف شد"
+  },
+  "teacherForm": {
+    "facultyIdLabel": "شماره هویت استادی",
+    "facultyIdUnassigned": "تعیین نشده — این استاد هنوز حساب ورود ندارد",
+    "fullNameLabel": "نام کامل",
+    "fullNamePlaceholder": "مثلاً دوکتور سمیت",
+    "noDepartment": "— بدون دیپارتمنت —",
+    "validateName": "لطفاً یک نام وارد کنید.",
+    "confirmDelete": "استاد {{name}} حذف شود؟",
+    "toastRemoved": "استاد حذف شد"
+  },
+  "departmentsPage": {
+    "title": "مدیریت دیپارتمنت‌ها",
+    "addDepartment": "افزودن دیپارتمنت",
+    "columns": {
+      "courses": "کورس‌ها",
+      "teachers": "استادان"
+    },
+    "deleteAria": "حذف دیپارتمنت {{name}}",
+    "confirmDelete": "دیپارتمنت {{name}} حذف شود؟",
+    "toastRemoved": "دیپارتمنت حذف شد"
+  },
+  "departmentForm": {
+    "nameLabel": "نام دیپارتمنت",
+    "namePlaceholder": "مثلاً کیمیا",
+    "validateName": "لطفاً نام دیپارتمنت را وارد کنید.",
+    "confirmDelete": "دیپارتمنت {{name}} حذف شود؟",
+    "toastRemoved": "دیپارتمنت حذف شد"
+  },
+  "bulkAssignDept": {
+    "description_one": "این کار دیپارتمنت را برای {{count}} کورس تعیین می‌کند — هر کورسی که با جستجو/فلترهای فعلی صفحه کورس‌ها مطابقت داشته باشد.",
+    "description_other": "این کار دیپارتمنت را برای {{count}} کورس تعیین می‌کند — هر کورسی که با جستجو/فلترهای فعلی صفحه کورس‌ها مطابقت داشته باشد.",
+    "none": "— هیچ —",
+    "assign": "تعیین",
+    "toastPickDepartment": "یک دیپارتمنت انتخاب کنید.",
+    "toastAssigned_one": "دیپارتمنت به {{count}} کورس تعیین شد.",
+    "toastAssigned_other": "دیپارتمنت به {{count}} کورس تعیین شد."
+  },
+  "semestersPage": {
+    "title": "مدیریت سمسترها",
+    "addSemester": "افزودن سمستر",
+    "columns": {
+      "start": "شروع",
+      "end": "ختم",
+      "creditLimit": "حد کریدت"
+    },
+    "creditsValue_one": "{{count}} کریدت",
+    "creditsValue_other": "{{count}} کریدت",
+    "active": "فعال",
+    "inactive": "غیرفعال",
+    "setActive": "فعال‌سازی",
+    "copyCoursesTitle": "کاپی کردن کورس‌ها از سمستر دیگر",
+    "copyCoursesIn": "کاپی کورس‌ها به این سمستر",
+    "deleteAria": "حذف سمستر {{name}}",
+    "confirmDelete": "سمستر {{name}} حذف شود؟",
+    "toastRemoved": "سمستر حذف شد",
+    "toastActiveUpdated": "سمستر فعال به‌روزرسانی شد."
+  },
+  "termForm": {
+    "nameLabel": "نام سمستر",
+    "namePlaceholder": "مثلاً خزان ۲۰۲۶",
+    "startDateLabel": "تاریخ شروع",
+    "endDateLabel": "تاریخ ختم",
+    "setActiveLabel": "این سمستر به عنوان سمستر فعال تعیین شود",
+    "nonTeachingDaysLabel": "روزهای غیر درسی",
+    "nonTeachingDaysHint": "صنف‌ها در این روزها برای این سمستر جدول‌بندی نمی‌شوند (مثلاً اگر جمعه رخصتی هفته‌وار شماست آن را علامت بزنید).",
+    "creditLimitLabel": "حد کریدت برای هر محصل",
+    "creditLimitPlaceholder": "بدون حد",
+    "creditLimitHint": "حداکثر مجموع کریدت‌هایی که یک محصل می‌تواند در این سمستر شامل شود. برای عدم محدودیت خالی بگذارید.",
+    "examStartDateLabel": "شروع دوره امتحانات",
+    "examEndDateLabel": "ختم دوره امتحانات",
+    "examRangeHint": "توسط «تولید خودکار» در صفحه جدول امتحانات برای انتخاب تاریخ امتحانات استفاده می‌شود. برای پیش‌فرض دو هفته آخر سمستر خالی بگذارید.",
+    "validateExamRange": "تاریخ ختم دوره امتحانات نمی‌تواند قبل از تاریخ شروع باشد.",
+    "validateName": "لطفاً نام سمستر را وارد کنید.",
+    "confirmDelete": "سمستر {{name}} حذف شود؟",
+    "toastRemoved": "سمستر حذف شد",
+    "toastSaved": "ذخیره شد."
+  },
+  "rolloverForm": {
+    "copyFromLabel": "کاپی کورس‌ها از",
+    "none": "— هیچ —",
+    "hint": "هر کورس در سمستر انتخاب شده به {{target}} کاپی می‌شود. کورس‌هایی که کود آن‌ها قبلاً در {{target}} استفاده شده نادیده گرفته و گزارش می‌شوند.",
+    "copyCourses": "کاپی کورس‌ها",
+    "courseLabel": "کورس {{code}}",
+    "toastPickSemester": "یک سمستر برای کاپی کردن انتخاب کنید.",
+    "toastCopied_one": "{{count}} کورس کاپی شد.",
+    "toastCopied_other": "{{count}} کورس کاپی شد.",
+    "toastSkipped_one": " {{count}} نادیده گرفته شد.",
+    "toastSkipped_other": " {{count}} نادیده گرفته شد."
+  }
+}
