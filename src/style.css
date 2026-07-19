@@ -410,12 +410,18 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
   color: var(--accent-light); margin-bottom: 2px;
 }
 .cal-day-col { flex: 1; display: flex; flex-direction: column; gap: 9px; padding-top: 4px; }
+/* Quiet ghost by default — a faint dashed hint that only resolves into a clear, accented affordance
+   on hover — so the per-day "add" boxes don't compete with the actual class cards above them. */
 .cal-add-card {
-  border: 1px dashed var(--border-strong); border-radius: var(--radius-sm);
+  border: 1px dashed var(--border); border-radius: var(--radius-sm);
   padding: 7px; text-align: center; font-size: 10.5px; color: var(--text-muted);
-  cursor: pointer; transition: all 0.12s;
+  cursor: pointer; opacity: 0.55;
+  transition: opacity 0.12s, border-color 0.12s, color 0.12s, background 0.12s;
 }
-.cal-add-card:hover { border-color: var(--accent); color: var(--accent); }
+.cal-add-card:hover {
+  opacity: 1; border-color: var(--accent); color: var(--accent);
+  background: var(--accent-dim);
+}
 
 
 /* Soft, borderless card: a subtle course-tint wash anchored at the leading edge fades into
@@ -709,6 +715,35 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
 .tab.active { background: var(--surface-card); color: var(--text-primary); font-weight: 500; border: 1px solid var(--border-strong); }
 
 .topbar-actions { display: flex; gap: 8px; align-items: center; }
+/* Timetable topbar: keep the title at its natural width (overriding the global h2 flex:1) and let
+   a flexible spacer split the left-hand view controls (title, week nav, filter chips) from the
+   right-hand actions (Add + overflow menu). */
+.topbar h2.topbar-title { flex: 0 0 auto; }
+.topbar-filters { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.topbar-spacer { flex: 1 1 auto; }
+
+/* "⋯" overflow menu holding the secondary Import/Reset actions. */
+.tt-more { position: relative; }
+.tt-more-menu {
+  position: absolute; inset-inline-end: 0; top: calc(100% + 6px); z-index: 30;
+  min-width: 180px; padding: 5px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card-hover);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.tt-more-item {
+  display: flex; align-items: center; gap: 9px;
+  width: 100%; padding: 8px 10px;
+  background: transparent; border: none; border-radius: var(--radius-sm);
+  color: var(--text-primary); font-family: inherit; font-size: 12px; text-align: start;
+  cursor: pointer; transition: background 0.1s;
+}
+.tt-more-item:hover { background: var(--surface-recessed); }
+.tt-more-item i { font-size: 15px; color: var(--text-muted); }
+.tt-more-item:disabled { opacity: 0.5; cursor: not-allowed; }
+
 #app-wrapper { position: relative; width: 100%; overflow: hidden; }
 
 .section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
@@ -990,18 +1025,36 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
 .logo-preview img { width: 100%; height: 100%; object-fit: cover; }
 
 /* ============ Small selects (topbar / sidebar) ============ */
+/* Soft, borderless filter chip: a faint recessed fill and no border by default so a row of them
+   stays calm; the border only fades in on hover, and an engaged (non-default) filter picks up a
+   subtle accent via .filter-chip.is-active. Leading room (padding-inline-start) is for the icon
+   the .filter-chip wrapper positions over it. */
 .select-sm {
-  padding: 6px 14px;
-  background: var(--surface-base);
+  padding: 6px 12px;
+  background: var(--surface-recessed);
   color: var(--text-secondary);
-  border: 1px solid var(--border-strong);
+  border: 1px solid transparent;
   border-radius: 999px;
   font-size: 11.5px;
   cursor: pointer;
-  transition: border-color 0.12s, color 0.12s;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
 }
-.select-sm:hover { border-color: var(--accent); color: var(--text-primary); }
+.select-sm:hover { border-color: var(--border-strong); color: var(--text-primary); }
 .select-sm:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.filter-chip { position: relative; display: inline-flex; align-items: center; }
+.filter-chip .select-sm { padding-inline-start: 29px; }
+.filter-chip-icon {
+  position: absolute; inset-inline-start: 11px; top: 50%; transform: translateY(-50%);
+  font-size: 13px; color: var(--text-muted); pointer-events: none; transition: color 0.12s;
+}
+/* Engaged filter (a non-default value is narrowing the view) — gentle accent, no hard border. */
+.filter-chip.is-active .select-sm {
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.filter-chip.is-active .filter-chip-icon { color: var(--accent); }
 /* ============ Semester dropdown (sidebar) ============ */
 /* A custom (non-native) dropdown: native <select> popups render on their own
    OS layer, so they can't be themed to match the sidebar and always overlay
@@ -1167,6 +1220,11 @@ button.btn-loading { pointer-events: none; opacity: 0.75; }
 
   .topbar { flex-wrap: wrap; height: auto; min-height: 54px; padding-block: 10px; padding-inline: 54px 16px; gap: 8px; }
   .topbar h2 { flex-basis: 100%; order: -1; margin-inline-start: 0; }
+  /* Collapse the desktop split: filters take the full row, the spacer disappears, and actions
+     wrap onto their own line rather than being pushed to the far right. */
+  .topbar-spacer { display: none; }
+  .topbar-filters { flex-wrap: wrap; width: 100%; }
+  .topbar-filters .filter-chip, .topbar-filters .select-sm { flex: 1 1 auto; min-width: 0; }
   .topbar-actions { flex-wrap: wrap; width: 100%; }
   .topbar-actions input, .topbar-actions select { flex: 1 1 auto; min-width: 0; }
 
