@@ -1,16 +1,76 @@
-# React + Vite
+# UniScheduler
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+University course, timetable, and exam scheduling desktop app — built with **React + Vite** on the front end and **Electron** wrapping an embedded **Express** backend for a self-contained Windows install.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Course, room, teacher, department, term, and exam management
+- Automated timetable scheduling with conflict detection
+- Student enrollment, attendance, grades, and gradebook
+- Admissions applications workflow
+- Reports, audit log, and backups
+- Role-based access (admin / faculty / student)
+- Multi-language UI: English, Pashto (ps), and Dari (prs) with RTL support
+- Licensed activation and auto-update
 
-## React Compiler
+## Tech stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Layer     | Tech                                          |
+|-----------|-----------------------------------------------|
+| Frontend  | React 19, Vite, Recharts, i18next             |
+| Desktop   | Electron, electron-builder, electron-updater  |
+| Backend   | Express, JWT auth, bcrypt, Multer, SQLite     |
 
-## Expanding the Oxlint configuration
+## Getting started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+```bash
+npm install        # install dependencies
+npm run dev        # run the Vite dev server (browser, front end only)
+```
+
+### Running the full desktop app
+
+```bash
+npm run electron       # build the front end, copy the backend, launch Electron
+npm run electron:dev   # launch Electron against an existing build (faster)
+```
+
+The database is created automatically in the OS app-data directory on first run.
+
+## Building a release
+
+```bash
+npm run dist       # build an unsigned Windows installer (NSIS)
+npm run release    # build and publish to the GitHub releases repo
+```
+
+Installer output goes to `C:/UniScheduler-release`.
+
+## Scripts
+
+| Script            | Purpose                                            |
+|-------------------|----------------------------------------------------|
+| `npm run dev`     | Vite dev server                                    |
+| `npm run build`   | Production front-end build                          |
+| `npm run lint`    | Run Oxlint                                          |
+| `npm run electron`| Full build + launch Electron                       |
+| `npm run dist`    | Package a Windows installer                         |
+| `npm run release` | Package and publish an auto-update release          |
+
+## Project layout
+
+```
+src/            React front end (pages, components, contexts, hooks, i18n)
+electron/       Electron main process + embedded Express backend
+scripts/        Build, icon, and license tooling
+build/          App icons
+```
+
+## Security notes
+
+- The license-signing **private key** (`license-keys/`) is git-ignored and must never be committed.
+- This is a private, commercially licensed project. Keep the repository private.
+
+---
+
+© LEMON_Soft. All rights reserved.

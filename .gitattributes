@@ -1,0 +1,11 @@
+# Normalize line endings: LF in the repo, native on checkout
+* text=auto
+
+# Keep shell/preload scripts stable across platforms
+*.mjs text eol=lf
+*.cjs text eol=lf
+
+# Treat binary assets as binary (no line-ending munging, no diffs)
+*.png binary
+*.ico binary
+*.pdf binary
