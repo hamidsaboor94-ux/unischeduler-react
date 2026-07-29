@@ -31,6 +31,8 @@
     },
     "statusFilterAria": "Filter by status",
     "allStatuses": "All statuses",
+    "searchAria": "Search applications",
+    "searchPlaceholder": "Search by name or department...",
     "table": {
       "applicant": "Applicant",
       "department": "Desired Department",
@@ -123,5 +125,15 @@
     "created": "Application created.",
     "approved": "Application approved — student account created.",
     "notificationBody": "New application submitted by {{name}}."
+  },
+  "financialAid": {
+    "title": "Financial Aid",
+    "hint": "Set any scholarship, grant, waiver, or discount decided for this applicant. It's applied automatically to their bill the next time Finance generates charges for a term — no manual entry needed there.",
+    "none": "No financial aid",
+    "saved": "Financial aid saved.",
+    "errors": {
+      "valueRequired": "Enter a value greater than zero.",
+      "percentageMax": "A percentage award cannot exceed 100."
+    }
   }
 }

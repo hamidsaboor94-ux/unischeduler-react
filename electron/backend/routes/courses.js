@@ -4,9 +4,20 @@ const { requireAuth } = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { runOrFriendlyError } = require('./crudRouter');
 const { isPositiveInt } = require('../validate');
-const { canManageCourse, courseScopeClause } = require('../ownership');
+const { canManageCourse, canModifyEnrollment, courseScopeClause } = require('../ownership');
 const { isScopedRequest, departmentInScope, resolveScopedDepartment, scopedDepartmentIds } = require('../scope');
-const { requirePermission } = require('../middleware/permission');
+// Migrated to the central Module.Action authorization layer (see authz.js) — write routes below
+// use requirePermission('courses.Create' | '.Update' | '.Delete') instead of the legacy
+// requirePermission('courses', 'write') from middleware/permission.js. Read routes are unchanged
+// (still gated at the app.js mount via requireModuleAccess).
+const { requirePermission } = require('../authz');
+
+/** Resolves { departmentId } for an existing course by id — used as requirePermission's
+    scopeOf so a Dept Head/Dean 403s before the handler runs if the course is outside their
+    department, on top of (not instead of) canManageCourse's own scope check below. */
+async function courseScopeOf(req) {
+  return get('SELECT departmentId FROM courses WHERE id = ?', [req.params.id]);
+}
 
 const router = express.Router();
 const FIELDS = ['code', 'name', 'departmentId', 'credits', 'teacherId', 'roomId', 'maxStudents', 'termId'];
@@ -27,7 +38,13 @@ router.get('/', requireAuth, asyncHandler(async (req, res) => {
   const scope = await courseScopeClause(req);
   if (scope) { clauses.push(scope.clause); params.push(...scope.params); }
   const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
-  const rows = await all(`SELECT * FROM courses ${where}`, params);
+  // enrolledCount: a read-only aggregate (no student identities), safe for every role that can
+  // already read courses at all — powers the student Course Catalog's remaining-seats display.
+  const rows = await all(
+    `SELECT c.*, (SELECT COUNT(*) FROM enrollments e WHERE e.courseId = c.id AND e.status = 'enrolled') AS enrolledCount
+     FROM courses c ${where}`,
+    params
+  );
   res.json(rows);
 }));
 
@@ -44,7 +61,7 @@ router.get('/:id', requireAuth, asyncHandler(async (req, res) => {
   res.json(row);
 }));
 
-router.post('/', requireAuth, requirePermission('courses', 'write'), asyncHandler(async (req, res) => {
+router.post('/', requireAuth, requirePermission('courses.Create'), asyncHandler(async (req, res) => {
   if (!req.body.code || !req.body.name) return res.status(400).json({ error: 'Course code and name are required' });
   const validationErr = validateCourse(req.body);
   if (validationErr) return res.status(400).json({ error: validationErr });
@@ -64,11 +81,11 @@ router.post('/', requireAuth, requirePermission('courses', 'write'), asyncHandle
   ));
   if (result === undefined) return;
   const row = await get('SELECT * FROM courses WHERE id = ?', [result.id]);
-  await logAudit(req.user, 'create', 'courses', result.id, req.body);
+  await logAudit(req.user, 'create', 'courses', result.id, req.body, null, row);
   res.status(201).json(row);
 }));
 
-router.post('/bulk-import', requireAuth, requirePermission('courses', 'write'), asyncHandler(async (req, res) => {
+router.post('/bulk-import', requireAuth, requirePermission('courses.Create'), asyncHandler(async (req, res) => {
   const { rows, termId } = req.body;
   if (!Array.isArray(rows) || !rows.length) return res.status(400).json({ error: 'No rows provided' });
   if (!termId) return res.status(400).json({ error: 'termId is required' });
@@ -117,13 +134,16 @@ router.post('/bulk-import', requireAuth, requirePermission('courses', 'write'), 
   res.status(200).json({ created, errors });
 }));
 
-router.put('/:id', requireAuth, asyncHandler(async (req, res) => {
+// Editing course metadata (code/name/department/credits/instructor/room/capacity) is a
+// registrar/admin-level action, not a faculty ownership right — faculty keep courses:View only,
+// so requirePermission('courses.Update') rejects them here even though canManageCourse's
+// ownership branch would otherwise let a faculty member manage their own assigned course
+// (that ownership path stays deliberately in effect for teaching actions elsewhere:
+// announcements/assignments/attendance/grades/materials/roster).
+router.put('/:id', requireAuth, requirePermission('courses.Update', { scopeOf: courseScopeOf }), asyncHandler(async (req, res) => {
   const existing = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
   if (!existing) return res.status(404).json({ error: 'Not found' });
   if (!(await canManageCourse(req, existing))) return res.status(403).json({ error: 'You do not have access to this course.' });
-  if (req.user.role === 'faculty' && req.body.teacherId !== undefined && Number(req.body.teacherId) !== existing.teacherId) {
-    return res.status(403).json({ error: 'Faculty cannot reassign a course to a different instructor.' });
-  }
   // A department-restricted editor can't move a course into another department.
   if (isScopedRequest(req)) req.body.departmentId = existing.departmentId;
   const cols = FIELDS.filter(f => req.body[f] !== undefined);
@@ -143,15 +163,15 @@ router.put('/:id', requireAuth, asyncHandler(async (req, res) => {
   if (result === undefined) return;
   const row = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
   if (!row) return res.status(404).json({ error: 'Not found' });
-  await logAudit(req.user, 'update', 'courses', req.params.id, req.body);
+  await logAudit(req.user, 'update', 'courses', req.params.id, req.body, existing, row);
   res.json(row);
 }));
 
 // Deleting a course is a staff action (admin/registrar/dept head) — faculty who
-// can edit their own course still can't delete it. requirePermission('courses',
-// 'write') excludes faculty (course read only); the dept-scope check below then
-// confines a Department Head to their own department.
-router.delete('/:id', requireAuth, requirePermission('courses', 'write'), asyncHandler(async (req, res) => {
+// can edit their own course still can't delete it. requirePermission('courses.Delete')
+// excludes faculty (courses:View only); the dept-scope check below then confines a
+// Department Head to their own department.
+router.delete('/:id', requireAuth, requirePermission('courses.Delete', { scopeOf: courseScopeOf }), asyncHandler(async (req, res) => {
   const id = req.params.id;
   const course = await get('SELECT * FROM courses WHERE id = ?', [id]);
   if (!course) return res.status(404).json({ error: 'Not found' });
@@ -161,7 +181,7 @@ router.delete('/:id', requireAuth, requirePermission('courses', 'write'), asyncH
   await run('DELETE FROM exams WHERE courseId = ?', [id]);
   await run('DELETE FROM enrollments WHERE courseId = ?', [id]);
   await run('DELETE FROM courses WHERE id = ?', [id]);
-  await logAudit(req.user, 'delete', 'courses', id, null);
+  await logAudit(req.user, 'delete', 'courses', id, null, course, null);
   res.status(204).end();
 }));
 
@@ -173,7 +193,22 @@ router.get('/:id/prerequisites', requireAuth, asyncHandler(async (req, res) => {
   res.json(rows);
 }));
 
-router.post('/:id/prerequisites', requireAuth, asyncHandler(async (req, res) => {
+/** Meeting schedule (day/time/room) for one course — any authenticated role, no ownership check.
+    Unlike GET /slots (scoped to the caller's own enrolled/owned courses for the Timetable and My
+    Schedule views), a student browsing the Catalog needs to see the schedule of a course they
+    are NOT yet enrolled in to decide whether to register — the same read-only, non-sensitive
+    data (day/time/room), just reachable for a course the caller hasn't joined yet. */
+router.get('/:id/slots', requireAuth, asyncHandler(async (req, res) => {
+  const rows = await all(
+    'SELECT id, courseId, day, time, durationMinutes, roomId FROM timetable_slots WHERE courseId = ?',
+    [req.params.id]
+  );
+  res.json(rows);
+}));
+
+// Same as PUT /:id: prerequisites are course metadata, so this is registrar/admin-level,
+// not covered by faculty course ownership.
+router.post('/:id/prerequisites', requireAuth, requirePermission('courses.Update', { scopeOf: courseScopeOf }), asyncHandler(async (req, res) => {
   const course = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
   if (!course) return res.status(404).json({ error: 'Not found' });
   if (!(await canManageCourse(req, course))) return res.status(403).json({ error: 'You do not have access to this course.' });
@@ -189,7 +224,7 @@ router.post('/:id/prerequisites', requireAuth, asyncHandler(async (req, res) => 
   res.status(201).json({ courseId: Number(req.params.id), prerequisiteCourseId: Number(prerequisiteCourseId) });
 }));
 
-router.delete('/:id/prerequisites/:prereqId', requireAuth, asyncHandler(async (req, res) => {
+router.delete('/:id/prerequisites/:prereqId', requireAuth, requirePermission('courses.Update', { scopeOf: courseScopeOf }), asyncHandler(async (req, res) => {
   const course = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
   if (!course) return res.status(404).json({ error: 'Not found' });
   if (!(await canManageCourse(req, course))) return res.status(403).json({ error: 'You do not have access to this course.' });
@@ -207,8 +242,38 @@ router.get('/:id/roster', requireAuth, asyncHandler(async (req, res) => {
   const rows = await all(
     `SELECT e.id as enrollmentId, e.status, e.grade, e.createdAt, u.id as studentId, u.name, u.email, u.idNumber
      FROM enrollments e JOIN users u ON u.id = e.studentId
-     WHERE e.courseId = ? ORDER BY e.createdAt`,
+     WHERE e.courseId = ? AND e.status != 'dropped' ORDER BY e.createdAt`,
     [req.params.id]
+  );
+  res.json(rows);
+}));
+
+// Candidates for the roster's "Enroll students" picker: students scoped to the course's
+// department (no program-level link exists on courses yet), each flagged with their current
+// enrollment status in this course so the UI can hide/disable already-enrolled students. Fails
+// OPEN on an unset student department, same as the self-enroll department check in
+// routes/enrollments.js — an incomplete profile shouldn't silently vanish from every picker.
+router.get('/:id/eligible-students', requireAuth, asyncHandler(async (req, res) => {
+  const course = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
+  if (!course) return res.status(404).json({ error: 'Not found' });
+  if (!(await canModifyEnrollment(req, course))) {
+    return res.status(403).json({ error: 'You do not have permission to view enrollment candidates for this course.' });
+  }
+  const clauses = [`u.role = 'student'`];
+  const params = [];
+  if (course.departmentId != null) {
+    clauses.push('(sp.departmentId IS NULL OR sp.departmentId = ?)');
+    params.push(course.departmentId);
+  }
+  const rows = await all(
+    `SELECT u.id, u.name, u.email, u.idNumber, sp.departmentId, sp.programSemester,
+            e.status as enrollmentStatus
+     FROM users u
+     LEFT JOIN student_profiles sp ON sp.studentId = u.id
+     LEFT JOIN enrollments e ON e.studentId = u.id AND e.courseId = ? AND e.status IN ('enrolled', 'waitlisted')
+     WHERE ${clauses.join(' AND ')}
+     ORDER BY sp.programSemester, u.name`,
+    [req.params.id, ...params]
   );
   res.json(rows);
 }));

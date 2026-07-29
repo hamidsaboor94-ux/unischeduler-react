@@ -17,6 +17,7 @@
       "rooms": "Rooms",
       "courses": "Courses",
       "teachers": "Teachers",
+      "students": "Students",
       "departments": "Departments",
       "semesters": "Semesters",
       "examSchedule": "Exam Schedule",
@@ -38,7 +39,8 @@
       "myProfile": "My Profile",
       "admissions": "Applications",
       "finance": "Finance",
-      "myFees": "My Fees"
+      "myFees": "My Fees",
+      "announcements": "Announcements"
     },
     "noTermsYet": "No terms yet"
   },
@@ -75,6 +77,8 @@
     "addTeacher": "Add teacher",
     "editDepartment": "Edit department",
     "addDepartment": "Add department",
+    "editProgram": "Edit program",
+    "addProgram": "Add program",
     "editSemester": "Edit semester",
     "addSemester": "Add semester",
     "copyCoursesInto": "Copy courses into {{term}}",
@@ -86,6 +90,7 @@
     "scheduleExam": "Schedule exam",
     "autoGenerateExamType": "Auto-generate exams",
     "roster": "{{code}} roster",
+    "enrollStudents": "Enroll students — {{code}}",
     "affectedStudents": "Affected students ({{count}})",
     "createAccount": "Create account",
     "accountCreated": "Account created",
@@ -94,6 +99,7 @@
     "myProfile": "My Profile",
     "conflictDetail": "Conflict details",
     "moveSlot": "Move — {{code}}",
+    "rescheduleCancelledSession": "Reschedule cancelled class — {{code}}",
     "applicationStatusChange": "Update Status — {{name}}",
     "applicationApprove": "Approve — {{name}}",
     "closeDialog": "Close dialog"
@@ -104,6 +110,11 @@
     "emailPlaceholder": "you@university.edu",
     "passwordPlaceholder": "••••••••",
     "signIn": "Sign in",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "forgotPasswordTitle": "Resetting your password",
+    "forgotPasswordNoEmailHint": "This installation isn't set up to send reset emails. Contact your administrator to reset your password — they can issue you a new temporary one from Users.",
+    "forgotPasswordClose": "Got it",
     "noSelfRegistration": "No self-registration — an admin creates your account and gives you a temporary password.",
     "applyPrompt": "Not a student yet?",
     "applyLink": "Apply for admission"

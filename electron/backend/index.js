@@ -1,8 +1,10 @@
 const os = require('os');
 const app = require('./app');
 const { init } = require('./db');
+const { runNoticeScheduler } = require('./noticeScheduler');
 
 const PORT = process.env.PORT || 4000;
+const NOTICE_SCHEDULER_INTERVAL_MS = 60 * 1000;
 
 /** Prints every non-internal IPv4 address this machine has — whichever of these is on the
     same network as another device is what that device should use to reach this server
@@ -25,6 +27,10 @@ init()
       console.log(`API server listening on http://localhost:${PORT}`);
       logNetworkAddresses();
     });
+    // Publishes due scheduled announcements and expires overdue ones — see noticeScheduler.js
+    // for why an interval is enough (this process is already long-running, unlike a browser tab).
+    runNoticeScheduler();
+    setInterval(runNoticeScheduler, NOTICE_SCHEDULER_INTERVAL_MS);
   })
   .catch((err) => {
     console.error('Failed to initialize the database:', err.message);

@@ -83,6 +83,12 @@
     "maxStudentsLabel": "زیاته حده زده کوونکي",
     "termLabel": "دوره",
     "prerequisitesLabel": "مخکینۍ اړتیاوې",
+    "prerequisitesHint": "هغه مخکینۍ اړتیاوې چې ورته د OR-ګروپ شمېره لري د بدیل په توګه دي — یوازې د یوې بشپړول بس دي. د اړین (باید بشپړ شي) مخکینۍ اړتیا لپاره ګروپ خانه تشه پرېږدئ.",
+    "prereqType": {
+      "prerequisite": "مخکینۍ اړتیا (باید لومړی بشپړه شي)",
+      "corequisite": "همزمانه اړتیا (کیدای شي پرې همغه وخت واخیستل شي)"
+    },
+    "orGroupPlaceholder": "د OR ګروپ #",
     "noOtherCourses": "لا تر اوسه بل کورس نشته.",
     "saveFirstHint": "لومړی کورس خوندي کړئ، بیا یې د مخکینیو اړتیاوو ټاکلو لپاره بیا خلاص کړئ.",
     "validateRequired": "د کورس کوډ او نوم اړین دي.",
@@ -96,11 +102,21 @@
     "searchPlaceholder": "نوم یا د ښوونکي پیژندنه ولټوئ…",
     "addTeacher": "ښوونکی اضافه کړئ",
     "columns": {
-      "facultyId": "د ښوونکي پیژندنه",
+      "facultyId": "د کارمند پیژندنه",
+      "rank": "علمي رتبه",
       "courses": "ښودل شوي کورسونه",
-      "sessions": "اونیزې ناستې"
+      "sessions": "اونیزې ناستې",
+      "completion": "د پروفایل بشپړتیا",
+      "status": "د پروفایل حالت"
+    },
+    "filters": {
+      "allDepartments": "ټولې څانګې",
+      "allRanks": "ټولې رتبې",
+      "allEmploymentTypes": "د دندې ټول ډولونه",
+      "allProfileStatuses": "د پروفایل ټول حالتونه"
     },
     "noCourses": "هیڅ",
+    "fullProfile": "بشپړ پروفایل",
     "deleteAria": "ښوونکی {{name}} ړنګول",
     "confirmDelete": "ښوونکی {{name}} ړنګ شي؟",
     "toastRemoved": "ښوونکی لرې شو"
@@ -111,9 +127,119 @@
     "fullNameLabel": "بشپړ نوم",
     "fullNamePlaceholder": "لکه ډاکټر سمیت",
     "noDepartment": "— بې څانګې —",
+    "onboardingHint": "دا د ښوونکي بنسټیز ثبت جوړوي. تاسو به سملاسي وروسته د هغه بشپړ پروفایل — شخصي، اړیکه، دنده، زده کړه او اسناد — بشپړ کړئ.",
     "validateName": "مهرباني وکړئ یو نوم ولیکئ.",
     "confirmDelete": "ښوونکی {{name}} ړنګ شي؟",
     "toastRemoved": "ښوونکی لرې شو"
+  },
+  "studentsPage": {
+    "title": "زده کوونکي",
+    "searchAriaLabel": "زده کوونکي د نوم، بریښنالیک، د زده کوونکي پیژندنې شمېرې، یا تلیفون له مخې پلټل",
+    "searchPlaceholder": "نوم، بریښنالیک، یا د زده کوونکي پیژندنه ولټوئ",
+    "columns": {
+      "studentId": "د زده کوونکي پیژندنه",
+      "program": "پروګرام",
+      "semester": "سمستر",
+      "batch": "بېچ",
+      "status": "حالت"
+    },
+    "filters": {
+      "allColleges": "ټول پوهنځي",
+      "allDepartments": "ټولې څانګې",
+      "allPrograms": "ټول پروګرامونه",
+      "allStudentTypes": "د زده کوونکو ټول ډولونه",
+      "allStatuses": "ټول حالتونه",
+      "allStudentStatuses": "د زده کوونکي ټول حالتونه",
+      "allEnrollmentStatuses": "د شمولیت ټول حالتونه",
+      "allSemesters": "ټول سمسترونه",
+      "allCourses": "ټول مضامین",
+      "batchPlaceholder": "بېچ / دوره…",
+      "admissionDateFrom": "د شمولیت نېټه له",
+      "admissionDateTo": "د شمولیت نېټه تر",
+      "flaggedOnly": "یوازې د ډاټا ستونزې ښکاره کړئ",
+      "clearFilters": "فلټرونه پاکول",
+      "moreFilters": "نور فلټرونه",
+      "clearAll": "ټول پاکول",
+      "advancedFiltersTitle": "پرمختللي فلټرونه",
+      "academicScope": "علمي ساحه",
+      "enrollmentGroup": "شمولیت",
+      "enrolledBetween": "د شمولیت نېټه (له - تر)",
+      "applyFilters": "فلټرونه پلي کول",
+      "semesterChip": "سمستر {{semester}}"
+    },
+    "flags": {
+      "role_mismatch": "رول بدل شوی",
+      "no_account": "حساب نشته",
+      "unlinked_user": "نالینک شوی",
+      "no_account_hint": "غوښتنلیک منل شوی، خو هیچ حساب جوړ شوی نه دی — حساب په د پذیرشونو برخه کې جوړ/تصویب کړئ.",
+      "unlinked_user_hint": "د زده کوونکي پیژندنه {{id}} په {{sources}} کې ښکاري خو هیڅ ورته کاروونکي حساب نلري — احتمالاً د ډاټا ستونزه ده."
+    },
+    "quickActions": {
+      "viewProfile": "پروفایل کتل",
+      "edit": "سمول",
+      "academicRecord": "علمي ریکارډ",
+      "finance": "مالي چارې"
+    },
+    "bulk": {
+      "selectedCount_one": "{{count}} زده کوونکی وټاکل شو",
+      "selectedCount_other": "{{count}} زده کوونکي وټاکل شول",
+      "updateStatus": "حالت تازه کول",
+      "reassign": "دیپارتمنت/پروګرام بدلول",
+      "sendAnnouncement": "خبرتیا لیږل",
+      "clearSelection": "ټاکنه پاکول",
+      "reasonPlaceholder": "دلیل (اختیاري)",
+      "pickStatus": "لومړی یو حالت وټاکئ.",
+      "pickTarget": "لومړی یوه څانګه یا پروګرام وټاکئ.",
+      "toastUpdated_one": "{{count}} زده کوونکی تازه شو.",
+      "toastUpdated_other": "{{count}} زده کوونکي تازه شول."
+    },
+    "export": {
+      "exportFiltered": "صادرول",
+      "exportSelected": "ټاکل شوي صادرول",
+      "toastExported": "زده کوونکي صادر شول."
+    },
+    "pagination": {
+      "summary": "{{from}}–{{to}} د {{total}} ښودل کیږي",
+      "perPage": "{{count}} / پاڼه",
+      "pageOf": "پاڼه {{page}} د {{totalPages}}"
+    },
+    "semesterPill": "سمستر {{semester}}",
+    "reviewInAdmissions": "په پذیرشونو کې بیاکتنه",
+    "viewDetails": "جزئیات وګورئ",
+    "noStudentsMatch": "هیڅ زده کوونکی د اوسنیو فلټرونو سره مطابقت نلري."
+  },
+  "studentDetailPage": {
+    "title": "د زده کوونکي جزئیات",
+    "noStudentSelected": "د جزئیاتو لیدلو لپاره د زده کوونکو له لیست نه یو زده کوونکی وټاکئ.",
+    "fullProfile": "بشپړ پروفایل",
+    "roleMismatchBanner": "د دې کس رول اوس \"{{role}}\" دی — د هغه پخوانی زده کوونکي ثبت یوازې لوستلو لپاره ښودل کیږي.",
+    "sections": {
+      "application": "غوښتنلیک",
+      "finance": "د مالي چارو لنډیز",
+      "enrollments": "نومليکنې"
+    },
+    "noApplication": "هیڅ غوښتنلیک ثبت شوی نه دی — د دې زده کوونکي حساب مستقیم جوړ شوی و.",
+    "noEnrollments": "دا زده کوونکی لا تر اوسه په هیچا کورس کې نومول شوی نه دی.",
+    "fields": {
+      "applicationStatus": "د غوښتنلیک حالت",
+      "applicationSource": "سرچینه",
+      "applicationDecidedAt": "پریکړه شوې نېټه",
+      "applicationEmail": "د غوښتونکي بریښنالیک",
+      "balance": "پاتې پیسې",
+      "totalCharged": "ټول تادیه شوي",
+      "totalPaid": "ټول ورکړل شوي"
+    },
+    "columns": {
+      "course": "کورس",
+      "term": "سمستر",
+      "enrollmentStatus": "حالت",
+      "grade": "درجه"
+    },
+    "enrollmentStatus": {
+      "enrolled": "نومول شوی",
+      "dropped": "لغوه شوی",
+      "waitlisted": "په لیستې کې"
+    }
   },
   "departmentsPage": {
     "title": "د څانګو مدیریت",
@@ -143,6 +269,32 @@
     "noCollege": "— بې پوهنځي —",
     "confirmDelete": "څانګه {{name}} ړنګه شي؟",
     "toastRemoved": "څانګه لرې شوه"
+  },
+  "programsPanel": {
+    "title": "پروګرامونه / سندونه",
+    "none": "تر اوسه هیڅ پروګرام نشته — د پروګرام پر بنسټ فیس تنظیم کولو لپاره یو اضافه کړئ.",
+    "addProgram": "پروګرام اضافه کول",
+    "degreeLevel": "د سند کچه",
+    "totalCredits": "ټول کریدیتونه",
+    "deleteAria": "پروګرام {{name}} ړنګول"
+  },
+  "programForm": {
+    "nameLabel": "د پروګرام نوم",
+    "namePlaceholder": "لکه BSc کمپیوټر ساینس",
+    "validateName": "مهرباني وکړئ د پروګرام نوم ولیکئ.",
+    "noDepartment": "— بې څانګې —",
+    "degreeLevel": "د سند کچه",
+    "degreeLevels": {
+      "Certificate": "سرتیفیکیټ",
+      "Diploma": "ډیپلوم",
+      "Associate": "اسوسیټ",
+      "Bachelor": "لیسانس",
+      "Master": "ماسټر",
+      "Doctorate": "ډاکتورا"
+    },
+    "totalCredits": "اړین ټول کریدیتونه",
+    "confirmDelete": "پروګرام {{name}} ړنګ شي؟",
+    "toastRemoved": "پروګرام لرې شو"
   },
   "bulkAssignDept": {
     "description_one": "دا به {{count}} کورس ته څانګه وټاکي — هر هغه کورس چې د اوسنیو لټون/فلټرونو سره سم د کورسونو په مخ کې دي.",
@@ -187,7 +339,11 @@
     "examStartDateLabel": "د امتحان دورې پیل",
     "examEndDateLabel": "د امتحان دورې پای",
     "examRangeHint": "د امتحان مهال‌ویش پاڼې په \"په خپله جوړول\" کې د امتحان نېټو ټاکلو لپاره کارول کیږي. که خالي پرېږدئ، د سمستر وروستۍ دوه اونۍ به په ډیفالټ ډول وکارول شي.",
+    "registrationOpensLabel": "نومکښنه پرانیستل کیږي",
+    "registrationClosesLabel": "نومکښنه بندیږي",
+    "registrationRangeHint": "دا د راجستررار ډشبورډ پر مخ د نومکښنې د حالت پیل کې ښودل کیږي. که خالي پرېږدئ، پیل به یوازې د دې سمستر د فعال والي پر بنسټ پرانستی/بند ښکاره کړي، پرته له نېټې.",
     "validateExamRange": "د امتحان دورې پای نېټه د پیل نېټې نه دمخه نشي کیدای.",
+    "validateRegistrationRange": "د نومکښنې د بندېدو نېټه د پرانستې نېټې نه دمخه نشي کیدای.",
     "validateName": "مهرباني وکړئ د سمستر نوم ولیکئ.",
     "confirmDelete": "سمستر {{name}} ړنګ شي؟",
     "toastRemoved": "سمستر لرې شو",

@@ -4,6 +4,7 @@
     "newCourse": "نوی کورس",
     "autoSchedule": "اتومات مهالویش",
     "dismiss": "لرې کول",
+    "clickToReschedule": "د دې درس د بیا مهالویش لپاره کلیک وکړئ",
     "fullView": "بشپړه لیدنه",
     "statCards": {
       "myCourses": "زما کورسونه",
@@ -56,6 +57,195 @@
       "nameWithStatus": "{{name}} — {{status}}",
       "meta_one": "{{date}} · {{time}} · {{room}} · {{count}} زده کوونکی",
       "meta_other": "{{date}} · {{time}} · {{room}} · {{count}} زده کوونکي"
+    },
+    "superAdmin": {
+      "header": {
+        "title": "د پلیټ فارم کتنه",
+        "subtitle": "سوپر اډمین · سیسټم او امنیت",
+        "healthy": "ټول سیسټمونه نورمال دي",
+        "attention": "پاملرنې ته اړتیا لري",
+        "checking": "کتل کیږي…"
+      },
+      "kpi": {
+        "totalUsers": "ټول کاروونکي",
+        "roleChanges": "د رول بدلونونه (۷ ورځې)",
+        "forbiddenAttempts": "منع شوي هڅې (۲۴ ساعته)",
+        "failedLogins": "ناکامې ننوتنې (۲۴ ساعته)",
+        "notTracked": "لا تر اوسه نه تعقیبیږي"
+      },
+      "usersRoles": {
+        "title": "کاروونکي او رولونه",
+        "subtitle": "د پلیټ فارم په اوږدو کې د رول له مخې کاروونکي",
+        "manage": "رولونه اداره کړئ",
+        "totalUsers": "ټول کاروونکي",
+        "recentChanges": "وروستي رول بدلونونه",
+        "noRecentChanges": "تر اوسه هیڅ رول بدلون ثبت شوی نه دی.",
+        "changeLine": "{{actor}} د {{target}} رول {{role}} ته وټاکه"
+      },
+      "auditTrail": {
+        "title": "د پلټنې لاره",
+        "subtitle": "وروستي پلیټ فارم پیښې",
+        "empty": "هیڅ وروستی فعالیت نشته.",
+        "eventCount_one": "{{count}} پیښه",
+        "eventCount_other": "{{count}} پیښې"
+      },
+      "systemStatus": {
+        "title": "د سیسټم حالت",
+        "api": "API سرور",
+        "database": "ډیټابیس",
+        "auth": "د تصدیق خدمت",
+        "ok": "فعال",
+        "down": "غیرفعال",
+        "checking": "کتل کیږي…",
+        "lastBackup": "وروستی بیک اپ",
+        "noBackup": "هیڅ بیک اپ ثبت شوی نه دی"
+      },
+      "quickActions": {
+        "title": "چټکې کړنې",
+        "createUser": "کاروونکی جوړ کړئ",
+        "manageRoles": "رولونه اداره کړئ",
+        "platformSettings": "د پلیټ فارم تنظیمات",
+        "viewAuditLog": "د پلټنې لاګ وګورئ"
+      }
+    },
+    "studentDashboard": {
+      "welcome": {
+        "title": "ښه راغلاست، {{name}}",
+        "subtitle": "ستاسو د دې دورې اوسنی حالت دلته دی."
+      },
+      "stats": {
+        "gpa": "GPA",
+        "gpaTerm": "سمستر",
+        "gpaCumulative": "مجموعي",
+        "balance": "د فیس پاتې",
+        "balanceDue": "پاتې ورکړه لري",
+        "balanceClear": "بشپړ صاف",
+        "noFees": "لا تر اوسه فیس نه دی ټاکل شوی",
+        "attendance": "حاضري",
+        "attendanceSub": "ټولو کورسونو کې",
+        "credits": "کریډیټونه",
+        "creditsSub": "ترلاسه شوي / هڅه شوي"
+      },
+      "semester": {
+        "title": "دا سمستر",
+        "subtitle": "ستاسو د دې دورې علمي حالت",
+        "credits": "ترلاسه شوي / هڅه شوي کریډیټونه",
+        "coursesGraded": "نمرول شوي مضامین",
+        "failedCourses": "ناکام / بیا اخیستل شوي مضامین"
+      },
+      "enrolled": {
+        "title": "ثبت شوي کورسونه ({{count}})",
+        "notYetGraded": "لا تر اوسه نمرول شوی نه دی",
+        "inProgress": "روان دی",
+        "empty": "تاسو دې دورې کې په هیڅ کورس کې ثبت شوي نه یاست."
+      },
+      "announcements": {
+        "title": "وروستي اعلانونه",
+        "subtitle": "ستاسو لپاره وروستي خبرتیاوې",
+        "empty": "تر اوسه هیڅ اعلان نشته."
+      },
+      "quickLinks": {
+        "title": "چټک لینکونه",
+        "myFees": "زما فیسونه",
+        "myGrades": "زما نمرې",
+        "myAttendance": "زما حاضري",
+        "catalog": "د کورسونو کتالوګ",
+        "myProfile": "زما پروفایل"
+      }
+    },
+    "registrar": {
+      "header": {
+        "title": "د راجستررار ډشبورډ",
+        "subtitle": "د زده کوونکو ریکارډونه او د نومکښنې پروسه"
+      },
+      "loadError": "د راجستررار ډشبورډ معلومات نه شول بار کیدلی. مخ تازه کړئ.",
+      "registration": {
+        "open": "نومکښنه پرانیستې ده",
+        "openUntil": "نومکښنه پرانیستې ده · {{date}} بندیږي",
+        "opensOn": "نومکښنه به {{date}} پرانیزي",
+        "closed": "نومکښنه بنده ده"
+      },
+      "kpi": {
+        "activeStudents": "فعال زده کوونکي",
+        "newAdmitsPending": "{{count}} نوي منل شوي په تمه دي",
+        "registeredThisTerm": "پدې سمستر کې ثبت شوي",
+        "registrationHolds": "د نومکښنې بندونه",
+        "registrationHoldsSub": "هغه زده کوونکي چې پاتې پیسې لري — دا لا تر اوسه د نومکښنې بندیز نه دی، یوازې امتحانونه بندوي",
+        "pendingRequests": "په تمه غوښتنې",
+        "pendingRequestsSub": "د شمولیت/لغوه کولو د غوښتنو لیست لا نه دی جوړ شوی"
+      },
+      "workQueue": {
+        "title": "ستاسو پاملرنې ته اړتیا لري",
+        "subtitle": "پرانیستي شیان چې د راجستررار عمل ته اړتیا لري"
+      },
+      "queue": {
+        "notRegistered": "زده کوونکي چې لا تر اوسه پدې سمستر کې نه دي ثبت شوي",
+        "newAdmits": "نوي منل شوي چې د شمولیت په تمه دي",
+        "noApplication": "زده کوونکي چې د غوښتنلیک هیڅ ریکارډ نلري",
+        "overCapacity": "ټولګي چې د ظرفیت نه ډېر دي",
+        "addDrop": "د شمولیت/لغوه کولو پروسس ته اړتیا لرونکې غوښتنې",
+        "addDropNotBuilt": "دا د غوښتنو لیست لا نه دی جوړ شوی — بدلونونه مستقیم د شمولیت پر مهال ترسره کیږي"
+      },
+      "findStudent": {
+        "title": "زده کوونکی ومومئ",
+        "placeholder": "د نوم یا زده کوونکي شمېرې له مخې لټون وکړئ",
+        "empty": "هیڅ مطابق زده کوونکی ونه موندل شو."
+      },
+      "quickActions": {
+        "title": "چټک کړنې",
+        "enrollStudent": "زده کوونکی شامل کړئ",
+        "openRoster": "لیست پرانیزئ",
+        "enrollmentReport": "د شمولیت راپور",
+        "transcripts": "کرښې لیک"
+      }
+    },
+    "bursar": {
+      "header": {
+        "title": "د خزانه دار ډشبورډ",
+        "subtitle": "بیل ورکول، پیسې راټولول او د پاتې پیسو ریکارډ"
+      },
+      "loadError": "د خزانه دار ډشبورډ معلومات نه شول بار کیدلی. مخ تازه کړئ.",
+      "noActiveTerm": "هیڅ فعال سمستر نه دی ټاکل شوی — لاندې شمېرې د ټولو سمسترونو ټول شمېر دی.",
+      "viewAll": "ټول وګورئ",
+      "overdue": {
+        "title": "پاتې پیسې (وخت تېر شوی)",
+        "subtitle": "هغه زده کوونکي چې د قسط نېټه یې تېره شوې ده — تر ټولو ډېر وخت تېر لومړی",
+        "empty": "هیڅ پاتې پیسې نشته — ټول اوسني دي.",
+        "daysOverdue_one": "{{count}} ورځ تېره شوې",
+        "daysOverdue_other": "{{count}} ورځې تېرې شوې"
+      },
+      "upcoming": {
+        "title": "راتلونکي قسطونه",
+        "subtitle": "راتلونکې ۳۰ ورځې",
+        "empty": "په راتلونکو ۳۰ ورځو کې هیڅ قسط ونه رسید.",
+        "studentCount_one": "{{count}} زده کوونکی",
+        "studentCount_other": "{{count}} زده کوونکي"
+      },
+      "recentPayments": {
+        "title": "وروستۍ ورکړل شوې پیسې",
+        "subtitle": "تازه ثبت شوې تادیات",
+        "empty": "لا تر اوسه هیڅ تادیه نه ده ثبت شوې."
+      }
+    },
+    "faculty": {
+      "header": {
+        "title": "د استاد ډشبورډ",
+        "subtitle": "ستاسو کورسونه، زده کوونکي، او امتحانونه پدې دوره کې"
+      },
+      "kpi": {
+        "myCourses": "زما کورسونه",
+        "myStudents": "زما زده کوونکي",
+        "myExams": "زما امتحانونه"
+      },
+      "today": {
+        "subtitle": "ستاسو نن ورځ منعقدیدونکې برخې"
+      },
+      "attention": {
+        "title": "ستاسو پاملرنې ته اړتیا لري",
+        "subtitle": "ستاسو هغه امتحانونه چې لا تر اوسه د نیټې او خونې په تمه دي",
+        "empty": "ستاسو ټول امتحانونه مهالویش شوي دي.",
+        "unknownCourse": "کورس نور شتون نلري"
+      }
     }
   },
   "reports": {

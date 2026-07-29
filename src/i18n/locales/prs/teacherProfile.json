@@ -1,0 +1,276 @@
+{
+  "title": "پروفایل استاد",
+  "noTeacherSelected": "پروفایل کامل یک استاد را از صفحه مدیریت استادان باز کنید تا اینجا نمایش داده شود.",
+  "notFound": "پروفایل این استاد یافت نشد.",
+  "print": "چاپ",
+  "editProfile": "ویرایش پروفایل",
+  "changePhoto": "تغییر عکس",
+  "noLoginAccount": "تعیین نشده — این استاد هنوز حساب ورود ندارد",
+  "select": "— انتخاب کنید —",
+  "sections": {
+    "personal": "معلومات شخصی",
+    "contact": "معلومات تماس",
+    "employment": "معلومات استخدامی",
+    "academic": "پروفایل علمی",
+    "education": "تحصیلات",
+    "experience": "تجربه کاری",
+    "certifications": "سرتیفیکیت‌ها",
+    "documents": "اسناد",
+    "courses": "تخصیص مضامین",
+    "auditHistory": "تاریخچه بررسی"
+  },
+  "fields": {
+    "fullName": "نام کامل",
+    "preferredName": "نام ترجیحی / نمایشی",
+    "facultyId": "شماره هویت استادی",
+    "employeeId": "شماره هویت کارمند",
+    "gender": "جنسیت",
+    "dateOfBirth": "تاریخ تولد",
+    "fatherName": "نام پدر",
+    "motherName": "نام مادر",
+    "nationality": "تابعیت",
+    "nationalId": "تذکره / شماره پاسپورت",
+    "maritalStatus": "وضعیت تأهل",
+    "officialEmail": "ایمیل رسمی پوهنتون",
+    "personalEmail": "ایمیل شخصی",
+    "email": "ایمیل",
+    "phone": "تلیفون اصلی",
+    "secondaryPhone": "تلیفون دوم",
+    "emergencyContactName": "نام شخص در تماس اضطراری",
+    "emergencyContactRelationship": "نسبت با شخص در تماس اضطراری",
+    "emergencyContactPhone": "تلیفون تماس اضطراری",
+    "address": "آدرس فعلی",
+    "permanentAddress": "آدرس دایمی",
+    "city": "شهر",
+    "province": "ولایت",
+    "country": "کشور",
+    "postalCode": "کود پستی",
+    "department": "دیپارتمنت",
+    "college": "پوهنتکده / کالج",
+    "designation": "رتبه علمی",
+    "employmentType": "نوعیت استخدام",
+    "status": "وضعیت استخدام",
+    "dateOfJoining": "تاریخ پیوستن",
+    "contractStartDate": "تاریخ آغاز قرارداد",
+    "contractEndDate": "تاریخ ختم قرارداد",
+    "officeRoom": "دفتر / شماره اتاق",
+    "workLocation": "محل کار",
+    "reportingManager": "مدیر گزارش‌دهی",
+    "employeeCategory": "کتگوری کارمند",
+    "payrollId": "شماره معاش",
+    "qualifiedSubjects": "مضامین واجد شرایط",
+    "qualifiedSubjectsPlaceholder": "مانند ساختمان‌های داده، الگوریتم‌ها",
+    "bio": "معرفی مختصر",
+    "expertiseAreas": "ساحات تخصص",
+    "researchInterests": "علاقه‌مندی‌های تحقیقاتی",
+    "teachingInterests": "علاقه‌مندی‌های تدریسی",
+    "officeHours": "ساعات دفتر",
+    "officeHoursPlaceholder": "مانند دوشنبه/چهارشنبه ۲-۴ بجه",
+    "publications": "نشرات علمی",
+    "awards": "جوایز و افتخارات"
+  },
+  "genderOptions": { "Male": "مرد", "Female": "زن", "Other": "دیگر" },
+  "maritalStatusOptions": {
+    "Single": "مجرد", "Married": "متأهل", "Divorced": "طلاق شده", "Widowed": "بیوه", "Other": "دیگر"
+  },
+  "designationOptions": {
+    "Lecturer": "لیکچرار",
+    "Senior Lecturer": "لیکچرار ارشد",
+    "Instructor": "انسترکتر",
+    "Assistant Professor": "پروفیسور معاون",
+    "Associate Professor": "پروفیسور همکار",
+    "Professor": "پروفیسور",
+    "Teaching Assistant": "معاون تدریسی",
+    "Research Assistant": "معاون تحقیقاتی",
+    "Visiting Professor": "پروفیسور مهمان",
+    "Visiting Faculty": "استاد مهمان",
+    "Adjunct Faculty": "استاد کمکی",
+    "Other": "دیگر"
+  },
+  "employmentTypeOptions": {
+    "full-time": "وقت کامل",
+    "part-time": "نیمه وقت",
+    "contract": "قراردادی",
+    "visiting": "مهمان",
+    "adjunct": "کمکی"
+  },
+  "statusOptions": {
+    "Active": "فعال",
+    "On Leave": "در رخصتی",
+    "Suspended": "معلق",
+    "Inactive": "غیرفعال",
+    "Resigned": "استعفا داده",
+    "Retired": "متقاعد",
+    "Terminated": "برکنار شده"
+  },
+  "degreeOptions": {
+    "High School": "لیسه",
+    "Diploma": "دیپلوم",
+    "Bachelor's": "لیسانس",
+    "Master's": "ماستری",
+    "MPhil": "ام‌فیل",
+    "PhD": "پی‌اچ‌دی",
+    "Postdoctoral": "پُست‌دکتورا",
+    "Other": "دیگر"
+  },
+  "profileStatus": {
+    "Complete": "پروفایل تکمیل است",
+    "Under Review": "در حال بررسی",
+    "Incomplete": "پروفایل ناتکمیل است",
+    "Documents Pending": "اسناد ناتکمیل"
+  },
+  "completion": {
+    "percent": "{{percent}}٪ تکمیل شده",
+    "missingLabel": "ناقص:",
+    "section": {
+      "personal": "معلومات شخصی",
+      "contact": "معلومات تماس",
+      "employment": "معلومات استخدامی",
+      "education": "تحصیلات",
+      "documents": "اسناد"
+    }
+  },
+  "toasts": {
+    "saved": "پروفایل به‌روزرسانی شد.",
+    "photoUploaded": "عکس به‌روزرسانی شد."
+  },
+  "education": {
+    "add": "افزودن",
+    "empty": "تا هنوز هیچ سابقه تحصیلی ثبت نشده است.",
+    "fieldOfStudyPlaceholder": "رشته تحصیلی",
+    "institutionPlaceholder": "موسسه",
+    "countryPlaceholder": "کشور",
+    "startYearPlaceholder": "سال آغاز",
+    "yearPlaceholder": "سال فراغت",
+    "gpaPlaceholder": "نمره / GPA",
+    "degreeHeader": "درجه تحصیلی",
+    "fieldHeader": "رشته تحصیلی",
+    "institutionHeader": "موسسه",
+    "yearHeader": "سال",
+    "certificate": "سند",
+    "transcript": "ترانسکریپت",
+    "deleteAria": "حذف سابقه تحصیلی",
+    "confirmDelete": "این سابقه {{degree}} حذف شود؟ این کار قابل بازگشت نیست.",
+    "errors": {
+      "degreeRequired": "یک درجه تحصیلی انتخاب کنید."
+    },
+    "toasts": {
+      "added": "سابقه تحصیلی افزوده شد.",
+      "deleted": "سابقه تحصیلی حذف شد."
+    }
+  },
+  "experience": {
+    "add": "افزودن",
+    "empty": "تا هنوز هیچ تجربه کاری ثبت نشده است.",
+    "organizationPlaceholder": "موسسه",
+    "positionPlaceholder": "سمت / عنوان وظیفه",
+    "departmentPlaceholder": "دیپارتمنت",
+    "employmentTypePlaceholder": "نوعیت استخدام",
+    "currentlyWorking": "در حال حاضر اینجا کار می‌کند",
+    "responsibilitiesPlaceholder": "مسئولیت‌ها",
+    "organizationHeader": "موسسه",
+    "positionHeader": "سمت",
+    "periodHeader": "دوره",
+    "deleteAria": "حذف تجربه کاری",
+    "confirmDelete": "سابقه {{organization}} حذف شود؟ این کار قابل بازگشت نیست.",
+    "errors": {
+      "organizationRequired": "نام موسسه را وارد کنید."
+    },
+    "toasts": {
+      "added": "تجربه کاری افزوده شد.",
+      "deleted": "تجربه کاری حذف شد."
+    }
+  },
+  "certifications": {
+    "add": "افزودن",
+    "empty": "تا هنوز هیچ سرتیفیکیتی ثبت نشده است.",
+    "namePlaceholder": "نام سرتیفیکیت",
+    "issuerPlaceholder": "موسسه صادرکننده",
+    "numberPlaceholder": "شماره سرتیفیکیت",
+    "doesNotExpire": "میعاد ندارد",
+    "nameHeader": "سرتیفیکیت",
+    "issuerHeader": "موسسه صادرکننده",
+    "expiryHeader": "تاریخ ختم",
+    "deleteAria": "حذف سرتیفیکیت",
+    "confirmDelete": "\"{{name}}\" حذف شود؟ این کار قابل بازگشت نیست.",
+    "errors": {
+      "nameRequired": "نام سرتیفیکیت را وارد کنید."
+    },
+    "toasts": {
+      "added": "سرتیفیکیت افزوده شد.",
+      "deleted": "سرتیفیکیت حذف شد."
+    }
+  },
+  "documents": {
+    "typeHeader": "نوع",
+    "fileHeader": "فایل",
+    "uploadedHeader": "آپلود شده",
+    "issueDate": "تاریخ صدور",
+    "expiryDate": "تاریخ ختم",
+    "empty": "تا هنوز هیچ سندی آپلود نشده است.",
+    "upload": "آپلود",
+    "download": "دانلود",
+    "delete": "حذف",
+    "confirmDelete": "\"{{fileName}}\" حذف شود؟ این کار قابل بازگشت نیست.",
+    "types": {
+      "CV": "سی‌وی",
+      "certificate": "سند",
+      "National ID": "تذکره",
+      "Passport": "پاسپورت",
+      "Appointment Letter": "مکتوب تقرر",
+      "Employment Contract": "قرارداد استخدام",
+      "Experience Certificate": "سند تجربه کاری",
+      "Teaching Certificate": "سند تدریس",
+      "Professional License": "جواز مسلکی",
+      "Background Verification": "تصدیق سوابق",
+      "other": "دیگر"
+    },
+    "errors": {
+      "fileRequired": "یک فایل برای آپلود انتخاب کنید."
+    },
+    "toasts": {
+      "uploaded": "سند آپلود شد.",
+      "deleted": "سند حذف شد."
+    }
+  },
+  "courses": {
+    "noneAssigned": "تا هنوز هیچ مضمونی تخصیص داده نشده است.",
+    "assignHint": "یک مضمون موجود را به این استاد تخصیص دهید (این کار آن را از استاد فعلی می‌گیرد).",
+    "showAllDepartments": "مضامین همه دیپارتمنت‌ها را نشان بده",
+    "noneAvailable": "مضمون دیگری برای تخصیص موجود نیست.",
+    "codeHeader": "کود",
+    "nameHeader": "مضمون",
+    "currentTeacherHeader": "استاد فعلی",
+    "assign": "تخصیص {{count}} مضمون",
+    "toasts": {
+      "assigned": "{{count}} مضمون تخصیص داده شد."
+    }
+  },
+  "auditHistory": {
+    "empty": "تا هنوز هیچ سابقه بررسی برای این استاد موجود نیست.",
+    "timeHeader": "زمان",
+    "userHeader": "کاربر",
+    "actionHeader": "عملیه",
+    "entityHeader": "سابقه",
+    "unknownUser": "کاربر نامعلوم"
+  },
+  "verification": {
+    "statusHeader": "تصدیق",
+    "verify": "تصدیق",
+    "reject": "رد",
+    "confirmReject": "این رد شود؟ سابقه HR این استاد نشان می‌دهد که به توجه نیاز دارد.",
+    "status": {
+      "Pending": "در انتظار",
+      "Verified": "تصدیق شده",
+      "Rejected": "رد شده"
+    },
+    "toasts": {
+      "verified": "به عنوان تصدیق شده علامت‌گذاری شد.",
+      "rejected": "به عنوان رد شده علامت‌گذاری شد."
+    }
+  },
+  "expiry": {
+    "expired": "منقضی شده",
+    "expiringSoon": "در {{count}} روز منقضی می‌شود"
+  }
+}

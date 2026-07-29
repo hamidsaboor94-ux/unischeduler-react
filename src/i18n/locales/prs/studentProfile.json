@@ -45,16 +45,94 @@
     "enrollmentStatus": "وضعیت ثبت‌نام",
     "admissionStatus": "وضعیت پذیرش",
     "department": "دیپارتمنت / رشته",
+    "program": "پروگرام / سند تحصیلی",
+    "studentType": "نوعیت محصل",
     "programSemester": "سمستر فعلی برنامه",
     "previousSchool": "تحصیلات قبلی (مکتب / موسسه)",
     "previousGraduationYear": "سال فراغت قبلی",
     "advisor": "مشاور اکادمیک",
     "gpa": "معدل تجمعی (GPA)",
-    "credits": "کریدیت‌های تکمیل‌شده"
+    "credits": "کریدیت‌های تکمیل‌شده",
+    "studentStatus": "وضعیت محصل",
+    "batch": "بچ / دوره"
+  },
+  "batchPlaceholder": "مثال: خزان ۲۰۲۴",
+  "changePhoto": "تغییر عکس",
+  "cards": {
+    "sections": { "personal": "شخصی", "contact": "تماس", "address": "آدرس", "education": "تحصیل", "documents": "اسناد" },
+    "fields": {
+      "father": "پدر",
+      "grandfather": "پدرکلان",
+      "gender": "جنسیت",
+      "born": "تولد",
+      "nationality": "تابعیت",
+      "nationalId": "تذکره",
+      "passport": "پاسپورت",
+      "mobile": "موبایل",
+      "emergency": "اضطراری",
+      "email": "ایمیل",
+      "presentAddress": "آدرس فعلی",
+      "permanentAddress": "آدرس دایمی",
+      "previousSchool": "مکتب قبلی",
+      "gradYear": "سال فراغت",
+      "program": "برنامه",
+      "entryTest": "امتحان کانکور"
+    },
+    "noDocuments": "هیچ سندی ضمیمه نشده است",
+    "statusAccepted": "منظور شده",
+    "statusPending": "در انتظار",
+    "statusRejected": "رد شده",
+    "entryPill": "کانکور {{score}}"
   },
   "genderOptions": { "Male": "مرد", "Female": "زن", "Other": "دیگر" },
   "admissionOptions": { "Approved": "منظور شده", "Pending": "در انتظار", "Rejected": "رد شده" },
   "enrollmentOptions": { "Regular": "منظم", "Part-time": "نیمه‌وقت", "Probation": "آزمایشی", "Withdrawn": "انصراف داده" },
+  "studentStatusOptions": { "Active": "فعال", "Graduated": "فارغ شده", "Suspended": "معلق", "Withdrawn": "انصراف داده", "On Leave": "در رخصتی" },
+  "semesterStatusOptions": {
+    "In Progress": "در جریان",
+    "Awaiting Results": "در انتظار نتایج",
+    "Passed": "موفق شده",
+    "Failed": "ناکام شده",
+    "On Hold": "معطل",
+    "Graduation Eligible": "واجد شرایط فراغت"
+  },
+  "progression": {
+    "title": "پیشرفت اکادمیک",
+    "evaluate": "ارزیابی پیشرفت",
+    "fields": {
+      "academicYear": "سال اکادمیک",
+      "admissionYear": "سال شمولیت / بیچ",
+      "semesterStatus": "وضعیت سمستر فعلی",
+      "credits": "کریدیت‌های کسب‌شده / اخذشده",
+      "gradedProgress": "{{graded}} از {{total}} مضمون نمره‌دهی شده",
+      "failedCourses": "مضامین ناکام / تکراری"
+    },
+    "override": {
+      "toggle": "تغییر دستی",
+      "semesterNumber": "شماره سمستر جدید",
+      "status": "وضعیت جدید",
+      "reason": "دلیل (ضروری)",
+      "reasonPlaceholder": "چرا این تغییر دستی ضروری است؟",
+      "submit": "اعمال تغییر",
+      "errors": { "reasonRequired": "برای تغییر دستی یک دلیل ضروری است." }
+    },
+    "history": {
+      "semester": "سمستر",
+      "semesterValue": "سمستر {{number}}",
+      "status": "وضعیت",
+      "credits": "کریدیت‌ها (کسب‌شده / اخذشده)",
+      "gpa": "معدل سمستر",
+      "completed": "تکمیل شده"
+    },
+    "toasts": {
+      "advanced": "به سمستر {{semester}} ارتقا یافت.",
+      "noChange": "تغییری رخ نداد — سمستر هنوز باز است.",
+      "awaitingResults": "هنوز منتظر نمرات نهایی این سمستر است.",
+      "failed": "این سمستر ناکام علامت‌گذاری شد — به تصمیم دستی نیاز دارد.",
+      "graduationEligible": "این محصل اکنون واجد شرایط فراغت است.",
+      "overridden": "پیشرفت سمستر به صورت دستی تغییر یافت."
+    }
+  },
   "none": "هیچ",
   "select": "— انتخاب کنید —",
   "creditsProgress": "{{completed}} از {{required}} کریدیت",
@@ -63,7 +141,8 @@
   "gpaNotAvailable": "هنوز موجود نیست",
   "toasts": {
     "saved": "پروفایل به‌روزرسانی شد.",
-    "contactSaved": "معلومات تماس به‌روزرسانی شد."
+    "contactSaved": "معلومات تماس به‌روزرسانی شد.",
+    "photoUploaded": "عکس به‌روزرسانی شد."
   },
   "documents": {
     "typeHeader": "نوع",

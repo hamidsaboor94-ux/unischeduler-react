@@ -1,10 +1,13 @@
 const express = require('express');
 const { all, get, run, logAudit } = require('../db');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireRole } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/permission');
 const asyncHandler = require('../middleware/asyncHandler');
 const { DAYS } = require('../scheduling');
 const { courseInScope, isScopedRequest } = require('../scope');
+const { canManageCourse } = require('../ownership');
 const { createNotification } = require('../notificationTypes');
+const { notifyCourseStudents } = require('../notify');
 
 const router = express.Router();
 
@@ -23,27 +26,78 @@ function fmt12Hour(time) {
   return `${h12}:${String(m).padStart(2, '0')} ${period}`;
 }
 
-/** Alerts the class's instructor that this specific date was cancelled — the one
-    thing about an exception that can't wait for the instructor's next reload,
-    since they may not open the app again until well after the admin's session
-    ends. Silently does nothing if the course has no teacher, or the teacher has
-    no login account (nowhere to deliver it) — never blocks the cancellation itself. */
-async function notifyTeacherOfCancellation(slot, date) {
+/** Alerts the class's instructor AND every enrolled student that this specific date was
+    cancelled — the one thing about an exception that can't wait for a reload, since a recipient
+    may not open the app again until well after the admin's session ends. `entityType`/`entityId`
+    (the slot itself, stable even after this exception row is later deleted/replaced) is what
+    lets the Dashboard notice panel recognize a later reschedule of the SAME class and supersede
+    this one instead of showing both forever. Silently does nothing where there's no one to
+    deliver to (course has no teacher / teacher has no login account) — never blocks the
+    cancellation itself. */
+async function notifyOfCancellation(slot, date) {
   const course = await get('SELECT * FROM courses WHERE id = ?', [slot.courseId]);
-  if (!course || !course.teacherId) return;
-  const teacher = await get('SELECT userId FROM teachers WHERE id = ?', [course.teacherId]);
-  if (!teacher || !teacher.userId) return;
+  if (!course) return;
   const message = `Your ${course.code} — ${course.name} class on ${date} at ${fmt12Hour(slot.time)} was cancelled and should be rescheduled.`;
-  await createNotification(teacher.userId, message, 'class_cancelled', { courseId: course.id });
+  const meta = { courseId: course.id, entityType: 'timetable_slot', entityId: slot.id };
+  if (course.teacherId) {
+    const teacher = await get('SELECT userId FROM teachers WHERE id = ?', [course.teacherId]);
+    if (teacher && teacher.userId) await createNotification(teacher.userId, message, 'class_cancelled', meta);
+  }
+  await notifyCourseStudents(course.id, message, { type: 'class_cancelled', ...meta });
 }
 
-// Everyone can read exceptions — students and faculty need to see cancelled/
-// moved sessions on their own timetables. Rows carry no sensitive data.
-router.get('/', requireAuth, asyncHandler(async (req, res) => {
+/** Same audience as notifyOfCancellation, fired when that (or any) occurrence of this slot is
+    given a new date/time/room. Shares the same entityType/entityId (the slot) so the Dashboard
+    groups this with any earlier cancellation notice for the same class and shows only this,
+    newer one — the notice "updates" rather than doubling up. */
+async function notifyOfReschedule(slot, { newDate, newTime, newRoomId }) {
+  const course = await get('SELECT * FROM courses WHERE id = ?', [slot.courseId]);
+  if (!course) return;
+  const room = newRoomId ? await get('SELECT name FROM rooms WHERE id = ?', [newRoomId]) : null;
+  const message = `Your ${course.code} — ${course.name} class has been rescheduled to ${newDate} at ${fmt12Hour(newTime)}${room ? `, ${room.name}` : ''}.`;
+  const meta = { courseId: course.id, entityType: 'timetable_slot', entityId: slot.id };
+  if (course.teacherId) {
+    const teacher = await get('SELECT userId FROM teachers WHERE id = ?', [course.teacherId]);
+    if (teacher && teacher.userId) await createNotification(teacher.userId, message, 'class_rescheduled', meta);
+  }
+  await notifyCourseStudents(course.id, message, { type: 'class_rescheduled', ...meta });
+}
+
+/** A cancelled session can also be resolved by simply removing the exception (restoring the
+    normal weekly schedule) rather than rescheduling it — with no later notification to supersede
+    the cancellation notice in that case, it would otherwise nag forever. Marks it read instead of
+    deleting it, consistent with how every other notification is dismissed in this app. */
+async function resolveCancellationNotifications(slot) {
+  const course = await get('SELECT * FROM courses WHERE id = ?', [slot.courseId]);
+  if (!course) return;
+  const recipientIds = [];
+  if (course.teacherId) {
+    const teacher = await get('SELECT userId FROM teachers WHERE id = ?', [course.teacherId]);
+    if (teacher && teacher.userId) recipientIds.push(teacher.userId);
+  }
+  const students = await all(`SELECT studentId FROM enrollments WHERE courseId = ? AND status = 'enrolled'`, [course.id]);
+  recipientIds.push(...students.map(s => s.studentId));
+  if (!recipientIds.length) return;
+  const placeholders = recipientIds.map(() => '?').join(',');
+  await run(
+    `UPDATE notifications SET isRead = 1
+     WHERE type = 'class_cancelled' AND entityType = 'timetable_slot' AND entityId = ? AND userId IN (${placeholders})`,
+    [slot.id, ...recipientIds]
+  );
+}
+
+// Everyone with 'timetable' read access can read exceptions — students and faculty need to see
+// cancelled/moved sessions on their own timetables. Rows carry no sensitive data. (Same
+// requirement the old mount-level requireModuleAccess('timetable') enforced for this path.)
+router.get('/', requireAuth, requirePermission('timetable', 'read'), asyncHandler(async (req, res) => {
   res.json(await all('SELECT * FROM slot_exceptions'));
 }));
 
-router.post('/', requireAuth, asyncHandler(async (req, res) => {
+// General-purpose cancel/move, still requiring 'timetable' write (registrar/dean/dept_head) —
+// unchanged from before, faculty/student still can't reach this (their 'timetable' access is
+// read-only). The one exception carved out for faculty is the narrowly-scoped PUT
+// /:id/reschedule route below, which does NOT require 'timetable' write.
+router.post('/', requireAuth, requirePermission('timetable', 'write'), asyncHandler(async (req, res) => {
   const { slotId, date, kind, note } = req.body;
   const slot = await get('SELECT * FROM timetable_slots WHERE id = ?', [slotId]);
   if (!slot) return res.status(404).json({ error: 'Timetable slot not found' });
@@ -90,11 +144,51 @@ router.post('/', requireAuth, asyncHandler(async (req, res) => {
   }
   const row = await get('SELECT * FROM slot_exceptions WHERE id = ?', [result.id]);
   await logAudit(req.user, 'create', 'slot_exceptions', result.id, { slotId, date, kind, newDate, newTime });
-  if (kind === 'cancelled') await notifyTeacherOfCancellation(slot, date);
+  if (kind === 'cancelled') await notifyOfCancellation(slot, date);
+  if (kind === 'rescheduled') await notifyOfReschedule(slot, { newDate, newTime, newRoomId });
   res.status(201).json(row);
 }));
 
-router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
+/** Narrowly-scoped faculty action: turn ONE already-cancelled session into a rescheduled one.
+    Unlike POST/DELETE above (open to any authenticated user, department-scope only), this route
+    is the one place a faculty member can write to slot_exceptions at all, and only under both
+    conditions at once — (a) they teach the course this slot belongs to (canManageCourse, same
+    ownership check used for assignments/attendance/gradebook), and (b) the target row is
+    currently 'cancelled'. It writes only this row's kind/newDate/newTime/newRoomId/
+    newDurationMinutes — never the slot, the course, another exception, or an exam. */
+router.put('/:id/reschedule', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+  const exception = await get('SELECT * FROM slot_exceptions WHERE id = ?', [req.params.id]);
+  if (!exception) return res.status(404).json({ error: 'Not found' });
+  if (exception.kind !== 'cancelled') {
+    return res.status(400).json({ error: 'Only a cancelled session can be rescheduled through this action.' });
+  }
+
+  const slot = await get('SELECT * FROM timetable_slots WHERE id = ?', [exception.slotId]);
+  if (!slot) return res.status(404).json({ error: 'Timetable slot not found' });
+  const course = await get('SELECT * FROM courses WHERE id = ?', [slot.courseId]);
+  if (!course) return res.status(404).json({ error: 'Course not found' });
+  if (!(await canManageCourse(req, course))) {
+    return res.status(403).json({ error: 'You do not have access to this course.' });
+  }
+
+  const newDate = req.body.newDate || exception.date;
+  const newTime = req.body.newTime || slot.time;
+  const newRoomId = req.body.newRoomId ?? slot.roomId;
+  const newDurationMinutes = slot.durationMinutes ?? 60;
+  if (!ISO_DATE_RE.test(newDate)) return res.status(400).json({ error: 'newDate must be YYYY-MM-DD' });
+  if (!TIME_RE.test(newTime)) return res.status(400).json({ error: 'newTime must be HH:MM' });
+
+  await run(
+    `UPDATE slot_exceptions SET kind = 'rescheduled', newDate = ?, newTime = ?, newRoomId = ?, newDurationMinutes = ? WHERE id = ?`,
+    [newDate, newTime, newRoomId, newDurationMinutes, exception.id]
+  );
+  const row = await get('SELECT * FROM slot_exceptions WHERE id = ?', [exception.id]);
+  await logAudit(req.user, 'update', 'slot_exceptions', exception.id, { kind: 'rescheduled', newDate, newTime, newRoomId });
+  await notifyOfReschedule(slot, { newDate, newTime, newRoomId });
+  res.json(row);
+}));
+
+router.delete('/:id', requireAuth, requirePermission('timetable', 'write'), asyncHandler(async (req, res) => {
   const row = await get('SELECT * FROM slot_exceptions WHERE id = ?', [req.params.id]);
   if (isScopedRequest(req)) {
     const slot = row ? await get('SELECT courseId FROM timetable_slots WHERE id = ?', [row.slotId]) : null;
@@ -104,6 +198,10 @@ router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
   }
   await run('DELETE FROM slot_exceptions WHERE id = ?', [req.params.id]);
   await logAudit(req.user, 'delete', 'slot_exceptions', req.params.id, row ? { slotId: row.slotId, date: row.date, kind: row.kind } : null);
+  if (row && row.kind === 'cancelled') {
+    const slot = await get('SELECT * FROM timetable_slots WHERE id = ?', [row.slotId]);
+    if (slot) await resolveCancellationNotifications(slot);
+  }
   res.status(204).end();
 }));
 

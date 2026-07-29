@@ -11,6 +11,7 @@ import PdfImportResult from './PdfImportResult.jsx';
 import RoomForm from './RoomForm.jsx';
 import TeacherForm from './TeacherForm.jsx';
 import DepartmentForm from './DepartmentForm.jsx';
+import ProgramForm from './ProgramForm.jsx';
 import TermForm from './TermForm.jsx';
 import RolloverForm from './RolloverForm.jsx';
 import CourseForm from './CourseForm.jsx';
@@ -18,6 +19,7 @@ import BulkAssignDept from './BulkAssignDept.jsx';
 import ImportErrors from './ImportErrors.jsx';
 import ExamForm from './ExamForm.jsx';
 import RosterModal from './RosterModal.jsx';
+import EnrollStudentsModal from './EnrollStudentsModal.jsx';
 import StudentListModal from './StudentListModal.jsx';
 import CreateAccountForm from './CreateAccountForm.jsx';
 import AccountCredentials from './AccountCredentials.jsx';
@@ -28,9 +30,12 @@ import ConflictDetailModal from './ConflictDetailModal.jsx';
 import CourseActionsModal from './CourseActionsModal.jsx';
 import CourseActivityModal from './CourseActivityModal.jsx';
 import MoveSlotModal from './MoveSlotModal.jsx';
+import RescheduleCancelledSessionModal from './RescheduleCancelledSessionModal.jsx';
 import AutoGenerateExamTypeForm from './AutoGenerateExamTypeForm.jsx';
 import ApplicationStatusChangeModal from './ApplicationStatusChangeModal.jsx';
 import ApplicationApproveModal from './ApplicationApproveModal.jsx';
+import CourseDetailModal from './CourseDetailModal.jsx';
+import CourseQuickLookModal from './CourseQuickLookModal.jsx';
 
 /** Title text per modal type — mirrors the original's inline `title.textContent = ...` in openModal().
     Filled in incrementally as each modal type is built; unhandled types fall back to a blank title
@@ -50,6 +55,7 @@ function modalTitle(modal, appData, t) {
     case 'room': return modal.editId ? t('modal.editRoom') : t('modal.addRoom');
     case 'teacher': return modal.editId ? t('modal.editTeacher') : t('modal.addTeacher');
     case 'department': return modal.editId ? t('modal.editDepartment') : t('modal.addDepartment');
+    case 'program': return modal.editId ? t('modal.editProgram') : t('modal.addProgram');
     case 'term': return modal.editId ? t('modal.editSemester') : t('modal.addSemester');
     case 'rollover': {
       const target = appData.terms.find(term => term.id === modal.prefill.targetTermId);
@@ -63,6 +69,10 @@ function modalTitle(modal, appData, t) {
     case 'roster': {
       const course = appData.courses.find(c => c.id === modal.editId);
       return t('modal.roster', { code: course ? course.code : '' });
+    }
+    case 'enroll-students': {
+      const course = appData.courses.find(c => c.id === modal.editId);
+      return t('modal.enrollStudents', { code: course ? course.code : '' });
     }
     case 'studentList': return t('modal.affectedStudents', { count: modal.prefill.studentIds.length });
     case 'create-account': return t('modal.createAccount');
@@ -89,8 +99,22 @@ function modalTitle(modal, appData, t) {
       const course = slot && appData.courses.find(c => c.id === slot.courseId);
       return t('modal.moveSlot', { code: course ? course.code : '' });
     }
+    case 'reschedule-cancelled-session': {
+      const exception = appData.slotExceptions.find(x => x.id === modal.editId);
+      const slot = exception && appData.slots.find(s => s.id === exception.slotId);
+      const course = slot && appData.courses.find(c => c.id === slot.courseId);
+      return t('modal.rescheduleCancelledSession', { code: course ? course.code : '' });
+    }
     case 'application-status-change': return t('modal.applicationStatusChange', { name: modal.prefill?.fullName || '' });
     case 'application-approve': return t('modal.applicationApprove', { name: modal.prefill?.fullName || '' });
+    case 'course-detail': {
+      const course = appData.courses.find(c => c.id === modal.prefill?.optionIds?.[0]);
+      return course ? `${course.code} — ${course.name}` : '';
+    }
+    case 'course-quicklook': {
+      const course = appData.courses.find(c => c.id === modal.editId) || modal.prefill?.course;
+      return course ? `${course.code} — ${course.name}` : '';
+    }
     default: return '';
   }
 }
@@ -99,7 +123,17 @@ function isWide(modal) {
   if (modal.type === 'pdf-import-preview') return true;
   if (modal.type === 'pdf-import-result') return (modal.prefill?.facultyAccountsCreated?.length || 0) > 0;
   if (modal.type === 'conflict-detail') return true;
-  if (modal.type === 'course-actions' || modal.type === 'course-activity') return true;
+  if (modal.type === 'course-actions') return true;
+  return false;
+}
+
+/** Content with a few stacked sections (lists + cards) that's cramped at the default 380px form
+    width but doesn't need the full 1080px workspace width either — currently just the student
+    course-activity view (announcements list + assignment cards with a submit form + materials
+    list). */
+function isMedium(modal) {
+  if (modal.type === 'course-activity') return true;
+  if (modal.type === 'enroll-students') return true;
   return false;
 }
 
@@ -114,6 +148,7 @@ function ModalBody({ modal }) {
     case 'room': return <RoomForm editId={modal.editId} />;
     case 'teacher': return <TeacherForm editId={modal.editId} />;
     case 'department': return <DepartmentForm editId={modal.editId} />;
+    case 'program': return <ProgramForm editId={modal.editId} />;
     case 'term': return <TermForm editId={modal.editId} />;
     case 'rollover': return <RolloverForm prefill={modal.prefill} />;
     case 'course': return <CourseForm editId={modal.editId} />;
@@ -122,6 +157,7 @@ function ModalBody({ modal }) {
     case 'exam': return <ExamForm editId={modal.editId} />;
     case 'auto-generate-exam-type': return <AutoGenerateExamTypeForm prefill={modal.prefill} />;
     case 'roster': return <RosterModal editId={modal.editId} />;
+    case 'enroll-students': return <EnrollStudentsModal editId={modal.editId} />;
     case 'studentList': return <StudentListModal prefill={modal.prefill} />;
     case 'create-account': return <CreateAccountForm />;
     case 'account-credentials': return <AccountCredentials prefill={modal.prefill} />;
@@ -131,8 +167,11 @@ function ModalBody({ modal }) {
     case 'course-actions': return <CourseActionsModal editId={modal.editId} prefill={modal.prefill} />;
     case 'course-activity': return <CourseActivityModal editId={modal.editId} prefill={modal.prefill} />;
     case 'move-slot': return <MoveSlotModal editId={modal.editId} prefill={modal.prefill} />;
+    case 'reschedule-cancelled-session': return <RescheduleCancelledSessionModal editId={modal.editId} />;
     case 'application-status-change': return <ApplicationStatusChangeModal prefill={modal.prefill} />;
     case 'application-approve': return <ApplicationApproveModal prefill={modal.prefill} />;
+    case 'course-detail': return <CourseDetailModal prefill={modal.prefill} />;
+    case 'course-quicklook': return <CourseQuickLookModal editId={modal.editId} prefill={modal.prefill} />;
     default: return null;
   }
 }
@@ -151,7 +190,7 @@ export default function ModalHost() {
 
   return (
     <div id="modal-overlay" className={isOpen ? 'open' : ''} onClick={closeIfOutside}>
-      <div className={'modal-box' + (isWide(modal) ? ' modal-wide' : '')} role="dialog" aria-modal="true" aria-labelledby="modal-title" tabIndex={-1} ref={boxRef}>
+      <div className={'modal-box' + (isWide(modal) ? ' modal-wide' : isMedium(modal) ? ' modal-medium' : '')} role="dialog" aria-modal="true" aria-labelledby="modal-title" tabIndex={-1} ref={boxRef}>
         <div className="modal-header">
           <span className="modal-title" id="modal-title">{isOpen ? modalTitle(modal, appData, t) : ''}</span>
           <button className="modal-close" aria-label={t('modal.closeDialog')} onClick={closeModal}><i className="ti ti-x" aria-hidden="true"></i></button>

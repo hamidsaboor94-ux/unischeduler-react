@@ -34,15 +34,20 @@ export function useAutoSchedule() {
   return { autoScheduleAll, loading };
 }
 
-/** Port of autoResolveAll() — shared by the Conflicts and Timetable/Exams "suggest fix" actions. */
+/** Port of autoResolveAll() — shared by the Conflicts and Timetable/Exams "suggest fix" actions.
+    The full per-conflict resolution list from the response is stashed on AppDataContext (not
+    just a count) so the Conflicts page's "Recently resolved" panel can show exactly what
+    changed, not just how many things changed. */
 export function useAutoResolve() {
-  const { activeTermId, reload } = useAppData();
+  const { activeTermId, reload, setLastResolutions } = useAppData();
   const { toast } = useToast();
   const { run, loading } = useAsyncAction();
   async function autoResolveAll() {
     const result = await run(api('POST', '/conflicts/auto-resolve', { termId: activeTermId }));
     await reload();
-    toast(result.fixed > 0 ? `Auto-resolved ${result.fixed} issue${result.fixed > 1 ? 's' : ''}.` : 'No auto-fixable issues found.');
+    setLastResolutions(result.resolutions || []);
+    const count = result.resolvedCount || 0;
+    toast(count > 0 ? `Auto-resolved ${count} issue${count > 1 ? 's' : ''} — see details below.` : 'No auto-fixable issues found.');
   }
   return { autoResolveAll, loading };
 }

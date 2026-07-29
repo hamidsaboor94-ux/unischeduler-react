@@ -476,15 +476,21 @@ function autoScheduleAll({ exams, rooms, teachers = [], slots = [], enrollmentsB
 }
 
 /**
- * Returns { slotUpdates, examUpdates, fixed } describing the changes that
+ * Returns { slotUpdates, examUpdates, fixed, resolutions } describing the changes that
  * would resolve as many of the given conflicts as possible. Does not mutate
- * its inputs — the caller persists the returned updates.
+ * its inputs — the caller persists the returned updates. `resolutions` is one entry per
+ * fixed conflict — {conflictType, entity, entityType, entityId, before, after, action, reason}
+ * — built from the exact same before/after values that get persisted, so it's a true record of
+ * what changed rather than a re-derived guess (entityType/entityId identify the row for callers
+ * that want to write an audit-log entry per resolution).
  */
 function autoResolveAll({ conflicts, courses, slots, rooms, exams, enrollmentsByCourse, teachers, dateOptions, times = TIMES }) {
   const { critical, warnings, notices } = conflicts;
   const courseById = new Map((courses || []).map(c => [c.id, c]));
+  const roomById = new Map((rooms || []).map(r => [r.id, r]));
   const slotUpdates = [];
   const examUpdates = new Map();
+  const resolutions = [];
   let fixed = 0;
 
   const workingSlots = slots.map(s => ({ ...s }));
@@ -496,6 +502,7 @@ function autoResolveAll({ conflicts, courses, slots, rooms, exams, enrollmentsBy
   }
 
   const slotDuration = (s) => s.durationMinutes || 60;
+  const courseCode = (courseId) => courseById.get(courseId)?.code || `course ${courseId}`;
 
   critical.forEach(c => {
     if (c.type === 'room-double-booking') {
@@ -507,8 +514,17 @@ function autoResolveAll({ conflicts, courses, slots, rooms, exams, enrollmentsBy
           !workingSlots.some(s2 => s2.id !== slot.id && s2.day === slot.day && s2.roomId === r.id &&
             overlapsMinutes(s2.time, slotDuration(s2), slot.time, slotDuration(slot))));
         if (freeRoom) {
+          const fromRoom = roomById.get(slot.roomId);
           slot.roomId = freeRoom.id;
           slotUpdates.push({ slotId, roomId: freeRoom.id });
+          const code = courseCode(slot.courseId);
+          resolutions.push({
+            conflictType: c.type, entity: code, entityType: 'timetable_slots', entityId: slotId,
+            before: { day: slot.day, time: slot.time, roomId: fromRoom?.id ?? null, roomName: fromRoom?.name || null },
+            after: { day: slot.day, time: slot.time, roomId: freeRoom.id, roomName: freeRoom.name },
+            action: `Moved ${code} to ${freeRoom.name}`,
+            reason: c.desc,
+          });
           fixed++;
         }
       });
@@ -518,6 +534,7 @@ function autoResolveAll({ conflicts, courses, slots, rooms, exams, enrollmentsBy
         const slot = workingSlots.find(s => s.id === slotId);
         if (!slot) return;
         const duration = slotDuration(slot);
+        const fromDay = slot.day, fromTime = slot.time;
         outer:
         for (const day of DAYS) {
           for (const time of SLOT_TIMES) {
@@ -531,6 +548,15 @@ function autoResolveAll({ conflicts, courses, slots, rooms, exams, enrollmentsBy
             if (roomBusy) continue;
             slot.day = day; slot.time = time;
             slotUpdates.push({ slotId, day, time });
+            const code = courseCode(slot.courseId);
+            const room = roomById.get(slot.roomId);
+            resolutions.push({
+              conflictType: c.type, entity: code, entityType: 'timetable_slots', entityId: slotId,
+              before: { day: fromDay, time: fromTime, roomId: room?.id ?? null, roomName: room?.name || null },
+              after: { day, time, roomId: room?.id ?? null, roomName: room?.name || null },
+              action: `Rescheduled ${code} to ${day} ${time}`,
+              reason: c.desc,
+            });
             fixed++;
             break outer;
           }
@@ -546,6 +572,7 @@ function autoResolveAll({ conflicts, courses, slots, rooms, exams, enrollmentsBy
       const durationOf = (e) => e.durationMinutes || EXAM_DURATION_HOURS * 60;
       const moveDuration = durationOf(examToMove);
       const dates = [...dateOptions, examToMove.date];
+      const fromDate = examToMove.date, fromTime = examToMove.time;
       let resolved = false;
       for (const date of dates) {
         for (const time of times) {
@@ -556,6 +583,14 @@ function autoResolveAll({ conflicts, courses, slots, rooms, exams, enrollmentsBy
           if (clash) continue;
           examToMove.date = date; examToMove.time = time;
           Object.assign(getExamUpdate(examToMove.id), { date, time });
+          const code = courseCode(examToMove.courseId);
+          resolutions.push({
+            conflictType: w.type, entity: `${code} exam`, entityType: 'exams', entityId: examToMove.id,
+            before: { date: fromDate, time: fromTime },
+            after: { date, time },
+            action: `Rescheduled ${code} exam to ${date} ${time}`,
+            reason: w.desc,
+          });
           fixed++; resolved = true;
           break;
         }
@@ -566,8 +601,17 @@ function autoResolveAll({ conflicts, courses, slots, rooms, exams, enrollmentsBy
       const needed = (enrollmentsByCourse.get(exam.courseId) || []).length;
       const bigger = rooms.filter(r => r.capacity >= needed).sort((a, b) => a.capacity - b.capacity)[0];
       if (bigger) {
+        const fromRoom = roomById.get(exam.roomId);
         exam.roomId = bigger.id;
         Object.assign(getExamUpdate(exam.id), { roomId: bigger.id });
+        const code = courseCode(exam.courseId);
+        resolutions.push({
+          conflictType: w.type, entity: `${code} exam`, entityType: 'exams', entityId: exam.id,
+          before: { roomId: fromRoom?.id ?? null, roomName: fromRoom?.name || null, capacity: fromRoom?.capacity ?? null },
+          after: { roomId: bigger.id, roomName: bigger.name, capacity: bigger.capacity },
+          action: `Moved ${code} exam to ${bigger.name} (capacity ${bigger.capacity})`,
+          reason: w.desc,
+        });
         fixed++;
       }
     }
@@ -582,13 +626,21 @@ function autoResolveAll({ conflicts, courses, slots, rooms, exams, enrollmentsBy
         if (free) {
           exam.invigilatorId = free.id;
           Object.assign(getExamUpdate(exam.id), { invigilatorId: free.id });
+          const code = courseCode(exam.courseId);
+          resolutions.push({
+            conflictType: n.type, entity: `${code} exam`, entityType: 'exams', entityId: exam.id,
+            before: { invigilatorId: null, invigilatorName: null },
+            after: { invigilatorId: free.id, invigilatorName: free.name },
+            action: `Assigned ${free.name} as invigilator for ${code} exam`,
+            reason: n.desc,
+          });
           fixed++;
         }
       });
     }
   });
 
-  return { slotUpdates, examUpdates: [...examUpdates.values()], fixed };
+  return { slotUpdates, examUpdates: [...examUpdates.values()], fixed, resolutions };
 }
 
 module.exports = {

@@ -9,6 +9,8 @@ import { useAppData } from '../context/AppDataContext.jsx';
 import { useNavigation } from '../context/NavigationContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { api } from '../api.js';
+import { StatCard } from '../components/ui/StatCard.jsx';
+import { can } from '../permissions.js';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAY_COLORS = ['#4B7FE8', '#1B9E5A', '#E8A84B', '#7F77DD', '#D85A30', '#2FA9B0', '#8A93AA'];
@@ -31,9 +33,10 @@ function ChartPanel({ title, subtitle, children, empty }) {
   );
 }
 
-/** Admin-only analytics: room utilization, course popularity, teacher workload (all scoped to
-    the currently selected term, same as every other admin page), and enrollment trends across
-    every term (deliberately term-independent — that's the whole point of a trend). */
+/** Analytics: room utilization, course popularity, teacher workload (all scoped to the currently
+    selected term), and enrollment trends across every term (deliberately term-independent —
+    that's the whole point of a trend). Read access matches POLICY.reports (registrar:R,
+    records_officer:W, viewer:R, admin) — not admin-only, despite the endpoint's original name. */
 export default function ReportsPage() {
   const { t } = useTranslation(['dashboard', 'admissions', 'common']);
   const { activeTermId, terms, currentUser } = useAppData();
@@ -48,10 +51,10 @@ export default function ReportsPage() {
 
   useEffect(() => {
     // Every page in this app stays mounted at all times regardless of role (see AppShell.jsx) —
-    // this page is admin-only, so skip the fetch entirely for anyone else. Without this, every
-    // faculty/student login would silently 403 against this admin-only endpoint the moment the
-    // app boots, and the resulting error toast would show up in their notification bell.
-    if (!activeTermId || currentUser.role !== 'admin') { setData(null); return; }
+    // skip the fetch entirely for a role with no reports:read, so that role never silently 403s
+    // against this endpoint the moment the app boots (the resulting error toast would show up in
+    // their notification bell).
+    if (!activeTermId || !can(currentUser.role, 'reports', 'read')) { setData(null); return; }
     let cancelled = false;
     setLoading(true);
     api('GET', `/reports?termId=${activeTermId}`)
@@ -98,31 +101,15 @@ export default function ReportsPage() {
                 </div>
               </div>
               <div className="stat-grid" style={{ marginBottom: 0 }}>
-                <div className="stat-card stat-accent-blue">
-                  <div className="s-icon s-blue"><i className="ti ti-clipboard-list"></i></div>
-                  <div className="stat-label">{t('admissions:reports.total')}</div>
-                  <div className="stat-value">{applicationStats.total}</div>
-                </div>
-                <div className="stat-card stat-accent-green">
-                  <div className="s-icon s-green"><i className="ti ti-check"></i></div>
-                  <div className="stat-label">{t('admissions:reports.accepted')}</div>
-                  <div className="stat-value">{applicationStats.accepted}</div>
-                </div>
-                <div className="stat-card stat-accent-red">
-                  <div className="s-icon s-red"><i className="ti ti-x"></i></div>
-                  <div className="stat-label">{t('admissions:reports.rejected')}</div>
-                  <div className="stat-value">{applicationStats.rejected}</div>
-                </div>
-                <div className="stat-card stat-accent-gold">
-                  <div className="s-icon s-gold"><i className="ti ti-clock"></i></div>
-                  <div className="stat-label">{t('admissions:reports.pending')}</div>
-                  <div className="stat-value">{applicationStats.pending}</div>
-                </div>
-                <div className="stat-card stat-accent-purple">
-                  <div className="s-icon s-purple"><i className="ti ti-percentage"></i></div>
-                  <div className="stat-label">{t('admissions:reports.acceptanceRate')}</div>
-                  <div className="stat-value">{applicationStats.acceptanceRate != null ? `${applicationStats.acceptanceRate}%` : t('admissions:reports.notAvailable')}</div>
-                </div>
+                <StatCard icon="ti-clipboard-list" hue="indigo" label={t('admissions:reports.total')} value={applicationStats.total} />
+                <StatCard icon="ti-check" hue="teal" label={t('admissions:reports.accepted')} value={applicationStats.accepted} />
+                <StatCard icon="ti-x" hue="red" label={t('admissions:reports.rejected')} value={applicationStats.rejected} />
+                <StatCard icon="ti-clock" hue="amber" label={t('admissions:reports.pending')} value={applicationStats.pending} />
+                <StatCard
+                  icon="ti-percentage" hue="indigo"
+                  label={t('admissions:reports.acceptanceRate')}
+                  value={applicationStats.acceptanceRate != null ? `${applicationStats.acceptanceRate}%` : t('admissions:reports.notAvailable')}
+                />
               </div>
             </div>
 

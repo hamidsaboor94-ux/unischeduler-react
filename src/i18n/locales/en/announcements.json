@@ -1,0 +1,188 @@
+{
+  "page": {
+    "title": "Announcements",
+    "manageTab": "Manage",
+    "mineTab": "My Announcements"
+  },
+  "types": {
+    "general": "General",
+    "academic": "Academic",
+    "examination": "Examination",
+    "admissions": "Admissions",
+    "finance": "Finance",
+    "registration": "Registration",
+    "enrollment": "Enrollment",
+    "timetable": "Timetable",
+    "attendance": "Attendance",
+    "gradebook": "Gradebook",
+    "event": "Event",
+    "emergency": "Emergency",
+    "holiday": "Holiday",
+    "system": "System",
+    "maintenance": "Maintenance",
+    "other": "Other"
+  },
+  "priorities": {
+    "normal": "Normal",
+    "important": "Important",
+    "urgent": "Urgent",
+    "critical": "Critical"
+  },
+  "statuses": {
+    "draft": "Draft",
+    "scheduled": "Scheduled",
+    "published": "Published",
+    "expired": "Expired",
+    "archived": "Archived",
+    "cancelled": "Cancelled"
+  },
+  "list": {
+    "tabs": {
+      "all": "All",
+      "draft": "Drafts",
+      "scheduled": "Scheduled",
+      "published": "Published",
+      "expired": "Expired",
+      "archived": "Archived"
+    },
+    "allTypes": "All types",
+    "searchPlaceholder": "Search announcements…",
+    "newAnnouncement": "New Announcement",
+    "empty": "No announcements yet.",
+    "pinned": "Pinned",
+    "backToList": "Back to list",
+    "table": {
+      "title": "Title",
+      "type": "Type / Priority",
+      "recipients": "Recipients",
+      "status": "Status",
+      "date": "Date"
+    },
+    "actions": {
+      "edit": "Edit",
+      "duplicate": "Duplicate",
+      "archive": "Archive",
+      "cancelSchedule": "Cancel Schedule",
+      "delete": "Delete"
+    },
+    "confirmArchive": "Archive this announcement? It will no longer appear as active.",
+    "confirmCancelSchedule": "Cancel this scheduled announcement? It will not be sent.",
+    "confirmDelete": "Delete this draft? This cannot be undone.",
+    "toasts": {
+      "duplicated": "Duplicated as a new draft.",
+      "archived": "Announcement archived.",
+      "scheduleCancelled": "Scheduled announcement cancelled.",
+      "deleted": "Draft deleted."
+    },
+    "recipientsPanel": {
+      "title": "Recipients",
+      "load": "Load recipients",
+      "empty": "No recipients.",
+      "name": "Name",
+      "role": "Role",
+      "readAt": "Read at",
+      "ackAt": "Acknowledged at"
+    },
+    "analyticsPanel": {
+      "title": "Analytics",
+      "load": "Load analytics",
+      "total": "Total Recipients",
+      "read": "Read",
+      "unread": "Unread",
+      "acknowledged": "Acknowledged",
+      "readRate": "Read Rate",
+      "ackRate": "Acknowledgment Rate"
+    }
+  },
+  "mine": {
+    "backToList": "Back to my announcements",
+    "empty": "You have no announcements yet.",
+    "unread": "New",
+    "ackRequired": "Acknowledgment required",
+    "acknowledged": "Acknowledged",
+    "acknowledgeAction": "I Acknowledge",
+    "toasts": { "acknowledged": "Acknowledged." }
+  },
+  "composer": {
+    "createTitle": "Create Announcement",
+    "editTitle": "Edit Announcement",
+    "lockedNotice": "This announcement is archived/cancelled/expired and can no longer be edited.",
+    "fields": {
+      "title": "Title",
+      "titlePlaceholder": "e.g. Midterm Examination Schedule",
+      "message": "Message",
+      "messagePlaceholder": "Write the announcement message…",
+      "messageHint": "Supports **bold**, *italic*, \"- \" bullet lists, and [link text](https://…) links.",
+      "type": "Type",
+      "priority": "Priority",
+      "pinned": "Pin this announcement to the top",
+      "requiresAck": "Require recipients to acknowledge",
+      "actionLabel": "Action button label (optional)",
+      "actionLabelPlaceholder": "e.g. View Exam Schedule",
+      "actionSection": "Action destination",
+      "actionSectionNone": "No action button",
+      "expiresAt": "Expires at (optional)",
+      "attachments": "Attachments",
+      "noAttachments": "No attachments yet.",
+      "uploadAttachment": "Upload"
+    },
+    "sendTo": "Send To",
+    "targetingFrozen": "This announcement has already been published — its recipient list is frozen and cannot be changed. Edits to the message will not be re-sent unless you check \"Notify recipients about this update\" below.",
+    "recipientPreview": {
+      "loading": "Calculating recipients…",
+      "none": "Add a recipient group to see how many people will receive this announcement.",
+      "total": "Recipients: {{count}}"
+    },
+    "notifyOnUpdate": "Notify existing recipients about this update",
+    "actions": {
+      "saveDraft": "Save Draft",
+      "schedule": "Schedule",
+      "confirmSchedule": "Confirm Schedule",
+      "sendNow": "Send Now",
+      "saveChanges": "Save Changes"
+    },
+    "errors": {
+      "titleRequired": "Title is required.",
+      "messageRequired": "Message is required.",
+      "recipientsRequired": "Add at least one recipient group.",
+      "scheduleRequired": "Pick a date and time to schedule for.",
+      "fileRequired": "Choose a file first."
+    },
+    "toasts": {
+      "draftSaved": "Draft saved.",
+      "published": "Announcement sent to {{count}} recipients.",
+      "scheduled": "Announcement scheduled.",
+      "updated": "Announcement updated.",
+      "attachmentUploaded": "Attachment uploaded."
+    }
+  },
+  "targeting": {
+    "empty": "No recipient groups yet — add one above.",
+    "removeGroup": "Remove this group",
+    "audiences": {
+      "students": "Students",
+      "faculty": "Faculty",
+      "staff": "Staff",
+      "roles": "Roles",
+      "users": "Specific Users"
+    },
+    "filters": {
+      "department": "Department",
+      "college": "College",
+      "program": "Program",
+      "semester": "Semester / Year Level",
+      "semesterN": "Semester {{n}}",
+      "section": "Section",
+      "status": "Status",
+      "course": "Course",
+      "designation": "Academic Rank",
+      "employmentType": "Employment Type",
+      "staffRole": "Staff Role",
+      "role": "Role",
+      "searchUsers": "Add specific people",
+      "searchUsersPlaceholder": "Search by name, ID, or email…",
+      "removeUser": "Remove",
+      "selectedCount": "{{count}} selected"
+    }
+  }
+}

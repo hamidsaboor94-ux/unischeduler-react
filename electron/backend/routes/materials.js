@@ -74,6 +74,18 @@ router.post('/', requireAuth, requireRole('admin', 'faculty'), upload.single('fi
   res.status(201).json(await get('SELECT m.*, u.name as uploaderName FROM course_materials m LEFT JOIN users u ON u.id = m.createdBy WHERE m.id = ?', [result.id]));
 }));
 
+router.delete('/:id', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+  const material = await get('SELECT * FROM course_materials WHERE id = ?', [req.params.id]);
+  if (!material) return res.status(404).json({ error: 'Material not found' });
+  const { error } = await requireCourseAccess(req, material.courseId);
+  if (error) return res.status(error.status).json({ error: error.message });
+
+  await run('DELETE FROM course_materials WHERE id = ?', [req.params.id]);
+  if (MATERIALS_DIR && fs.existsSync(materialFile(material.id))) fs.unlinkSync(materialFile(material.id));
+  await logAudit(req.user, 'delete-material', 'course_materials', material.id, { courseId: material.courseId, title: material.title });
+  res.status(204).end();
+}));
+
 router.get('/:id/file', requireAuth, asyncHandler(async (req, res) => {
   const material = await get('SELECT * FROM course_materials WHERE id = ?', [req.params.id]);
   if (!material) return res.status(404).json({ error: 'Material not found' });

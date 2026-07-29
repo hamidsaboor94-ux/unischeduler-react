@@ -83,6 +83,12 @@
     "maxStudentsLabel": "Max students",
     "termLabel": "Term",
     "prerequisitesLabel": "Prerequisites",
+    "prerequisitesHint": "Prerequisites sharing the same OR-group number are alternatives — completing any one of them is enough. Leave the group blank for a required (must-complete) prerequisite.",
+    "prereqType": {
+      "prerequisite": "Prerequisite (must complete first)",
+      "corequisite": "Corequisite (may take at the same time)"
+    },
+    "orGroupPlaceholder": "OR group #",
     "noOtherCourses": "No other courses yet.",
     "saveFirstHint": "Save the course first, then reopen it to set prerequisites.",
     "validateRequired": "Course code and name are required.",
@@ -96,11 +102,21 @@
     "searchPlaceholder": "Search name or faculty ID…",
     "addTeacher": "Add teacher",
     "columns": {
-      "facultyId": "Faculty ID",
+      "facultyId": "Employee ID",
+      "rank": "Academic Rank",
       "courses": "Courses taught",
-      "sessions": "Weekly sessions"
+      "sessions": "Weekly sessions",
+      "completion": "Profile Completion",
+      "status": "Profile Status"
+    },
+    "filters": {
+      "allDepartments": "All departments",
+      "allRanks": "All ranks",
+      "allEmploymentTypes": "All employment types",
+      "allProfileStatuses": "All profile statuses"
     },
     "noCourses": "None",
+    "fullProfile": "Full profile",
     "deleteAria": "Delete teacher {{name}}",
     "confirmDelete": "Delete teacher {{name}}?",
     "toastRemoved": "Teacher removed"
@@ -111,9 +127,119 @@
     "fullNameLabel": "Full name",
     "fullNamePlaceholder": "e.g. Dr. Smith",
     "noDepartment": "— No department —",
+    "onboardingHint": "This creates the faculty member's core record. You'll continue with their full onboarding profile — personal, contact, employment, education and documents — right after.",
     "validateName": "Please enter a name.",
     "confirmDelete": "Delete teacher {{name}}?",
     "toastRemoved": "Teacher removed"
+  },
+  "studentsPage": {
+    "title": "Students",
+    "searchAriaLabel": "Search students by name, email, student ID, or phone",
+    "searchPlaceholder": "Search name, email, or student ID",
+    "columns": {
+      "studentId": "Student ID",
+      "program": "Program",
+      "semester": "Semester",
+      "batch": "Batch",
+      "status": "Status"
+    },
+    "filters": {
+      "allColleges": "All colleges",
+      "allDepartments": "All departments",
+      "allPrograms": "All programs",
+      "allStudentTypes": "All student types",
+      "allStatuses": "All statuses",
+      "allStudentStatuses": "All student statuses",
+      "allEnrollmentStatuses": "All enrollment statuses",
+      "allSemesters": "All semesters",
+      "allCourses": "All courses",
+      "batchPlaceholder": "Batch / session…",
+      "admissionDateFrom": "Enrolled from",
+      "admissionDateTo": "Enrolled until",
+      "flaggedOnly": "Show data issues only",
+      "clearFilters": "Clear filters",
+      "moreFilters": "More filters",
+      "clearAll": "Clear all",
+      "advancedFiltersTitle": "Advanced filters",
+      "academicScope": "Academic scope",
+      "enrollmentGroup": "Enrollment",
+      "enrolledBetween": "Enrolled between",
+      "applyFilters": "Apply filters",
+      "semesterChip": "Semester {{semester}}"
+    },
+    "flags": {
+      "role_mismatch": "Role changed",
+      "no_account": "No account",
+      "unlinked_user": "Unlinked",
+      "no_account_hint": "Application accepted, but no account was ever created — approve/create the account in Admissions.",
+      "unlinked_user_hint": "Student ID {{id}} appears in {{sources}} but has no matching user account — likely a data issue."
+    },
+    "quickActions": {
+      "viewProfile": "View profile",
+      "edit": "Edit",
+      "academicRecord": "Academic record",
+      "finance": "Finance"
+    },
+    "bulk": {
+      "selectedCount_one": "{{count}} student selected",
+      "selectedCount_other": "{{count}} students selected",
+      "updateStatus": "Update status",
+      "reassign": "Reassign dept/program",
+      "sendAnnouncement": "Send announcement",
+      "clearSelection": "Clear selection",
+      "reasonPlaceholder": "Reason (optional)",
+      "pickStatus": "Pick a status first.",
+      "pickTarget": "Pick a department or program first.",
+      "toastUpdated_one": "{{count}} student updated.",
+      "toastUpdated_other": "{{count}} students updated."
+    },
+    "export": {
+      "exportFiltered": "Export",
+      "exportSelected": "Export selected",
+      "toastExported": "Students exported."
+    },
+    "pagination": {
+      "summary": "Showing {{from}}–{{to}} of {{total}}",
+      "perPage": "{{count}} / page",
+      "pageOf": "Page {{page}} of {{totalPages}}"
+    },
+    "semesterPill": "Semester {{semester}}",
+    "reviewInAdmissions": "Review in Admissions",
+    "viewDetails": "View details",
+    "noStudentsMatch": "No students match the current filters."
+  },
+  "studentDetailPage": {
+    "title": "Student Details",
+    "noStudentSelected": "Select a student from the Students list to view their details.",
+    "fullProfile": "Full profile",
+    "roleMismatchBanner": "This person's role is now \"{{role}}\" — showing their historical student record read-only.",
+    "sections": {
+      "application": "Application",
+      "finance": "Finance Summary",
+      "enrollments": "Enrollments"
+    },
+    "noApplication": "No application on record — this student's account was created directly.",
+    "noEnrollments": "This student isn't enrolled in any courses yet.",
+    "fields": {
+      "applicationStatus": "Application status",
+      "applicationSource": "Source",
+      "applicationDecidedAt": "Decided on",
+      "applicationEmail": "Applicant email",
+      "balance": "Outstanding Balance",
+      "totalCharged": "Total Charged",
+      "totalPaid": "Total Paid"
+    },
+    "columns": {
+      "course": "Course",
+      "term": "Term",
+      "enrollmentStatus": "Status",
+      "grade": "Grade"
+    },
+    "enrollmentStatus": {
+      "enrolled": "Enrolled",
+      "dropped": "Dropped",
+      "waitlisted": "Waitlisted"
+    }
   },
   "departmentsPage": {
     "title": "Department Management",
@@ -143,6 +269,32 @@
     "noCollege": "— No college —",
     "confirmDelete": "Delete department {{name}}?",
     "toastRemoved": "Department removed"
+  },
+  "programsPanel": {
+    "title": "Programs / Degrees",
+    "none": "No programs yet — add one to start configuring program-specific tuition rates and fees.",
+    "addProgram": "Add program",
+    "degreeLevel": "Degree Level",
+    "totalCredits": "Total Credits",
+    "deleteAria": "Delete program {{name}}"
+  },
+  "programForm": {
+    "nameLabel": "Program name",
+    "namePlaceholder": "e.g. BSc Computer Science",
+    "validateName": "Please enter a program name.",
+    "noDepartment": "— No department —",
+    "degreeLevel": "Degree level",
+    "degreeLevels": {
+      "Certificate": "Certificate",
+      "Diploma": "Diploma",
+      "Associate": "Associate",
+      "Bachelor": "Bachelor",
+      "Master": "Master",
+      "Doctorate": "Doctorate"
+    },
+    "totalCredits": "Total credits required",
+    "confirmDelete": "Delete program {{name}}?",
+    "toastRemoved": "Program removed"
   },
   "bulkAssignDept": {
     "description_one": "This sets the department for {{count}} course — whichever courses match the current search/filters on the Courses page.",
@@ -187,7 +339,11 @@
     "examStartDateLabel": "Exam period start",
     "examEndDateLabel": "Exam period end",
     "examRangeHint": "Used by Auto-generate on the Exam Schedule page to pick exam dates. Leave blank to default to the last two weeks of the semester.",
+    "registrationOpensLabel": "Registration opens",
+    "registrationClosesLabel": "Registration closes",
+    "registrationRangeHint": "Shown as the registration-status pill on the Registrar dashboard. Leave blank to show Open/Closed based only on this semester being active, with no date.",
     "validateExamRange": "Exam period end date cannot be before the start date.",
+    "validateRegistrationRange": "Registration close date cannot be before the open date.",
     "validateName": "Please enter a semester name.",
     "confirmDelete": "Delete semester {{name}}?",
     "toastRemoved": "Semester removed",

@@ -1,5 +1,6 @@
 {
   "appName": "UniScheduler",
+  "orConjunction": "or",
   "actions": {
     "save": "Save",
     "cancel": "Cancel",
@@ -92,5 +93,6 @@
     "switchToDark": "Switch to dark mode"
   },
   "noneYet": "None yet",
-  "notApplicable": "—"
+  "notApplicable": "—",
+  "accessDenied": "You don't have permission to view this."
 }

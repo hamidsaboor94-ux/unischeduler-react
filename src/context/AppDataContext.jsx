@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { api, markNotificationRead, markAllNotificationsRead, updateMyLanguage, fetchActivityStatus, markCourseActivityViewedApi, fetchMyGrades } from '../api.js';
+import { api, markNotificationRead, markAllNotificationsRead, updateMyLanguage, fetchActivityStatus, markCourseActivityViewedApi, fetchMyGrades, fetchTeacherProfileSummaries } from '../api.js';
 import { API_BASE } from '../api.js';
 import { useToast } from './ToastContext.jsx';
 import { lightenHex, hexToRgba } from '../utils.js';
 import { applyLanguage, DEFAULT_LANGUAGE } from '../i18n/index.js';
 import { can } from '../permissions.js';
+import { getToken, clearToken } from '../tokenStorage.js';
 
 const AppDataContext = createContext(null);
 
@@ -38,9 +39,15 @@ export function AppDataProvider({ children }) {
 
   const [departments, setDepartments] = useState([]);
   const [colleges, setColleges] = useState([]);
+  const [programs, setPrograms] = useState([]);
+  const [studentTypes, setStudentTypes] = useState([]);
   const [terms, setTerms] = useState([]);
   const [activeTermId, setActiveTermIdState] = useState(null);
   const [teachers, setTeachers] = useState([]);
+  // teacherId -> { employeeId, designation, employmentType, status, completionPercent,
+  // profileStatus, documentsCount, verifiedDocumentsCount } — one bulk fetch backing the Teacher
+  // Management list's status badges/filters instead of a per-row profile request.
+  const [teacherProfileSummaries, setTeacherProfileSummaries] = useState(new Map());
   const [rooms, setRooms] = useState([]);
   const [courses, setCourses] = useState([]);
   const [slots, setSlots] = useState([]);
@@ -48,8 +55,17 @@ export function AppDataProvider({ children }) {
   const [exams, setExams] = useState([]);
   const [myEnrollments, setMyEnrollments] = useState([]);
   const [conflictsData, setConflictsData] = useState(emptyConflicts);
+  // Detailed per-conflict results from the last successful "Auto-resolve" run — the Conflicts
+  // page's "Recently resolved" panel reads this. Lives here rather than local component state
+  // because auto-resolve can be triggered from more than one place (the page's own toolbar
+  // button, or a ConflictItem card's "Suggest fix" action), and both should update the same panel.
+  const [lastResolutions, setLastResolutions] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [unviewedActivityCourseIds, setUnviewedActivityCourseIds] = useState(new Set());
+  // courseId -> count of unseen assignments/announcements/materials — Map<number, number>, same
+  // source (GET /course-activity/status) as unviewedActivityCourseIds, just the count alongside
+  // the existing boolean set rather than replacing it (nothing else needs to change).
+  const [unviewedActivityCounts, setUnviewedActivityCounts] = useState(new Map());
   const [myFinalGrades, setMyFinalGrades] = useState(new Map());
   const [courseRosters, setCourseRosters] = useState(new Map());
   const [allUsers, setAllUsers] = useState([]);
@@ -79,10 +95,21 @@ export function AppDataProvider({ children }) {
       const wantCourses = can(role, 'courses', 'read');
       const wantTimetable = can(role, 'timetable', 'read');
       const wantExams = can(role, 'exams', 'read');
+      // Mirrors the backend's GET /teacher-profile guard (teachers:View OR finance:write/Bursar) —
+      // a role without either (e.g. student, faculty) 403s on this call. Left ungated, that 403
+      // rejects the Promise.all below and silently aborts the rest of this load (courses, rooms,
+      // slots, exams, notifications all stay stuck at their initial empty state) with no visible
+      // error, since AuthScreen's try/catch around boot() fires after the UI has already left the
+      // login screen.
+      const wantTeacherProfiles = can(role, 'teachers', 'read') || can(role, 'finance', 'write');
 
-      const [depts, clgs, trms] = await Promise.all([api('GET', '/departments'), api('GET', '/colleges'), api('GET', '/terms')]);
+      const [depts, clgs, progs, sTypes, trms] = await Promise.all([
+        api('GET', '/departments'), api('GET', '/colleges'), api('GET', '/programs'), api('GET', '/student-types'), api('GET', '/terms'),
+      ]);
       setDepartments(depts);
       setColleges(clgs);
+      setPrograms(progs);
+      setStudentTypes(sTypes);
       setTerms(trms);
 
       let effectiveTermId = termIdParam;
@@ -93,8 +120,9 @@ export function AppDataProvider({ children }) {
       setActiveTermIdState(effectiveTermId);
 
       const termQuery = effectiveTermId ? `?termId=${effectiveTermId}` : '';
-      const [tchrs, rms, crs, slts, exms, excs, notifs] = await Promise.all([
+      const [tchrs, profileSummaries, rms, crs, slts, exms, excs, notifs] = await Promise.all([
         api('GET', '/teachers'),
+        wantTeacherProfiles ? fetchTeacherProfileSummaries() : Promise.resolve([]),
         api('GET', '/rooms'),
         wantCourses ? api('GET', `/courses${termQuery}`) : Promise.resolve([]),
         wantTimetable ? api('GET', '/slots').then(rows => effectiveTermId ? rows.filter(s => s.termId === effectiveTermId) : rows) : Promise.resolve([]),
@@ -103,6 +131,7 @@ export function AppDataProvider({ children }) {
         api('GET', '/notifications'),
       ]);
       setTeachers(tchrs);
+      setTeacherProfileSummaries(new Map(profileSummaries.map(s => [s.teacherId, s])));
       setRooms(rms);
       setCourses(crs);
       setSlots(slts);
@@ -131,8 +160,9 @@ export function AppDataProvider({ children }) {
       }
       if (role === 'student') {
         setMyEnrollments(await api('GET', '/enrollments/me'));
-        const { courseIds } = await fetchActivityStatus();
+        const { courseIds, counts } = await fetchActivityStatus();
         setUnviewedActivityCourseIds(new Set(courseIds));
+        setUnviewedActivityCounts(new Map(Object.entries(counts).map(([id, n]) => [Number(id), n])));
         const grades = await fetchMyGrades();
         setMyFinalGrades(new Map(grades.map(g => [g.course.id, { letterGrade: g.letterGrade, hasAnyScore: g.hasAnyScore, average: g.average }])));
       } else if (role === 'faculty') {
@@ -179,6 +209,12 @@ export function AppDataProvider({ children }) {
     setUnviewedActivityCourseIds(prev => {
       if (!prev.has(courseId)) return prev;
       const next = new Set(prev);
+      next.delete(courseId);
+      return next;
+    });
+    setUnviewedActivityCounts(prev => {
+      if (!prev.has(courseId)) return prev;
+      const next = new Map(prev);
       next.delete(courseId);
       return next;
     });
@@ -241,7 +277,7 @@ export function AppDataProvider({ children }) {
   }
 
   function logout() {
-    localStorage.removeItem('token');
+    clearToken();
     setCurrentUser(null);
     setActiveTermIdState(null);
     setAuthPhase('login');
@@ -251,6 +287,7 @@ export function AppDataProvider({ children }) {
     // (this login or the next one, same browser tab) always re-fetches its own scoped set,
     // but nothing from this account's feed should be visible even for the instant in between.
     setNotifications([]);
+    setLastResolutions([]);
   }
 
   /** Self-service language switch — applied immediately (i18next + document dir/lang) so the
@@ -290,7 +327,7 @@ export function AppDataProvider({ children }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const token = localStorage.getItem('token');
+      const token = getToken();
       if (!token) { setAuthPhase('login'); return; }
       try {
         const user = await api('GET', '/auth/me');
@@ -299,7 +336,7 @@ export function AppDataProvider({ children }) {
         else await boot(user);
       } catch (err) {
         if (cancelled) return;
-        localStorage.removeItem('token');
+        clearToken();
         setAuthPhase('login');
       }
     })();
@@ -309,9 +346,9 @@ export function AppDataProvider({ children }) {
 
   const value = useMemo(() => ({
     authPhase, currentUser, branding, logoUrl, language,
-    departments, colleges, terms, activeTermId, teachers, rooms, courses, slots, slotExceptions, exams,
-    myEnrollments, conflictsData, courseRosters, allUsers, auditLog, isLoading, notifications,
-    unviewedActivityCourseIds, myFinalGrades,
+    departments, colleges, programs, studentTypes, terms, activeTermId, teachers, teacherProfileSummaries, rooms, courses, slots, slotExceptions, exams,
+    myEnrollments, conflictsData, lastResolutions, setLastResolutions, courseRosters, allUsers, auditLog, isLoading, notifications,
+    unviewedActivityCourseIds, unviewedActivityCounts, myFinalGrades,
     sortState, toggleSort,
     reload, afterMutate, selectTerm, boot, showSetPasswordScreen, logout,
     dismissNotification, dismissAllNotifications, markCourseActivityViewed, updateCurrentUser,
@@ -319,9 +356,9 @@ export function AppDataProvider({ children }) {
     setActiveTermIdOptimistic: setActiveTermIdState,
   }), [
     authPhase, currentUser, branding, logoUrl, language,
-    departments, colleges, terms, activeTermId, teachers, rooms, courses, slots, slotExceptions, exams,
-    myEnrollments, conflictsData, courseRosters, allUsers, auditLog, isLoading, notifications,
-    unviewedActivityCourseIds, myFinalGrades,
+    departments, colleges, programs, studentTypes, terms, activeTermId, teachers, teacherProfileSummaries, rooms, courses, slots, slotExceptions, exams,
+    myEnrollments, conflictsData, lastResolutions, courseRosters, allUsers, auditLog, isLoading, notifications,
+    unviewedActivityCourseIds, unviewedActivityCounts, myFinalGrades,
     sortState,
   ]);
 

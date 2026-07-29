@@ -47,6 +47,19 @@
       "confirmRemoveButton": "Remove",
       "toastResolved": "Conflict resolved — re-checked the timetable for new clashes.",
       "toastRemoved": "Duplicate session removed."
+    },
+    "recentlyResolved": {
+      "title": "Recently resolved",
+      "subtitle": "{{count}} resolved just now",
+      "dismiss": "Dismiss",
+      "unassigned": "Unassigned",
+      "types": {
+        "room-double-booking": "Room double-booking",
+        "instructor-double-booking": "Instructor double-booking",
+        "exam-clash": "Exam clash",
+        "capacity": "Capacity exceeded",
+        "invigilator-shortage": "Invigilator gap"
+      }
     }
   },
   "conflictItem": {
@@ -161,6 +174,24 @@
     "toast": {
       "exported": "Backup exported — keep the file somewhere safe, like a USB drive or shared folder.",
       "restored": "Backup restored — reloading…"
+    },
+    "systemReset": {
+      "title": "System Reset",
+      "hint": "Permanently deletes all operational data — courses, timetables, exams, enrollments, students, teachers, notifications, admissions, and finance records — while keeping the schema, every Super Admin account, and your institution's branding/config intact. This cannot be undone.",
+      "backupFirstLabel": "Back up database before resetting",
+      "confirmTypeLabelWithOrg": "Type <strong>{{orgName}}</strong> or <strong>RESET</strong> to confirm",
+      "confirmTypeLabelResetOnly": "Type <strong>RESET</strong> to confirm",
+      "resetButton": "Reset system",
+      "confirmMessage": "This permanently deletes all operational data — courses, timetables, exams, enrollments, students, teachers, notifications, admissions, and finance records. Super Admin accounts, the database schema, and institution settings are kept. This cannot be undone.",
+      "confirmLabel": "Reset system",
+      "toast": {
+        "success": "System reset complete — reloading…",
+        "successWithBackup": "System reset complete. Backup saved as \"{{fileName}}\" — reloading…"
+      },
+      "result": {
+        "successNoBackup": "Reset complete. No backup was taken.",
+        "successWithBackup": "Reset complete. Backup saved as \"{{fileName}}\"."
+      }
     }
   }
 }

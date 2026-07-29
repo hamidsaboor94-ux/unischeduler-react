@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const { findUserByEmail, get, run, logAudit } = require('./db');
-const { requireAuth, JWT_SECRET } = require('./middleware/auth');
+const { requireAuth, requireRole, JWT_SECRET } = require('./middleware/auth');
 const { requireModuleAccess } = require('./middleware/permission');
 const { departmentScopeForUser } = require('./scope');
 const asyncHandler = require('./middleware/asyncHandler');
@@ -45,8 +45,14 @@ app.get('/api/ping', (req, res) => res.json({ ok: true }));
 // app is the default admin (see seed.js) — every other account is created by
 // an admin via POST /api/users or /api/users/bulk-import, which hand back a
 // one-time temporary password instead of sending email.
+// "Remember me" doesn't change where the token lives client-side alone (localStorage vs.
+// sessionStorage) — the token itself must actually outlive the default 8h session, or the user
+// would still get logged out mid-day despite checking the box.
+const REMEMBER_ME_EXPIRES_IN = '30d';
+const DEFAULT_EXPIRES_IN = '8h';
+
 app.post('/api/auth/login', authLimiter, asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, rememberMe } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
   const user = await findUserByEmail(email);
   if (!user) return res.status(401).json({ error: 'Invalid credentials' });
@@ -58,7 +64,7 @@ app.post('/api/auth/login', authLimiter, asyncHandler(async (req, res) => {
   authLimiter.resetKey(ipKeyGenerator(req.ip));
   const mustChangePassword = !!user.mustChangePassword;
   const departmentIds = await departmentScopeForUser(user);
-  const token = jwt.sign({ sub: user.id, role: user.role, departmentId: user.departmentId ?? null, collegeId: user.collegeId ?? null, departmentIds, email: user.email, mustChangePassword }, JWT_SECRET, { expiresIn: '8h' });
+  const token = jwt.sign({ sub: user.id, role: user.role, departmentId: user.departmentId ?? null, collegeId: user.collegeId ?? null, departmentIds, email: user.email, mustChangePassword }, JWT_SECRET, { expiresIn: rememberMe ? REMEMBER_ME_EXPIRES_IN : DEFAULT_EXPIRES_IN });
   res.json({ token, user: { id: user.id, email: user.email, role: user.role, departmentId: user.departmentId ?? null, collegeId: user.collegeId ?? null, name: user.name, mustChangePassword, idNumber: user.idNumber, language: user.language || 'en' } });
 }));
 
@@ -69,13 +75,13 @@ app.get('/api/auth/me', requireAuth, asyncHandler(async (req, res) => {
 }));
 
 app.put('/api/auth/set-password', requireAuth, authLimiter, asyncHandler(async (req, res) => {
-  const { newPassword } = req.body;
+  const { newPassword, rememberMe } = req.body;
   if (!isValidPassword(newPassword)) return res.status(400).json({ error: 'Password must be at least 8 characters' });
   const passwordHash = bcrypt.hashSync(newPassword, 8);
   await run('UPDATE users SET passwordHash = ?, mustChangePassword = 0 WHERE id = ?', [passwordHash, req.user.sub]);
   const user = await get('SELECT id, name, email, role, departmentId, collegeId, idNumber, language FROM users WHERE id = ?', [req.user.sub]);
   const departmentIds = await departmentScopeForUser(user);
-  const token = jwt.sign({ sub: user.id, role: user.role, departmentId: user.departmentId ?? null, collegeId: user.collegeId ?? null, departmentIds, email: user.email, mustChangePassword: false }, JWT_SECRET, { expiresIn: '8h' });
+  const token = jwt.sign({ sub: user.id, role: user.role, departmentId: user.departmentId ?? null, collegeId: user.collegeId ?? null, departmentIds, email: user.email, mustChangePassword: false }, JWT_SECRET, { expiresIn: rememberMe ? REMEMBER_ME_EXPIRES_IN : DEFAULT_EXPIRES_IN });
   res.json({ token, user: { ...user, mustChangePassword: false } });
 }));
 
@@ -139,12 +145,27 @@ app.use('/api/users', requireAuth, requireModuleAccess('users'), require('./rout
 app.use('/api/audit-log', requireAuth, requireModuleAccess('audit'), require('./routes/auditLog'));
 app.use('/api/colleges', requireAuth, requireModuleAccess('departments', { openRead: true }), require('./routes/colleges'));
 app.use('/api/departments', requireAuth, requireModuleAccess('departments', { openRead: true }), require('./routes/departments'));
+app.use('/api/programs', requireAuth, requireModuleAccess('departments', { openRead: true }), require('./routes/programs'));
+app.use('/api/student-types', requireAuth, requireModuleAccess('finance', { openRead: true }), require('./routes/studentTypes'));
 app.use('/api/terms', requireAuth, requireModuleAccess('terms'), require('./routes/terms'));
 app.use('/api/teachers', requireAuth, requireModuleAccess('teachers', { openRead: true }), require('./routes/teachers'));
+// Faculty HR profile (personal/employment/education/documents) — read is open to any
+// authenticated user (matches /api/teachers). Writes are deliberately NOT gated by a mount-level
+// module check: every mutating route inside the router already carries its own
+// requirePermission('teachers.Create'/'.Update'/'.Delete', ...), and PUT /:teacherId additionally
+// lets a Bursar (finance write, but no general 'teachers' module access) through for a
+// payroll-id-only update — a coarse mount-level 'teachers' write gate here would block that
+// before the router ever got a chance to make that distinction. See routes/teacherProfile.js.
+app.use('/api/teacher-profile', requireAuth, require('./routes/teacherProfile'));
 app.use('/api/rooms', requireAuth, requireModuleAccess('rooms', { openRead: true }), require('./routes/rooms'));
 app.use('/api/courses', requireAuth, requireModuleAccess('courses', { allowOwnerWrite: true }), require('./routes/courses'));
 app.use('/api/slots', requireAuth, requireModuleAccess('timetable'), require('./routes/slots'));
-app.use('/api/slot-exceptions', requireAuth, requireModuleAccess('timetable'), require('./routes/slotExceptions'));
+// No blanket requireModuleAccess here (unlike /api/slots) — the general read/cancel/move
+// endpoints enforce 'timetable' read/write per-route inside the router (same net effect as
+// before), which leaves room for the one faculty-facing route (reschedule a cancelled session
+// of a course they own) to be gated independently and more narrowly, without granting faculty
+// 'timetable' write access at large.
+app.use('/api/slot-exceptions', requireAuth, require('./routes/slotExceptions'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/attendance', requireAuth, requireModuleAccess('attendance'), require('./routes/attendance'));
 app.use('/api/exams', requireAuth, requireModuleAccess('exams', { allowOwnerWrite: true }), require('./routes/exams'));
@@ -155,13 +176,31 @@ app.use('/api/enrollments', requireAuth, requireModuleAccess('enrollment', { all
 app.use('/api/grades', requireAuth, requireModuleAccess('grades'), require('./routes/grades'));
 app.use('/api/assignments', require('./routes/assignments'));
 app.use('/api/announcements', require('./routes/announcements'));
+// University-wide targeted announcements — mounted bare (like /api/notifications) since its
+// /notices/me/* endpoints must be reachable by every role regardless of the 'announcements'
+// module policy; management endpoints carry their own requirePermission checks internally.
+app.use('/api/notices', require('./routes/notices'));
 app.use('/api/course-activity', require('./routes/courseActivity'));
 app.use('/api/materials', require('./routes/materials'));
 app.use('/api/student-profile', require('./routes/studentProfile'));
+app.use('/api/progression', require('./routes/progression'));
+app.use('/api/students', require('./routes/students'));
 app.use('/api/finance', require('./routes/finance'));
 app.use('/api/applications', require('./routes/applications'));
 app.use('/api/timetable-import', requireAuth, requireModuleAccess('timetable'), require('./routes/timetableImport'));
 app.use('/api/backup', requireAuth, requireModuleAccess('backup'), require('./routes/backup'));
+// Read-only system status for the Super Admin dashboard's pulse banner/health cards — no
+// module entry in permissions.js needed since it's gated directly to the admin role.
+app.use('/api/system-health', requireAuth, requireRole('admin'), require('./routes/systemHealth'));
+// Registrar dashboard aggregates (counts over applications/enrollments/finance) — gated directly
+// to registrar/admin, same pattern as system-health above, rather than through requireModuleAccess:
+// registrar has no general 'admissions'/'finance' module access, and this endpoint only ever
+// returns counts, never raw applicant/billing records, so it doesn't need that broader grant.
+app.use('/api/registrar-dashboard', requireAuth, requireRole('registrar', 'admin'), require('./routes/registrarDashboard'));
+// System reset (wipes operational data). Gated directly to the admin role here — same pattern
+// as system-health above — rather than through the permissions.js module policy, since this
+// must never be reachable by any other role under any policy configuration.
+app.use('/api/super-admin', requireAuth, requireRole('admin'), require('./routes/superAdmin'));
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });

@@ -5,7 +5,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { isPositiveInt } = require('../validate');
 
 const router = express.Router();
-const FIELDS = ['name', 'startDate', 'endDate', 'isActive', 'offDays', 'creditLimit', 'examStartDate', 'examEndDate'];
+const FIELDS = ['name', 'startDate', 'endDate', 'isActive', 'offDays', 'creditLimit', 'examStartDate', 'examEndDate', 'registrationOpensAt', 'registrationClosesAt'];
 const VALID_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 function validateDateRange(body) {
@@ -14,6 +14,9 @@ function validateDateRange(body) {
   }
   if (body.examStartDate && body.examEndDate && body.examEndDate < body.examStartDate) {
     return 'Exam period end date cannot be before the exam period start date.';
+  }
+  if (body.registrationOpensAt && body.registrationClosesAt && body.registrationClosesAt < body.registrationOpensAt) {
+    return 'Registration close date cannot be before the registration open date.';
   }
   return null;
 }

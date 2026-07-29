@@ -1,38 +1,27 @@
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppData } from '../../context/AppDataContext.jsx';
 import { useModal } from '../../context/ModalContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
-import { api, withdrawFromCourse } from '../../api.js';
+import { withdrawFromCourse } from '../../api.js';
 import { courseById, csvEscape, downloadFile } from '../../utils.js';
+import CourseScheduleSummary from './CourseScheduleSummary.jsx';
 
 /** Port of openRoster() — the roster stays live against courseRosters from context, so grade
-    changes and admin-enrollments re-render in place after each reload() (the original re-called
-    openRoster(courseId) after every mutation; here the same openModal stays mounted and context
-    updates flow through). */
+    changes and registrar/admin-enrollments re-render in place after each reload() (the original
+    re-called openRoster(courseId) after every mutation; here the same openModal stays mounted and
+    context updates flow through). */
 export default function RosterModal({ editId: courseId }) {
   const { t } = useTranslation(['academics', 'common']);
-  const { courses, courseRosters, allUsers, currentUser, reload, afterMutate } = useAppData();
-  const { closeModal, confirmAction } = useModal();
+  const { courses, courseRosters, currentUser, afterMutate } = useAppData();
+  const { closeModal, confirmAction, openModal } = useModal();
   const { toast } = useToast();
-  const [selectedStudent, setSelectedStudent] = useState('');
 
   const course = courseById(courses, courseId);
   const roster = courseRosters.get(courseId) || [];
-  const enrolledIds = new Set(roster.map(r => r.studentId));
-  const availableStudents = allUsers.filter(u => u.role === 'student' && !enrolledIds.has(u.id));
-
-  async function adminEnrollStudent() {
-    if (!selectedStudent) { toast(t('academics:rosterModal.pickStudentFirst'), 'warning'); return; }
-    try {
-      const enrollment = await api('POST', '/enrollments', { courseId, studentId: Number(selectedStudent) });
-      toast(enrollment.status === 'waitlisted' ? t('academics:rosterModal.courseFullWaitlisted') : t('academics:rosterModal.studentEnrolled'));
-      setSelectedStudent('');
-      await reload();
-    } catch (err) {
-      toast(err.message, 'error');
-    }
-  }
+  // Mirrors the server's canModifyEnrollment (see api/src/ownership.js): enrollment write
+  // (enroll or withdraw) is Super Admin/Registrar only — Faculty can view the roster (grades/
+  // attendance are their domain) but do not add or remove students from it.
+  const canModify = currentUser.role === 'admin' || currentUser.role === 'registrar';
 
   function removeStudent(r) {
     closeModal();
@@ -56,6 +45,7 @@ export default function RosterModal({ editId: courseId }) {
   return (
     <>
       <div id="modal-body">
+        {course && <CourseScheduleSummary course={course} />}
         <div className="roster-list">
           {roster.length ? roster.map(r => (
             <div className="roster-row" key={r.enrollmentId}>
@@ -66,24 +56,21 @@ export default function RosterModal({ editId: courseId }) {
                   : r.grade ? <span className="pill pill-blue" style={{ marginInlineStart: 6 }}>{r.grade}</span> : null}
               </span>
               <span style={{ display: 'flex', alignItems: 'center' }}>
-                <button className="icon-btn danger" aria-label={t('academics:rosterModal.removeAriaLabel', { name: r.name })} onClick={() => removeStudent(r)}>
-                  <i className="ti ti-x" aria-hidden="true"></i>
-                </button>
+                {canModify && (
+                  <button className="icon-btn danger" aria-label={t('academics:rosterModal.removeAriaLabel', { name: r.name })} onClick={() => removeStudent(r)}>
+                    <i className="ti ti-x" aria-hidden="true"></i>
+                  </button>
+                )}
               </span>
             </div>
           )) : <div className="field-hint">{t('academics:rosterModal.noStudents')}</div>}
         </div>
-        {currentUser.role === 'admin' && (
-          <>
-            <div className="form-row" style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-              <div className="form-label">{t('academics:rosterModal.enrollExisting')}</div>
-              <select value={selectedStudent} onChange={e => setSelectedStudent(e.target.value)}>
-                <option value="">{t('academics:rosterModal.selectStudent')}</option>
-                {availableStudents.map(u => <option key={u.id} value={u.id}>{u.idNumber ? `${u.idNumber} — ` : ''}{u.name}</option>)}
-              </select>
-            </div>
-            <button className="btn-sm" onClick={adminEnrollStudent}><i className="ti ti-plus"></i> {t('academics:rosterModal.addToCourse')}</button>
-          </>
+        {canModify && (
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+            <button className="btn-sm" onClick={() => openModal('enroll-students', courseId)}>
+              <i className="ti ti-user-plus" aria-hidden="true"></i> {t('academics:rosterModal.enrollStudents')}
+            </button>
+          </div>
         )}
       </div>
       <div id="modal-footer" className="modal-footer">

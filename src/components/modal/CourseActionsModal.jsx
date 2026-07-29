@@ -8,7 +8,7 @@ import { useAsyncAction } from '../../hooks/useAsyncAction.js';
 import {
   fetchCourseAssignments, saveAssignment, fetchAssignmentSubmissions, gradeSubmission,
   fetchCourseAnnouncements, saveAnnouncement, downloadSubmissionFile,
-  fetchCourseMaterials, saveMaterial, downloadMaterialFile,
+  fetchCourseMaterials, saveMaterial, downloadMaterialFile, deleteMaterial,
 } from '../../api.js';
 import { fmtDate } from '../../utils.js';
 
@@ -143,7 +143,7 @@ function AssignmentRow({ assignment, onGraded }) {
 export default function CourseActionsModal({ editId: courseId, prefill }) {
   const { t } = useTranslation(['academics', 'timetable', 'common']);
   const { courses } = useAppData();
-  const { closeModal, openModal } = useModal();
+  const { closeModal, openModal, confirmAction } = useModal();
   const { showSection } = useNavigation();
   const { toast } = useToast();
   const { run: runSave, loading: savingAssignment } = useAsyncAction();
@@ -151,6 +151,8 @@ export default function CourseActionsModal({ editId: courseId, prefill }) {
   const { run: runPostMaterial, loading: postingMaterial } = useAsyncAction();
 
   const course = courses.find(c => c.id === courseId);
+
+  const [activeTab, setActiveTab] = useState('assignments');
 
   const [assignments, setAssignments] = useState([]);
   const [loadingAssignments, setLoadingAssignments] = useState(false);
@@ -227,6 +229,17 @@ export default function CourseActionsModal({ editId: courseId, prefill }) {
     }
   }
 
+  /** Mirrors RosterModal's removeStudent — this app shows one modal at a time, so confirming a
+      destructive action means closing the current one first, then the shared confirm dialog runs
+      the deletion on accept. Faculty reopens this course card afterward to see the updated list. */
+  function handleDeleteMaterial(m) {
+    closeModal();
+    confirmAction(
+      t('academics:materialsPanel.deleteConfirm', { title: m.title }),
+      () => deleteMaterial(m.id).then(() => toast(t('academics:materialsPanel.deleted'))).catch(err => toast(err.message, 'error'))
+    );
+  }
+
   function goTo(section) {
     closeModal();
     showSection(section, { courseId });
@@ -237,132 +250,159 @@ export default function CourseActionsModal({ editId: courseId, prefill }) {
   return (
     <>
     <div id="modal-body">
-      {/* 1. Assignments */}
-      <div className="panel">
-        <div className="panel-header">
-          <div>
-            <div className="panel-title">{t('timetable:courseActionsModal.assignments')}</div>
-            <div className="panel-subtitle">{t('academics:assignmentsPanel.hint')}</div>
-          </div>
-          <button className="btn-sm" onClick={() => setShowAddForm(v => !v)}>
-            <i className="ti ti-plus"></i> {t('academics:assignmentsPanel.addAssignment')}
-          </button>
-        </div>
+      {/* Attendance / Marks / Roster — one-shot shortcuts (navigate away or open another modal),
+          not content of their own, so they stay outside the tabs rather than becoming a 4th one. */}
+      <div className="course-action-tiles" style={{ marginBottom: 14 }}>
+        <button className="course-action-tile blue" onClick={() => goTo('attendance')}>
+          <i className="ti ti-clipboard-check course-action-tile-icon" aria-hidden="true"></i>
+          <span className="course-action-tile-label">{t('timetable:courseActionsModal.takeAttendance')}</span>
+          <span className="course-action-tile-hint">{t('timetable:courseActionsModal.takeAttendanceHint')}</span>
+        </button>
+        <button className="course-action-tile green" onClick={() => goTo('gradebook')}>
+          <i className="ti ti-report-analytics course-action-tile-icon" aria-hidden="true"></i>
+          <span className="course-action-tile-label">{t('timetable:courseActionsModal.enterMarks')}</span>
+          <span className="course-action-tile-hint">{t('timetable:courseActionsModal.enterMarksHint')}</span>
+        </button>
+        <button className="course-action-tile amber" onClick={() => openModal('roster', courseId)}>
+          <i className="ti ti-users course-action-tile-icon" aria-hidden="true"></i>
+          <span className="course-action-tile-label">{t('timetable:courseActionsModal.viewRoster')}</span>
+          <span className="course-action-tile-hint">{t('timetable:courseActionsModal.viewRosterHint')}</span>
+        </button>
+      </div>
 
-        {showAddForm && (
-          <div style={{ marginBottom: 14, paddingBottom: 14, borderBottom: '1px solid var(--border)' }}>
-            <div className="form-row">
-              <div className="form-label">{t('academics:assignmentsPanel.title')}</div>
-              <input type="text" value={title} onChange={e => setTitle(e.target.value)} />
+      {/* Assignments / Announcements / Materials each get their own space instead of one long
+          stack — only the active tab's panel renders. */}
+      <div className="tabs" style={{ marginBottom: 14 }}>
+        <button className={'tab' + (activeTab === 'assignments' ? ' active' : '')} onClick={() => setActiveTab('assignments')}>
+          {t('timetable:courseActionsModal.assignments')}
+        </button>
+        <button className={'tab' + (activeTab === 'announcements' ? ' active' : '')} onClick={() => setActiveTab('announcements')}>
+          {t('timetable:courseActivityModal.announcements')}
+        </button>
+        <button className={'tab' + (activeTab === 'materials' ? ' active' : '')} onClick={() => setActiveTab('materials')}>
+          {t('academics:materialsPanel.title')}
+        </button>
+      </div>
+
+      {activeTab === 'assignments' && (
+        <div className="panel">
+          <div className="panel-header">
+            <div>
+              <div className="panel-title">{t('timetable:courseActionsModal.assignments')}</div>
+              <div className="panel-subtitle">{t('academics:assignmentsPanel.hint')}</div>
             </div>
-            <div className="form-row">
-              <div className="form-label">{t('academics:assignmentsPanel.description')}</div>
-              <input type="text" value={description} onChange={e => setDescription(e.target.value)} />
-            </div>
-            <div className="form-row-2">
-              <div className="form-row">
-                <div className="form-label">{t('academics:assignmentsPanel.dueDate')}</div>
-                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
-              </div>
-              <div className="form-row">
-                <div className="form-label">{t('academics:assignmentsPanel.maxMarksLabel')}</div>
-                <input type="number" min="1" value={maxMarks} onChange={e => setMaxMarks(e.target.value)} />
-              </div>
-            </div>
-            <button className={'btn-primary' + (savingAssignment ? ' btn-loading' : '')} disabled={savingAssignment} onClick={handleAddAssignment}>
-              {savingAssignment ? <span className="spinner"></span> : <><i className="ti ti-check"></i> {t('academics:assignmentsPanel.post')}</>}
+            <button className="btn-sm" onClick={() => setShowAddForm(v => !v)}>
+              <i className="ti ti-plus"></i> {t('academics:assignmentsPanel.addAssignment')}
             </button>
           </div>
-        )}
 
-        {loadingAssignments && <div className="field-hint">{t('common:actions.loading')}</div>}
-        {!loadingAssignments && !assignments.length && <div className="field-hint">{t('academics:assignmentsPanel.empty')}</div>}
-        {assignments.map(a => <AssignmentRow key={a.id} assignment={a} onGraded={loadAssignments} />)}
-      </div>
-
-      {/* 2 & 3. Attendance / Gradebook shortcuts */}
-      <div className="panel" style={{ display: 'flex', gap: 10 }}>
-        <button className="btn-sm" style={{ flex: 1 }} onClick={() => goTo('attendance')}>
-          <i className="ti ti-clipboard-check"></i> {t('timetable:courseActionsModal.takeAttendance')}
-        </button>
-        <button className="btn-sm" style={{ flex: 1 }} onClick={() => goTo('gradebook')}>
-          <i className="ti ti-report-analytics"></i> {t('timetable:courseActionsModal.enterMarks')}
-        </button>
-        <button className="btn-sm" style={{ flex: 1 }} onClick={() => openModal('roster', courseId)}>
-          <i className="ti ti-users"></i> {t('timetable:courseActionsModal.viewRoster')}
-        </button>
-      </div>
-
-      {/* 4. Announcements */}
-      <div className="panel">
-        <div className="panel-header">
-          <div>
-            <div className="panel-title">{t('timetable:courseActionsModal.postAnnouncement')}</div>
-            <div className="panel-subtitle">{t('academics:announcementsPanel.hint')}</div>
-          </div>
-        </div>
-        <div className="form-row">
-          <textarea rows={2} value={announcementText} onChange={e => setAnnouncementText(e.target.value)}
-            placeholder={t('academics:announcementsPanel.placeholder')} style={{ width: '100%', resize: 'vertical' }} />
-        </div>
-        <button className={'btn-primary' + (postingAnnouncement ? ' btn-loading' : '')} disabled={postingAnnouncement} onClick={handlePostAnnouncement}>
-          {postingAnnouncement ? <span className="spinner"></span> : <><i className="ti ti-send"></i> {t('academics:announcementsPanel.post')}</>}
-        </button>
-
-        <div style={{ marginTop: 12 }}>
-          {loadingAnnouncements && <div className="field-hint">{t('common:actions.loading')}</div>}
-          {!loadingAnnouncements && !announcements.length && <div className="field-hint">{t('academics:announcementsPanel.empty')}</div>}
-          <div className="roster-list">
-            {announcements.map(an => (
-              <div className="roster-row" key={an.id} style={{ alignItems: 'flex-start' }}>
-                <span>{an.message}</span>
-                <span className="field-hint" style={{ whiteSpace: 'nowrap', marginInlineStart: 8 }}>{fmtDateTime(an.createdAt)}</span>
+          {showAddForm && (
+            <div style={{ marginBottom: 14, paddingBottom: 14, borderBottom: '1px solid var(--border)' }}>
+              <div className="form-row">
+                <div className="form-label">{t('academics:assignmentsPanel.title')}</div>
+                <input type="text" value={title} onChange={e => setTitle(e.target.value)} />
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
+              <div className="form-row">
+                <div className="form-label">{t('academics:assignmentsPanel.description')}</div>
+                <input type="text" value={description} onChange={e => setDescription(e.target.value)} />
+              </div>
+              <div className="form-row-2">
+                <div className="form-row">
+                  <div className="form-label">{t('academics:assignmentsPanel.dueDate')}</div>
+                  <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+                </div>
+                <div className="form-row">
+                  <div className="form-label">{t('academics:assignmentsPanel.maxMarksLabel')}</div>
+                  <input type="number" min="1" value={maxMarks} onChange={e => setMaxMarks(e.target.value)} />
+                </div>
+              </div>
+              <button className={'btn-primary' + (savingAssignment ? ' btn-loading' : '')} disabled={savingAssignment} onClick={handleAddAssignment}>
+                {savingAssignment ? <span className="spinner"></span> : <><i className="ti ti-check"></i> {t('academics:assignmentsPanel.post')}</>}
+              </button>
+            </div>
+          )}
 
-      {/* Materials */}
-      <div className="panel">
-        <div className="panel-header">
-          <div>
-            <div className="panel-title">{t('academics:materialsPanel.title')}</div>
-            <div className="panel-subtitle">{t('academics:materialsPanel.hint')}</div>
-          </div>
+          {loadingAssignments && <div className="field-hint">{t('common:actions.loading')}</div>}
+          {!loadingAssignments && !assignments.length && <div className="field-hint">{t('academics:assignmentsPanel.empty')}</div>}
+          {assignments.map(a => <AssignmentRow key={a.id} assignment={a} onGraded={loadAssignments} />)}
         </div>
-        <div className="form-row-2">
-          <div className="form-row">
-            <div className="form-label">{t('academics:materialsPanel.materialTitle')}</div>
-            <input type="text" value={materialTitle} onChange={e => setMaterialTitle(e.target.value)} />
+      )}
+
+      {activeTab === 'announcements' && (
+        <div className="panel">
+          <div className="panel-header">
+            <div>
+              <div className="panel-title">{t('timetable:courseActionsModal.postAnnouncement')}</div>
+              <div className="panel-subtitle">{t('academics:announcementsPanel.hint')}</div>
+            </div>
           </div>
           <div className="form-row">
-            <div className="form-label">{t('academics:materialsPanel.file')}</div>
-            <input type="file" onChange={e => setMaterialFile(e.target.files[0] || null)} />
+            <textarea rows={2} value={announcementText} onChange={e => setAnnouncementText(e.target.value)}
+              placeholder={t('academics:announcementsPanel.placeholder')} style={{ width: '100%', resize: 'vertical' }} />
           </div>
-        </div>
-        <button className={'btn-primary' + (postingMaterial ? ' btn-loading' : '')} disabled={postingMaterial} onClick={handlePostMaterial}>
-          {postingMaterial ? <span className="spinner"></span> : <><i className="ti ti-upload"></i> {t('academics:materialsPanel.post')}</>}
-        </button>
+          <button className={'btn-primary' + (postingAnnouncement ? ' btn-loading' : '')} disabled={postingAnnouncement} onClick={handlePostAnnouncement}>
+            {postingAnnouncement ? <span className="spinner"></span> : <><i className="ti ti-send"></i> {t('academics:announcementsPanel.post')}</>}
+          </button>
 
-        <div style={{ marginTop: 12 }}>
-          {loadingMaterials && <div className="field-hint">{t('common:actions.loading')}</div>}
-          {!loadingMaterials && !materials.length && <div className="field-hint">{t('academics:materialsPanel.empty')}</div>}
-          <div className="roster-list">
-            {materials.map(m => (
-              <div className="roster-row" key={m.id}>
-                <span>{m.title}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span className="field-hint" style={{ whiteSpace: 'nowrap' }}>{fmtDateTime(m.createdAt)}</span>
-                  <button className="icon-btn" title={m.fileName} onClick={() => downloadMaterialFile(m.id, m.fileName).catch(err => toast(err.message, 'error'))}>
-                    <i className="ti ti-download" aria-hidden="true"></i>
-                  </button>
-                </span>
-              </div>
-            ))}
+          <div style={{ marginTop: 12 }}>
+            {loadingAnnouncements && <div className="field-hint">{t('common:actions.loading')}</div>}
+            {!loadingAnnouncements && !announcements.length && <div className="field-hint">{t('academics:announcementsPanel.empty')}</div>}
+            <div className="roster-list">
+              {announcements.map(an => (
+                <div className="roster-row" key={an.id} style={{ alignItems: 'flex-start' }}>
+                  <span>{an.message}</span>
+                  <span className="field-hint" style={{ whiteSpace: 'nowrap', marginInlineStart: 8 }}>{fmtDateTime(an.createdAt)}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {activeTab === 'materials' && (
+        <div className="panel">
+          <div className="panel-header">
+            <div>
+              <div className="panel-title">{t('academics:materialsPanel.title')}</div>
+              <div className="panel-subtitle">{t('academics:materialsPanel.hint')}</div>
+            </div>
+          </div>
+          <div className="form-row-2">
+            <div className="form-row">
+              <div className="form-label">{t('academics:materialsPanel.materialTitle')}</div>
+              <input type="text" value={materialTitle} onChange={e => setMaterialTitle(e.target.value)} />
+            </div>
+            <div className="form-row">
+              <div className="form-label">{t('academics:materialsPanel.file')}</div>
+              <input type="file" onChange={e => setMaterialFile(e.target.files[0] || null)} />
+            </div>
+          </div>
+          <button className={'btn-primary' + (postingMaterial ? ' btn-loading' : '')} disabled={postingMaterial} onClick={handlePostMaterial}>
+            {postingMaterial ? <span className="spinner"></span> : <><i className="ti ti-upload"></i> {t('academics:materialsPanel.post')}</>}
+          </button>
+
+          <div style={{ marginTop: 12 }}>
+            {loadingMaterials && <div className="field-hint">{t('common:actions.loading')}</div>}
+            {!loadingMaterials && !materials.length && <div className="field-hint">{t('academics:materialsPanel.empty')}</div>}
+            <div className="roster-list">
+              {materials.map(m => (
+                <div className="roster-row" key={m.id}>
+                  <span>{m.title}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span className="field-hint" style={{ whiteSpace: 'nowrap' }}>{fmtDateTime(m.createdAt)}</span>
+                    <button className="icon-btn" title={m.fileName} onClick={() => downloadMaterialFile(m.id, m.fileName).catch(err => toast(err.message, 'error'))}>
+                      <i className="ti ti-download" aria-hidden="true"></i>
+                    </button>
+                    <button className="icon-btn danger" aria-label={t('academics:materialsPanel.deleteAriaLabel', { title: m.title })} onClick={() => handleDeleteMaterial(m)}>
+                      <i className="ti ti-trash" aria-hidden="true"></i>
+                    </button>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     <div id="modal-footer" className="modal-footer">
       <button className="btn-sm" onClick={closeModal}>{t('common:actions.close')}</button>

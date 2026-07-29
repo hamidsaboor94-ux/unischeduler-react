@@ -57,6 +57,18 @@ async function isInvigilator(req, exam) {
   return teacherId != null && exam.invigilatorId === teacherId;
 }
 
+/**
+ * True if `req.user` may create/remove enrollments in `course`. Enrollment
+ * write (enroll or withdraw) is Super Admin or Registrar only — Faculty manage
+ * their course's grades/attendance/materials but do not touch who's on the
+ * roster, so unlike canManageCourse this grants no ownership-based access.
+ */
+async function canModifyEnrollment(req, course) {
+  if (!course) return false;
+  const role = req.user.role;
+  return role === 'admin' || role === 'registrar';
+}
+
 /** SQL WHERE fragment + params restricting a courses query by the caller's scope:
  *  a department-restricted role (Department Head → one department, Dean → their
  *  college's departments) to those departments, a faculty user to their own
@@ -70,10 +82,11 @@ async function courseScopeClause(req) {
   return { clause: 'teacherId = ?', params: [teacherId ?? -1] };
 }
 
-/** Course ids a student is currently enrolled in (any status) — used to scope their view of slots/exams. */
+/** Course ids a student is currently enrolled in (any status except a dropped/soft-deleted
+    enrollment) — used to scope their view of slots/exams. */
 async function enrolledCourseIds(userId) {
-  const rows = await all(`SELECT DISTINCT courseId FROM enrollments WHERE studentId = ?`, [userId]);
+  const rows = await all(`SELECT DISTINCT courseId FROM enrollments WHERE studentId = ? AND status != 'dropped'`, [userId]);
   return rows.map(r => r.courseId);
 }
 
-module.exports = { teacherIdForUser, canManageCourse, canManageExam, isInvigilator, courseScopeClause, enrolledCourseIds };
+module.exports = { teacherIdForUser, canManageCourse, canManageExam, canModifyEnrollment, isInvigilator, courseScopeClause, enrolledCourseIds };

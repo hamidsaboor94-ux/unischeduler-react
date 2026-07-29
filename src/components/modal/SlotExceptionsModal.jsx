@@ -1,30 +1,42 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppData } from '../../context/AppDataContext.jsx';
 import { useModal } from '../../context/ModalContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { saveSlotException, deleteSlotException } from '../../api.js';
-import { DURATION_OPTIONS, courseById, roomName, fmtDate, fmt12Hour, weekdayOfDate } from '../../utils.js';
+import { DURATION_OPTIONS, courseById, roomName, fmtDate, fmt12Hour, upcomingSessionDates } from '../../utils.js';
 
 /** Manage one-off exceptions for a single timetable slot (editId = slotId):
     cancel a specific date, or move that date's session to a new date/time/room,
     without touching the slot's normal weekly recurrence. */
 export default function SlotExceptionsModal({ editId, prefill }) {
   const { t } = useTranslation(['timetable', 'common']);
-  const { slots, courses, rooms, slotExceptions, afterMutate, reload } = useAppData();
+  const { slots, courses, rooms, terms, slotExceptions, afterMutate, reload } = useAppData();
   const { closeModal, confirmAction } = useModal();
   const { toast } = useToast();
 
   const slot = slots.find(s => s.id === editId);
   const course = slot ? courseById(courses, slot.courseId) : null;
+  const term = slot ? terms.find(tm => tm.id === slot.termId) : null;
   const existing = slotExceptions
     .filter(x => x.slotId === editId)
     .slice()
     .sort((a, b) => a.date.localeCompare(b.date));
+  const existingDates = existing.map(x => x.date).join(',');
+
+  // The class's own weekday/term define which dates it actually meets on, so the "session date
+  // to change" field offers only those upcoming occurrences instead of a free-typed date —
+  // already-excepted dates are dropped since re-picking one would just 409 (unique per slot+date).
+  const sessionDates = useMemo(() => {
+    if (!slot) return [];
+    const taken = new Set(existingDates ? existingDates.split(',') : []);
+    return upcomingSessionDates(slot.day, { termStartDate: term?.startDate, termEndDate: term?.endDate, count: 12 })
+      .filter(d => !taken.has(d));
+  }, [slot?.day, term?.startDate, term?.endDate, existingDates]);
 
   // Opened from a specific calendar card (e.g. the "Reschedule…" quick action) arrives with
   // that card's own date already filled in, so the admin doesn't have to re-pick it.
-  const [date, setDate] = useState(prefill?.date || '');
+  const [date, setDate] = useState(prefill?.date || sessionDates[0] || '');
   const [kind, setKind] = useState(prefill?.kind || 'cancelled');
   const [newDate, setNewDate] = useState('');
   const [newTime, setNewTime] = useState(slot?.time || '08:00');
@@ -33,16 +45,16 @@ export default function SlotExceptionsModal({ editId, prefill }) {
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
 
-  if (!slot || !course) return <div id="modal-body"><div className="field-hint">{t('timetable:slotExceptions.slotGone')}</div></div>;
+  // Keeps the selection valid as sessionDates shifts (e.g. after an exception is added and its
+  // date drops out of the list) — advances to the next available occurrence automatically.
+  useEffect(() => {
+    if (sessionDates.length && !sessionDates.includes(date)) setDate(sessionDates[0]);
+  }, [sessionDates]);
 
-  const wrongWeekday = date && weekdayOfDate(date) !== slot.day;
+  if (!slot || !course) return <div id="modal-body"><div className="field-hint">{t('timetable:slotExceptions.slotGone')}</div></div>;
 
   async function handleAdd() {
     if (!date) { toast(t('timetable:slotExceptions.toastPickDate'), 'warning'); return; }
-    if (wrongWeekday) {
-      toast(t('timetable:slotExceptions.toastWrongWeekday', { code: course.code, day: t('common:days.' + slot.day) }), 'warning');
-      return;
-    }
     setSaving(true);
     try {
       await saveSlotException({
@@ -55,7 +67,7 @@ export default function SlotExceptionsModal({ editId, prefill }) {
         } : {})
       });
       toast(kind === 'cancelled' ? t('timetable:slotExceptions.toastCancelledSuccess') : t('timetable:slotExceptions.toastMovedSuccess'));
-      setDate(''); setNewDate(''); setNote('');
+      setNewDate(''); setNote('');
       await reload();
     } catch (err) {
       toast(err.message, 'error');
@@ -69,6 +81,12 @@ export default function SlotExceptionsModal({ editId, prefill }) {
   function exceptionWhenText(x) {
     const sameDay = x.newDate === x.date;
     return `${sameDay ? '' : fmtDate(x.newDate) + ', '}${fmt12Hour(x.newTime)} · ${roomName(rooms, x.newRoomId)}`;
+  }
+
+  // Full weekday + year in each option, since fmtDate's short form omits both and this list is
+  // the one place a user picks a specific occurrence rather than just reading a known date back.
+  function fmtSessionOption(iso) {
+    return new Date(iso + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
   }
 
   return (
@@ -113,10 +131,13 @@ export default function SlotExceptionsModal({ editId, prefill }) {
         <div className="form-row-2">
           <div className="form-row">
             <div className="form-label">{t('timetable:slotExceptions.sessionDateLabel')}</div>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} />
-            {wrongWeekday && <div className="field-hint" style={{ color: 'var(--danger)' }}>
-              {t('timetable:slotExceptions.wrongWeekdayHint', { actualDay: t('common:days.' + weekdayOfDate(date)), slotDay: t('common:days.' + slot.day) })}
-            </div>}
+            {sessionDates.length > 0 ? (
+              <select value={date} onChange={e => setDate(e.target.value)}>
+                {sessionDates.map(d => <option key={d} value={d}>{fmtSessionOption(d)}</option>)}
+              </select>
+            ) : (
+              <div className="field-hint">{t('timetable:slotExceptions.noUpcomingSessions')}</div>
+            )}
           </div>
           <div className="form-row">
             <div className="form-label">{t('timetable:slotExceptions.whatHappensLabel')}</div>

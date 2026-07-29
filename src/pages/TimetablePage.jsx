@@ -75,11 +75,14 @@ export default function TimetablePage() {
     el.addEventListener('animationend', () => el.classList.remove(cls), { once: true });
   }
 
+  // 'all' always leads — it's the default, all-inclusive option (no semester filter applied at
+  // all), distinct from 'none' (filters FOR slots whose semester is unassigned, kept as its own
+  // option since it's a genuinely different query some admins rely on for data hygiene).
   const semesterOptions = useMemo(() => {
     const semesterValues = [...new Set(slots.map(s => s.programSemester))];
     const numericSemesters = semesterValues.filter(v => v != null).sort((a, b) => a - b).map(String);
     const hasUnassigned = semesterValues.some(v => v == null);
-    return [...numericSemesters, ...(hasUnassigned ? ['none'] : [])];
+    return ['all', ...numericSemesters, ...(hasUnassigned ? ['none'] : [])];
   }, [slots]);
 
   useEffect(() => {
@@ -128,24 +131,39 @@ export default function TimetablePage() {
     // A lecturer teaches across many program semesters/sections at once — narrowing to a single
     // semester+section (like the admin view below does) would hide most of their own classes.
   } else {
-    filtered = ttSemesterFilter == null ? slots
+    filtered = (ttSemesterFilter == null || ttSemesterFilter === 'all') ? slots
       : slots.filter(s => ttSemesterFilter === 'none' ? s.programSemester == null : String(s.programSemester) === ttSemesterFilter);
     if (ttSectionFilter) filtered = filtered.filter(s => s.section === ttSectionFilter);
     if (ttDeptFilter) filtered = filtered.filter(s => String(courseById(courses, s.courseId)?.departmentId) === ttDeptFilter);
-    if (ttSemesterFilter && ttSemesterFilter !== 'none') addPrefill.programSemester = Number(ttSemesterFilter);
+    if (ttSemesterFilter && ttSemesterFilter !== 'none' && ttSemesterFilter !== 'all') addPrefill.programSemester = Number(ttSemesterFilter);
     if (ttSectionFilter) addPrefill.section = ttSectionFilter;
   }
   if (ttSessionFilter) filtered = filtered.filter(s => slotSession(s.time) === ttSessionFilter);
 
+  // Faculty never get a semester filter (they teach across many at once, see the comment above),
+  // so their view is permanently "all semesters" — group it the same way admin's "All semesters"
+  // option does. For admin, only the explicit "all" selection groups; picking a specific semester
+  // (or the "no semester set" bucket) stays a single ungrouped grid, same as before this feature.
+  const groupBySemester = isFaculty || ttSemesterFilter == null || ttSemesterFilter === 'all';
+
   function ttSemesterLabel() {
-    if (ttSemesterFilter == null) return t('timetable:timetablePage.defaultSemesterLabel');
+    if (ttSemesterFilter == null || ttSemesterFilter === 'all') return t('timetable:timetablePage.allSemesters');
     return ttSemesterFilter === 'none'
       ? t('timetable:timetablePage.noSemesterClassesLabel')
       : t('timetable:timetablePage.semesterScopeLabel', { n: ttSemesterFilter });
   }
 
+  // Reset Timetable always deletes a specific, named scope (one semester, or the unassigned
+  // bucket) — deliberately kept that way even now that "All semesters" is a selectable (and
+  // default) filter value, so this destructive action can never silently target the entire
+  // timetable just because that's the current display filter. An admin who wants to reset
+  // everything must pick each scope explicitly, same as before this change.
   function openResetTimetableModalHandler() {
-    const scopeSlots = ttSemesterFilter == null ? [] : slots.filter(s => ttSemesterFilter === 'none' ? s.programSemester == null : String(s.programSemester) === ttSemesterFilter);
+    if (ttSemesterFilter == null || ttSemesterFilter === 'all') {
+      toast(t('timetable:timetablePage.toasts.selectSpecificSemesterToReset'), 'warning');
+      return;
+    }
+    const scopeSlots = slots.filter(s => ttSemesterFilter === 'none' ? s.programSemester == null : String(s.programSemester) === ttSemesterFilter);
     if (!scopeSlots.length) { toast(t('timetable:timetablePage.toasts.noEntriesToReset'), 'warning'); return; }
     openModal('reset-timetable-confirm', null, {
       scopeCount: scopeSlots.length,
@@ -203,8 +221,14 @@ export default function TimetablePage() {
           {isAdmin && (
             <FilterChip icon="ti-calendar-time">
               <select className="select-sm" aria-label={t('timetable:timetablePage.filterSemester')} value={ttSemesterFilter ?? ''} onChange={e => handleSemesterChange(e.target.value)}>
-                {semesterOptions.length
-                  ? semesterOptions.map(v => <option key={v} value={v}>{v === 'none' ? t('timetable:timetablePage.noSemesterSet') : t('timetable:timetablePage.semesterOption', { n: v })}</option>)
+                {slots.length
+                  ? semesterOptions.map(v => (
+                    <option key={v} value={v}>
+                      {v === 'all' ? t('timetable:timetablePage.allSemesters')
+                        : v === 'none' ? t('timetable:timetablePage.noSemesterSet')
+                        : t('timetable:timetablePage.semesterOption', { n: v })}
+                    </option>
+                  ))
                   : <option value="">{t('timetable:timetablePage.noClassesYet')}</option>}
               </select>
             </FilterChip>
@@ -270,20 +294,21 @@ export default function TimetablePage() {
           </div>
         )}
       </div>
-      <div id="content" ref={contentRef}>
+      <div id="content" className="cal-content" ref={contentRef}>
         <WeeklyCalendar
           slotsToShow={filtered}
           conflictSlotIds={conflictSlotIds}
           editable={isAdmin}
           addable={isAdmin}
           showLecturer={!isFaculty}
-          showSemesterBadge={isFaculty}
+          showSemesterBadge={false}
           addPrefill={addPrefill}
           dayFilter={ttDayFilter}
           weekDates={weekDates}
           exceptions={slotExceptions}
           onCardClick={isFaculty ? (course) => openModal('course-actions', course.id) : undefined}
           conflictIssueBySlotId={conflictIssueBySlotId}
+          groupBySemester={groupBySemester}
         />
       </div>
     </Section>

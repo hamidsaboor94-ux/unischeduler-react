@@ -1,0 +1,276 @@
+{
+  "title": "د استاد پروفایل",
+  "noTeacherSelected": "د ښوونکي بشپړ پروفایل د ښوونکو مدیریت پاڼې څخه پرانیزئ ترڅو دلته یې وګورئ.",
+  "notFound": "د دې ښوونکي پروفایل ونه موندل شو.",
+  "print": "چاپول",
+  "editProfile": "پروفایل سمول",
+  "changePhoto": "انځور بدلول",
+  "noLoginAccount": "نه ده ټاکل شوې — دې ښوونکي لا تر اوسه د دننه کیدو حساب نلري",
+  "select": "— وټاکئ —",
+  "sections": {
+    "personal": "شخصي مالومات",
+    "contact": "د اړیکې مالومات",
+    "employment": "د دندې مالومات",
+    "academic": "علمي پروفایل",
+    "education": "زده کړه",
+    "experience": "مسلکي تجربه",
+    "certifications": "سندونه",
+    "documents": "اسناد",
+    "courses": "د مضامینو ټاکنه",
+    "auditHistory": "د پلټنې تاریخچه"
+  },
+  "fields": {
+    "fullName": "بشپړ نوم",
+    "preferredName": "غوره / ښکاره کیدونکی نوم",
+    "facultyId": "د ښوونکي پیژندنه",
+    "employeeId": "د کارمند پیژندنه",
+    "gender": "جنسیت",
+    "dateOfBirth": "د زېږېدنې نېټه",
+    "fatherName": "د پلار نوم",
+    "motherName": "د مور نوم",
+    "nationality": "ملیت",
+    "nationalId": "د تذکرې / پاسپورټ شمېره",
+    "maritalStatus": "د واده حالت",
+    "officialEmail": "رسمي پوهنتون بریښنالیک",
+    "personalEmail": "شخصي بریښنالیک",
+    "email": "بریښنالیک",
+    "phone": "لومړنی تلیفون",
+    "secondaryPhone": "دویم تلیفون",
+    "emergencyContactName": "د بیړني اړیکې نوم",
+    "emergencyContactRelationship": "د بیړني اړیکې خپلوي اړیکه",
+    "emergencyContactPhone": "د بیړني اړیکې تلیفون",
+    "address": "اوسنۍ پته",
+    "permanentAddress": "دایمي پته",
+    "city": "ښار",
+    "province": "ولایت",
+    "country": "هیواد",
+    "postalCode": "پوسټي کوډ",
+    "department": "دیپارتمنت",
+    "college": "پوهنځی / کالج",
+    "designation": "علمي رتبه",
+    "employmentType": "د دندې ډول",
+    "status": "د دندې حالت",
+    "dateOfJoining": "د یوځای کیدو نېټه",
+    "contractStartDate": "د قرارداد پیل نېټه",
+    "contractEndDate": "د قرارداد پای نېټه",
+    "officeRoom": "دفتر / کوټه شمېره",
+    "workLocation": "د کار ځای",
+    "reportingManager": "راپور ورکوونکی مدیر",
+    "employeeCategory": "د کارمند کټګورۍ",
+    "payrollId": "د معاش پیژندنه",
+    "qualifiedSubjects": "وړ مضامین",
+    "qualifiedSubjectsPlaceholder": "لکه د ډیټا جوړښتونه، الگوریتمونه",
+    "bio": "لنډه پیژندنه",
+    "expertiseAreas": "د مهارت ساحې",
+    "researchInterests": "د څیړنې لیوالتیاوې",
+    "teachingInterests": "د ښوونې لیوالتیاوې",
+    "officeHours": "د دفتر ساعتونه",
+    "officeHoursPlaceholder": "لکه دوشنبه/چارشنبه ۲-۴ بجې",
+    "publications": "علمي خپرونې",
+    "awards": "جایزې او افتخارات"
+  },
+  "genderOptions": { "Male": "نارینه", "Female": "ښځینه", "Other": "نور" },
+  "maritalStatusOptions": {
+    "Single": "مجرد", "Married": "واده شوی", "Divorced": "طلاق شوی", "Widowed": "کونډ/کونډه", "Other": "نور"
+  },
+  "designationOptions": {
+    "Lecturer": "لیکچرار",
+    "Senior Lecturer": "ارشد لیکچرار",
+    "Instructor": "استاد لارښود",
+    "Assistant Professor": "مرستیال پروفیسور",
+    "Associate Professor": "همکار پروفیسور",
+    "Professor": "پروفیسور",
+    "Teaching Assistant": "د ښوونې مرستیال",
+    "Research Assistant": "د څیړنې مرستیال",
+    "Visiting Professor": "لیدونکی پروفیسور",
+    "Visiting Faculty": "لیدونکی استاد",
+    "Adjunct Faculty": "معاون استاد",
+    "Other": "نور"
+  },
+  "employmentTypeOptions": {
+    "full-time": "بشپړ وخت",
+    "part-time": "نیمه وخت",
+    "contract": "قراردادي",
+    "visiting": "لیدونکی",
+    "adjunct": "معاون"
+  },
+  "statusOptions": {
+    "Active": "فعال",
+    "On Leave": "په رخصتۍ کې",
+    "Suspended": "معلق",
+    "Inactive": "غیر فعال",
+    "Resigned": "استعفا شوی",
+    "Retired": "تقاعد شوی",
+    "Terminated": "له دندې لرې شوی"
+  },
+  "degreeOptions": {
+    "High School": "لیسه",
+    "Diploma": "ډیپلوم",
+    "Bachelor's": "لیسانس",
+    "Master's": "ماسټري",
+    "MPhil": "ایم فیل",
+    "PhD": "پی ایچ ډي",
+    "Postdoctoral": "پوسټ ډاکټورا",
+    "Other": "نور"
+  },
+  "profileStatus": {
+    "Complete": "پروفایل بشپړ دی",
+    "Under Review": "تر بیاکتنې لاندې",
+    "Incomplete": "پروفایل نیمگړی دی",
+    "Documents Pending": "اسناد ناکاملې دي"
+  },
+  "completion": {
+    "percent": "{{percent}}٪ بشپړ شوی",
+    "missingLabel": "ناکامل:",
+    "section": {
+      "personal": "شخصي مالومات",
+      "contact": "د اړیکې مالومات",
+      "employment": "د دندې مالومات",
+      "education": "زده کړه",
+      "documents": "اسناد"
+    }
+  },
+  "toasts": {
+    "saved": "پروفایل تازه شو.",
+    "photoUploaded": "انځور تازه شو."
+  },
+  "education": {
+    "add": "زیاتول",
+    "empty": "لا تر اوسه هیڅ زده کړه ثبت شوې نه ده.",
+    "fieldOfStudyPlaceholder": "د زده کړې ساحه",
+    "institutionPlaceholder": "موسسه",
+    "countryPlaceholder": "هیواد",
+    "startYearPlaceholder": "د پیل کال",
+    "yearPlaceholder": "د فراغت کال",
+    "gpaPlaceholder": "GPA / درجه",
+    "degreeHeader": "سند",
+    "fieldHeader": "د زده کړې ساحه",
+    "institutionHeader": "موسسه",
+    "yearHeader": "کال",
+    "certificate": "سند",
+    "transcript": "ټرانسکرپټ",
+    "deleteAria": "د زده کړې ثبت ړنګول",
+    "confirmDelete": "دا {{degree}} ثبت ړنګ شي؟ دا بیرته نشي کیدی.",
+    "errors": {
+      "degreeRequired": "یو سند وټاکئ."
+    },
+    "toasts": {
+      "added": "د زده کړې ثبت اضافه شو.",
+      "deleted": "د زده کړې ثبت ړنګ شو."
+    }
+  },
+  "experience": {
+    "add": "زیاتول",
+    "empty": "لا تر اوسه هیڅ تجربه ثبت شوې نه ده.",
+    "organizationPlaceholder": "موسسه",
+    "positionPlaceholder": "دنده / سمت",
+    "departmentPlaceholder": "دیپارتمنت",
+    "employmentTypePlaceholder": "د دندې ډول",
+    "currentlyWorking": "دلته اوس هم کار کوي",
+    "responsibilitiesPlaceholder": "دندې او مسوولیتونه",
+    "organizationHeader": "موسسه",
+    "positionHeader": "دنده",
+    "periodHeader": "دوره",
+    "deleteAria": "د تجربې ثبت ړنګول",
+    "confirmDelete": "د {{organization}} ثبت ړنګ شي؟ دا بیرته نشي کیدی.",
+    "errors": {
+      "organizationRequired": "د موسسې نوم ولیکئ."
+    },
+    "toasts": {
+      "added": "د تجربې ثبت اضافه شو.",
+      "deleted": "د تجربې ثبت ړنګ شو."
+    }
+  },
+  "certifications": {
+    "add": "زیاتول",
+    "empty": "لا تر اوسه هیڅ سند نشته.",
+    "namePlaceholder": "د سند نوم",
+    "issuerPlaceholder": "صادروونکې موسسه",
+    "numberPlaceholder": "د سند شمېره",
+    "doesNotExpire": "میعاد نلري",
+    "nameHeader": "سند",
+    "issuerHeader": "صادروونکې موسسه",
+    "expiryHeader": "د پای نېټه",
+    "deleteAria": "سند ړنګول",
+    "confirmDelete": "\"{{name}}\" ړنګ شي؟ دا بیرته نشي کیدی.",
+    "errors": {
+      "nameRequired": "د سند نوم ولیکئ."
+    },
+    "toasts": {
+      "added": "سند اضافه شو.",
+      "deleted": "سند ړنګ شو."
+    }
+  },
+  "documents": {
+    "typeHeader": "ډول",
+    "fileHeader": "فایل",
+    "uploadedHeader": "اپلوډ شوی",
+    "issueDate": "د صدور نېټه",
+    "expiryDate": "د پای نېټه",
+    "empty": "لا تر اوسه هیڅ سند اپلوډ شوی نه دی.",
+    "upload": "اپلوډول",
+    "download": "ډاونلوډول",
+    "delete": "ړنګول",
+    "confirmDelete": "\"{{fileName}}\" ړنګ کړئ؟ دا بیرته نشي کیدی.",
+    "types": {
+      "CV": "سی وی",
+      "certificate": "سند",
+      "National ID": "تذکره",
+      "Passport": "پاسپورټ",
+      "Appointment Letter": "د گمارنې لیک",
+      "Employment Contract": "د دندې قرارداد",
+      "Experience Certificate": "د تجربې سند",
+      "Teaching Certificate": "د ښوونې سند",
+      "Professional License": "مسلکي جواز",
+      "Background Verification": "د پس منظر تایید",
+      "other": "نور"
+    },
+    "errors": {
+      "fileRequired": "د اپلوډ لپاره یوه فایل وټاکئ."
+    },
+    "toasts": {
+      "uploaded": "سند اپلوډ شو.",
+      "deleted": "سند ړنګ شو."
+    }
+  },
+  "courses": {
+    "noneAssigned": "لا تر اوسه هیڅ مضمون نه دی ټاکل شوی.",
+    "assignHint": "یو موجود مضمون دې ښوونکي ته وټاکئ (دا به یې د اوسني ښوونکي څخه واخلي).",
+    "showAllDepartments": "د ټولو دیپارتمنتونو مضامین وښایاست",
+    "noneAvailable": "د ټاکلو لپاره نور مضامین نشته.",
+    "codeHeader": "کوډ",
+    "nameHeader": "مضمون",
+    "currentTeacherHeader": "اوسنی ښوونکی",
+    "assign": "{{count}} مضامین وټاکئ",
+    "toasts": {
+      "assigned": "{{count}} مضامین وټاکل شول."
+    }
+  },
+  "auditHistory": {
+    "empty": "د دې ښوونکي لپاره لا تر اوسه هیڅ د پلټنې سابقه نشته.",
+    "timeHeader": "وخت",
+    "userHeader": "کارن",
+    "actionHeader": "کړنه",
+    "entityHeader": "ثبت",
+    "unknownUser": "ناپیژندل شوی کارن"
+  },
+  "verification": {
+    "statusHeader": "تایید",
+    "verify": "تایید کول",
+    "reject": "رد کول",
+    "confirmReject": "دا رد شي؟ د ښوونکي د HR ثبت به وښيي چې پاملرنې ته اړتیا لري.",
+    "status": {
+      "Pending": "پاتې",
+      "Verified": "تایید شوی",
+      "Rejected": "رد شوی"
+    },
+    "toasts": {
+      "verified": "د تایید په توګه نښه شو.",
+      "rejected": "د رد په توګه نښه شو."
+    }
+  },
+  "expiry": {
+    "expired": "پای ته رسیدلی",
+    "expiringSoon": "په {{count}} ورځو کې پای ته رسیږي"
+  }
+}

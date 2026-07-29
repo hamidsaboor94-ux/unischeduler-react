@@ -1,5 +1,5 @@
 const express = require('express');
-const { get, run } = require('../db');
+const { get, run, logAudit } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { loadTermData } = require('../loaders');
@@ -58,7 +58,7 @@ router.post('/auto-resolve', requireAuth, asyncHandler(async (req, res) => {
   const conflicts = computeConflicts(data);
   const term = termId ? await get('SELECT * FROM terms WHERE id = ?', [termId]) : null;
   const dateOptions = candidateDates(term);
-  const { slotUpdates, examUpdates, fixed } = autoResolveAll({ ...data, conflicts, dateOptions });
+  const { slotUpdates, examUpdates, fixed, resolutions } = autoResolveAll({ ...data, conflicts, dateOptions });
 
   for (const u of slotUpdates) {
     const sets = [];
@@ -84,7 +84,14 @@ router.post('/auto-resolve', requireAuth, asyncHandler(async (req, res) => {
     }
   }
 
-  res.json({ fixed, slotUpdates, examUpdates });
+  // One audit-log entry per resolved conflict, mirroring exactly what was just persisted above
+  // (not a re-derived summary) so the trail matches the DB row for row.
+  for (const r of resolutions) {
+    await logAudit(req.user, 'auto-resolve-conflict', r.entityType, r.entityId,
+      { conflictType: r.conflictType, action: r.action, reason: r.reason }, r.before, r.after);
+  }
+
+  res.json({ resolvedCount: fixed, resolutions });
 }));
 
 module.exports = router;

@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Section from '../components/Section.jsx';
+import StudentDetailsCards from '../components/StudentDetailsCards.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
 import { useNavigation } from '../context/NavigationContext.jsx';
 import { useModal } from '../context/ModalContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { useAsyncAction } from '../hooks/useAsyncAction.js';
 import {
-  fetchApplications, fetchApplication, submitApplicationAsAdmin,
+  fetchApplications, fetchApplication, submitApplicationAsAdmin, updateApplication,
   uploadApplicationDocument, downloadApplicationDocument, deleteApplicationDocument,
 } from '../api.js';
 import { fmtDate } from '../utils.js';
+import { can } from '../permissions.js';
 
 const ALL_STATUSES = ['Submitted', 'Under Review', 'Entry Test Scheduled', 'Waitlisted', 'Accepted', 'Rejected'];
 const PENDING_STATUSES = new Set(['Submitted', 'Under Review', 'Entry Test Scheduled', 'Waitlisted']);
@@ -18,25 +20,21 @@ const STATUS_PILL = {
   Submitted: 'pill-blue', 'Under Review': 'pill-amber', 'Entry Test Scheduled': 'pill-amber',
   Waitlisted: 'pill-amber', Accepted: 'pill-green', Rejected: 'pill-red',
 };
+// StudentDetailsCards only knows a 3-way status — every other admissions status reads as "pending".
+const CARD_STATUS = { Accepted: 'accepted', Rejected: 'rejected' };
 const DOCUMENT_TYPES = ['ID Scan', 'Certificate', 'Transcript', 'Passport Copy', 'Other'];
 const GENDER_OPTIONS = ['Male', 'Female', 'Other'];
+const AID_TYPES = ['scholarship', 'grant', 'waiver', 'discount'];
+const AID_BASES = ['percentage', 'fixed'];
+const emptyAidForm = { type: '', basis: 'percentage', value: '', reason: '' };
 const FORM_FIELDS = [
   'fullName', 'fatherName', 'grandfatherName', 'gender', 'dateOfBirth', 'nationality', 'nationalId', 'passportNumber',
   'presentAddress', 'permanentAddress', 'mobileNumber', 'emergencyContact', 'personalEmail',
   'previousSchoolName', 'previousGraduationYear', 'desiredDepartmentId', 'entryTestMarks',
 ];
 
-function Field({ label, value }) {
-  return (
-    <div className="form-row">
-      <div className="form-label">{label}</div>
-      <div className="form-static">{value ?? '—'}</div>
-    </div>
-  );
-}
-
 export default function ApplicationsPage() {
-  const { t } = useTranslation(['admissions', 'studentProfile', 'common']);
+  const { t } = useTranslation(['admissions', 'studentProfile', 'finance', 'common']);
   const { currentUser, departments } = useAppData();
   const { showSection } = useNavigation();
   const { openModal, confirmAction } = useModal();
@@ -47,19 +45,25 @@ export default function ApplicationsPage() {
   const [loading, setLoading] = useState(false);
   const [tabFilter, setTabFilter] = useState('pending');
   const [statusFilter, setStatusFilter] = useState('');
+  const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState(null);
   const [detail, setDetail] = useState(null);
   const [showNewForm, setShowNewForm] = useState(false);
   const [newForm, setNewForm] = useState(Object.fromEntries(FORM_FIELDS.map(f => [f, ''])));
   const [docType, setDocType] = useState(DOCUMENT_TYPES[0]);
   const [docTitle, setDocTitle] = useState('');
+  const [aidForm, setAidForm] = useState(emptyAidForm);
   const { run: runCreate, loading: creating } = useAsyncAction();
   const { run: runUpload, loading: uploading } = useAsyncAction();
+  const { run: runSaveAid, loading: savingAid } = useAsyncAction();
 
-  const isAdmin = currentUser.role === 'admin';
+  // Matches POLICY.admissions (registrar:R, admissions_officer:W, dean:R, dept_head:R, viewer:R):
+  // everyone entitled to read sees the list/detail; only Admissions Officer (+admin) can act on it.
+  const canView = can(currentUser.role, 'admissions', 'read');
+  const canWrite = can(currentUser.role, 'admissions', 'write');
 
   async function refreshList() {
-    if (!isAdmin) return;
+    if (!canView) return;
     setLoading(true);
     try {
       setList(await fetchApplications());
@@ -72,11 +76,11 @@ export default function ApplicationsPage() {
 
   useEffect(() => {
     // Every page in this app stays mounted at all times regardless of role (see AppShell.jsx) —
-    // only admins manage admissions, so skip the fetch entirely for anyone else.
-    if (!isAdmin) return;
+    // skip the fetch entirely for a role with no admissions:read.
+    if (!canView) return;
     refreshList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin]);
+  }, [canView]);
 
   async function openDetail(id) {
     setSelectedId(id);
@@ -92,6 +96,34 @@ export default function ApplicationsPage() {
     if (!selectedId) return;
     setDetail(await fetchApplication(selectedId));
     refreshList();
+  }
+
+  useEffect(() => {
+    if (!detail) { setAidForm(emptyAidForm); return; }
+    setAidForm({
+      type: detail.aidType || '',
+      basis: detail.aidBasis || 'percentage',
+      value: detail.aidValue != null ? String(detail.aidValue) : '',
+      reason: detail.aidReason || '',
+    });
+  }, [detail]);
+
+  async function handleSaveAid() {
+    if (aidForm.type) {
+      const value = Number(aidForm.value);
+      if (!(value > 0)) { toast(t('admissions:financialAid.errors.valueRequired'), 'warning'); return; }
+      if (aidForm.basis === 'percentage' && value > 100) { toast(t('admissions:financialAid.errors.percentageMax'), 'warning'); return; }
+    }
+    const payload = aidForm.type
+      ? { aidType: aidForm.type, aidBasis: aidForm.basis, aidValue: Number(aidForm.value), aidReason: aidForm.reason.trim() || null }
+      : { aidType: null, aidBasis: null, aidValue: null, aidReason: null };
+    try {
+      await runSaveAid(updateApplication(selectedId, payload));
+      toast(t('admissions:financialAid.saved'));
+      await refreshDetail();
+    } catch (err) {
+      toast(err.message, 'error');
+    }
   }
 
   async function handleCreate() {
@@ -140,8 +172,12 @@ export default function ApplicationsPage() {
   let filtered = list;
   if (tabFilter === 'pending') filtered = filtered.filter(a => PENDING_STATUSES.has(a.status));
   if (statusFilter) filtered = filtered.filter(a => a.status === statusFilter);
+  const q = search.trim().toLowerCase();
+  if (q) {
+    filtered = filtered.filter(a => [a.fullName, a.desiredDepartmentName].filter(Boolean).join(' ').toLowerCase().includes(q));
+  }
 
-  if (!isAdmin) {
+  if (!canView) {
     return (
       <Section name="applications">
         <div className="topbar">
@@ -163,11 +199,12 @@ export default function ApplicationsPage() {
               <button className={'tab' + (tabFilter === 'pending' ? ' active' : '')} onClick={() => setTabFilter('pending')}>{t('admissions:page.tabs.pending')}</button>
               <button className={'tab' + (tabFilter === 'all' ? ' active' : '')} onClick={() => setTabFilter('all')}>{t('admissions:page.tabs.all')}</button>
             </div>
+            <input type="text" className="select-sm" aria-label={t('admissions:page.searchAria')} placeholder={t('admissions:page.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} />
             <select className="select-sm" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} aria-label={t('admissions:page.statusFilterAria')}>
               <option value="">{t('admissions:page.allStatuses')}</option>
               {ALL_STATUSES.map(s => <option key={s} value={s}>{t(`admissions:statuses.${s}`)}</option>)}
             </select>
-            <button className="btn-primary" onClick={() => setShowNewForm(true)}><i className="ti ti-plus"></i> {t('admissions:page.newApplication')}</button>
+            {canWrite && <button className="btn-primary" onClick={() => setShowNewForm(true)}><i className="ti ti-plus"></i> {t('admissions:page.newApplication')}</button>}
           </div>
         )}
         {selectedId && (
@@ -276,14 +313,14 @@ export default function ApplicationsPage() {
                   </div>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <span className={'pill ' + (STATUS_PILL[detail.status] || 'pill-gray')}>{t(`admissions:statuses.${detail.status}`)}</span>
-                    {canConvert && (
+                    {canWrite && canConvert && (
                       <button className="btn-sm" onClick={() => openModal('application-status-change', null, {
                         applicationId: detail.id, currentStatus: detail.status, fullName: detail.fullName, onUpdated: refreshDetail,
                       })}>
                         {t('admissions:detail.changeStatus')}
                       </button>
                     )}
-                    {canConvert && (
+                    {canWrite && canConvert && (
                       <button className="btn-primary" onClick={() => openModal('application-approve', null, {
                         applicationId: detail.id, desiredDepartmentId: detail.desiredDepartmentId, fullName: detail.fullName, onApproved: refreshDetail,
                       })}>
@@ -313,67 +350,72 @@ export default function ApplicationsPage() {
                 )}
               </div>
 
-              <div className="panel">
-                <div className="panel-header"><div className="panel-title">{t('studentProfile:sections.personal')}</div></div>
-                <div className="form-row-2">
-                  <Field label={t('studentProfile:fields.fullName')} value={detail.fullName} />
-                  <Field label={t('studentProfile:fields.fatherName')} value={detail.fatherName} />
-                </div>
-                <div className="form-row-2">
-                  <Field label={t('studentProfile:fields.grandfatherName')} value={detail.grandfatherName} />
-                  <Field label={t('studentProfile:fields.gender')} value={detail.gender ? t(`studentProfile:genderOptions.${detail.gender}`) : null} />
-                </div>
-                <div className="form-row-2">
-                  <Field label={t('studentProfile:fields.dateOfBirth')} value={detail.dateOfBirth ? fmtDate(detail.dateOfBirth) : null} />
-                  <Field label={t('studentProfile:fields.nationality')} value={detail.nationality} />
-                </div>
-                <div className="form-row-2">
-                  <Field label={t('studentProfile:fields.nationalId')} value={detail.nationalId} />
-                  <Field label={t('studentProfile:fields.passportNumber')} value={detail.passportNumber} />
-                </div>
-              </div>
+              <StudentDetailsCards student={{
+                fullName: detail.fullName,
+                fatherName: detail.fatherName,
+                grandfatherName: detail.grandfatherName,
+                gender: detail.gender ? t(`studentProfile:genderOptions.${detail.gender}`) : null,
+                dob: detail.dateOfBirth ? fmtDate(detail.dateOfBirth) : null,
+                nationality: detail.nationality,
+                nationalId: detail.nationalId,
+                passportNumber: detail.passportNumber,
+                presentAddress: detail.presentAddress,
+                permanentAddress: detail.permanentAddress,
+                mobile: detail.mobileNumber,
+                emergencyContact: detail.emergencyContact,
+                email: detail.personalEmail,
+                previousSchool: detail.previousSchoolName,
+                graduationYear: detail.previousGraduationYear,
+                program: detail.desiredDepartmentName,
+                entryTestScore: detail.entryTestMarks,
+                status: CARD_STATUS[detail.status] || 'pending',
+                documents: (detail.documents || []).map(doc => ({
+                  type: t(`admissions:documents.types.${doc.documentType}`, doc.documentType),
+                  title: doc.title,
+                })),
+              }} />
 
               <div className="panel">
-                <div className="panel-header"><div className="panel-title">{t('studentProfile:sections.address')}</div></div>
-                <div className="form-row-2">
-                  <Field label={t('studentProfile:fields.presentAddress')} value={detail.presentAddress} />
-                  <Field label={t('studentProfile:fields.permanentAddress')} value={detail.permanentAddress} />
-                </div>
-              </div>
-
-              <div className="panel">
-                <div className="panel-header"><div className="panel-title">{t('studentProfile:sections.contact')}</div></div>
-                <div className="form-row-2">
-                  <Field label={t('studentProfile:fields.mobileNumber')} value={detail.mobileNumber} />
-                  <Field label={t('studentProfile:fields.emergencyContact')} value={detail.emergencyContact} />
-                </div>
-                <Field label={t('admissions:form.personalEmailLabel')} value={detail.personalEmail} />
-              </div>
-
-              <div className="panel">
-                <div className="panel-header"><div className="panel-title">{t('studentProfile:sections.educational')}</div></div>
-                <div className="form-row-2">
-                  <Field label={t('studentProfile:fields.previousSchool')} value={detail.previousSchoolName} />
-                  <Field label={t('studentProfile:fields.previousGraduationYear')} value={detail.previousGraduationYear} />
-                </div>
-                <div className="form-row-2">
-                  <Field label={t('admissions:form.desiredDepartmentLabel')} value={detail.desiredDepartmentName} />
-                  <Field label={t('admissions:detail.entryTestScore')} value={detail.entryTestMarks ?? t('admissions:detail.notScored')} />
+                <div className="panel-header"><div className="panel-title">{t('admissions:financialAid.title')}</div></div>
+                <div className="field-hint" style={{ marginBottom: 10 }}>{t('admissions:financialAid.hint')}</div>
+                <div className="fin-form-panel">
+                  <div className="fin-form-row">
+                    <select className="select-sm" disabled={!canWrite} value={aidForm.type} onChange={e => setAidForm(f => ({ ...f, type: e.target.value }))}>
+                      <option value="">{t('admissions:financialAid.none')}</option>
+                      {AID_TYPES.map(v => <option key={v} value={v}>{t(`finance:financePage.aid.types.${v}`)}</option>)}
+                    </select>
+                    {aidForm.type && (
+                      <>
+                        <select className="select-sm" disabled={!canWrite} value={aidForm.basis} onChange={e => setAidForm(f => ({ ...f, basis: e.target.value }))}>
+                          {AID_BASES.map(v => <option key={v} value={v}>{t(`finance:financePage.aid.bases.${v}`)}</option>)}
+                        </select>
+                        <input type="number" min="0" className="select-sm" style={{ width: 100 }} disabled={!canWrite} placeholder={t('finance:financePage.aid.value')} value={aidForm.value} onChange={e => setAidForm(f => ({ ...f, value: e.target.value }))} />
+                        <input type="text" className="select-sm" style={{ width: 180 }} disabled={!canWrite} placeholder={t('finance:financePage.aid.reason')} value={aidForm.reason} onChange={e => setAidForm(f => ({ ...f, reason: e.target.value }))} />
+                      </>
+                    )}
+                    {canWrite && (
+                      <button className={'btn-sm' + (savingAid ? ' btn-loading' : '')} disabled={savingAid} onClick={handleSaveAid}>
+                        {savingAid ? <span className="spinner"></span> : <><i className="ti ti-check"></i> {t('common:actions.save')}</>}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
               <div className="panel">
                 <div className="panel-header"><div className="panel-title">{t('studentProfile:sections.documents')}</div></div>
-                <div className="profile-doc-upload">
-                  <select value={docType} onChange={e => setDocType(e.target.value)}>
-                    {DOCUMENT_TYPES.map(v => <option key={v} value={v}>{t(`admissions:documents.types.${v}`)}</option>)}
-                  </select>
-                  <input type="text" placeholder={t('admissions:documents.titlePlaceholder')} value={docTitle} onChange={e => setDocTitle(e.target.value)} />
-                  <input id="application-doc-file-input" type="file" accept=".pdf,.png,.jpg,.jpeg" />
-                  <button className={'btn-sm' + (uploading ? ' btn-loading' : '')} disabled={uploading} onClick={handleUploadDocument}>
-                    {uploading ? <span className="spinner"></span> : <><i className="ti ti-upload"></i> {t('admissions:documents.upload')}</>}
-                  </button>
-                </div>
+                {canWrite && (
+                  <div className="profile-doc-upload">
+                    <select value={docType} onChange={e => setDocType(e.target.value)}>
+                      {DOCUMENT_TYPES.map(v => <option key={v} value={v}>{t(`admissions:documents.types.${v}`)}</option>)}
+                    </select>
+                    <input type="text" placeholder={t('admissions:documents.titlePlaceholder')} value={docTitle} onChange={e => setDocTitle(e.target.value)} />
+                    <input id="application-doc-file-input" type="file" accept=".pdf,.png,.jpg,.jpeg" />
+                    <button className={'btn-sm' + (uploading ? ' btn-loading' : '')} disabled={uploading} onClick={handleUploadDocument}>
+                      {uploading ? <span className="spinner"></span> : <><i className="ti ti-upload"></i> {t('admissions:documents.upload')}</>}
+                    </button>
+                  </div>
+                )}
                 {(!detail.documents || detail.documents.length === 0) && <div className="field-hint" style={{ padding: '10px 0' }}>{t('admissions:documents.empty')}</div>}
                 {detail.documents && detail.documents.length > 0 && (
                   <table className="data-table">
@@ -387,9 +429,11 @@ export default function ApplicationsPage() {
                             <button className="btn-sm" onClick={() => downloadApplicationDocument(selectedId, doc.id, doc.fileName)}>
                               <i className="ti ti-download"></i> {t('admissions:documents.download')}
                             </button>
-                            <button className="icon-btn danger" aria-label={t('admissions:documents.delete')} onClick={() => handleDeleteDocument(doc)}>
-                              <i className="ti ti-trash" aria-hidden="true"></i>
-                            </button>
+                            {canWrite && (
+                              <button className="icon-btn danger" aria-label={t('admissions:documents.delete')} onClick={() => handleDeleteDocument(doc)}>
+                                <i className="ti ti-trash" aria-hidden="true"></i>
+                              </button>
+                            )}
                           </div></td>
                         </tr>
                       ))}

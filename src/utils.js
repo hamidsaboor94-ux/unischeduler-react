@@ -1,3 +1,12 @@
+/** True if a caught api.js error means "you're not allowed to see this" (HTTP 403), as opposed
+    to any other kind of request failure. Lets a by-id detail page render a distinct access-denied
+    state instead of silently falling into its "not found" empty state, and skip the generic error
+    toast for it — the dedicated state already explains what happened. See StudentDetailPage.jsx,
+    StudentProfilePage.jsx, TeacherProfilePage.jsx for the shared usage pattern. */
+export function isForbidden(err) {
+  return err?.status === 403;
+}
+
 /** Up-to-2-letter initials from a full name — e.g. "Springfield University" -> "SU",
     "Administrator" -> "A". Shared by user avatars and the generated org logo placeholder. */
 export function initials(name) {
@@ -120,6 +129,28 @@ export function weekdayOfDate(iso) {
   return DAYS[(new Date(iso + 'T00:00:00').getDay() + 6) % 7];
 }
 
+/** ISO dates a weekly slot actually meets on: `day`'s occurrences from max(today, term start)
+    through term end (unbounded if no end date given), capped at `count`. Powers the one-off
+    exception date picker so only real session dates are selectable. */
+export function upcomingSessionDates(day, { termStartDate, termEndDate, count = 12 } = {}) {
+  const targetIdx = DAYS.indexOf(day);
+  if (targetIdx === -1) return [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const termStart = termStartDate ? new Date(termStartDate + 'T00:00:00') : null;
+  const start = termStart && termStart > today ? termStart : today;
+  const startIdx = (start.getDay() + 6) % 7;
+  const cursor = new Date(start);
+  cursor.setDate(cursor.getDate() + ((targetIdx - startIdx + 7) % 7));
+  const termEnd = termEndDate ? new Date(termEndDate + 'T00:00:00') : null;
+  const dates = [];
+  while (dates.length < count && (!termEnd || cursor <= termEnd)) {
+    dates.push(isoDateLocal(cursor));
+    cursor.setDate(cursor.getDate() + 7);
+  }
+  return dates;
+}
+
 /* ------------------------------- CSV/ICS ------------------------------- */
 export function csvEscape(v) {
   const s = String(v ?? '');
@@ -205,6 +236,36 @@ export function csvArrayRowsToAccountObjects(rows) {
   }));
 }
 
+/* ------------------------- finance worklist summary (shared by FinancePage + BursarDashboard) ------------------------- */
+/** Sums a GET /finance/students worklist into {totalCharged, totalPaid, balance, overdueCount} —
+    the single reduction every finance headline-number consumer (stat cards, quick insights, the
+    Bursar dashboard) must share, so "vs Finance page" figures can never drift apart. */
+export function summarizeFinanceWorklist(students) {
+  return students.reduce((acc, s) => {
+    acc.totalCharged += s.totalCharged || 0;
+    acc.totalPaid += s.totalPaid || 0;
+    acc.balance += s.balance || 0;
+    if (s.status === 'overdue') acc.overdueCount++;
+    return acc;
+  }, { totalCharged: 0, totalPaid: 0, balance: 0, overdueCount: 0 });
+}
+
+/** The term immediately before `termId` by startDate (falling back to id when dates tie/are
+    missing) — used to compare stat-card totals "vs last term"; null when there isn't one. */
+export function findPreviousTermId(terms, termId) {
+  if (!termId) return null;
+  const sorted = [...terms].sort((a, b) => (a.startDate || '').localeCompare(b.startDate || '') || a.id - b.id);
+  const idx = sorted.findIndex(t => t.id === termId);
+  return idx > 0 ? sorted[idx - 1].id : null;
+}
+
+/** One stat's percent delta vs. a prior-period value — null when there's no prior value to
+    compare against, or it's zero (a percent change against zero is undefined, not "infinite%"). */
+export function financeDeltaPct(current, previous) {
+  if (previous == null || !(previous > 0)) return null;
+  return Math.round(((current - previous) / previous) * 100);
+}
+
 /** Header-flexible Excel row objects (arbitrary casing) -> account row objects. */
 export function excelObjectRowsToAccountObjects(rows) {
   return rows.map(r => {
@@ -243,6 +304,30 @@ export function termById(terms, id) { return terms.find(t => t.id === id); }
 export function termName(terms, id) { const t = termById(terms, id); return t ? t.name : '—'; }
 export function courseById(courses, id) { return courses.find(c => c.id === id); }
 
+/** Groups course rows that represent different sections/instructors of the SAME course — the
+    existing convention this app uses (see api's routes/enrollments.js sibling-section check):
+    same name (case/whitespace-insensitive) within the same term, modeled as duplicate course
+    rows rather than a dedicated sections table. Returns one entry per distinct course, each
+    carrying every matching row as `options` (sorted by code) — used by the student Course
+    Catalog to show one row per course with N instructor/section choices instead of N rows. */
+export function groupCourseSections(courses) {
+  const groups = new Map();
+  for (const c of courses) {
+    const key = `${String(c.name).trim().toLowerCase()}::${c.termId ?? ''}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(c);
+  }
+  return [...groups.values()].map(rows => {
+    const options = rows.slice().sort((a, b) => a.code.localeCompare(b.code));
+    const primary = options[0];
+    return {
+      key: `${String(primary.name).trim().toLowerCase()}::${primary.termId ?? ''}`,
+      name: primary.name, code: primary.code, departmentId: primary.departmentId,
+      credits: primary.credits, termId: primary.termId, options,
+    };
+  });
+}
+
 /* ---------------------------- roster / status helpers ---------------------------- */
 export function enrolledCount(courseRosters, courseId) {
   const roster = courseRosters.get(courseId);
@@ -265,6 +350,19 @@ export function examStatus(exam, conflictsData) {
   const clash = conflictsData.warnings.some(w => w.type === 'exam-clash' && w.examIds.includes(exam.id));
   if (clash) return { key: 'clash', label: 'Clash', cls: 'pill-amber' };
   return { key: 'confirmed', label: 'Confirmed', cls: 'pill-green' };
+}
+
+/** "Installment 1" -> "Installment One" for 1-20 (translated via financePage.numberWords.<n>),
+    falling back to the plain "Installment {n}" above that or if a translation is missing. Shared
+    by the receipt's allocation table, installment schedule tables, and payment history rows so
+    installment numbers read consistently everywhere they appear. */
+export function installmentLabel(t, n) {
+  const prefix = t('finance:financePage.receipt.allocationInstallment');
+  if (n >= 1 && n <= 20) {
+    const word = t(`finance:financePage.numberWords.${n}`, { defaultValue: '' });
+    if (word) return `${prefix} ${word}`;
+  }
+  return `${prefix} ${n}`;
 }
 
 export function roomStatus(rooms, exams, conflictsData, roomId) {

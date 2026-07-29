@@ -86,7 +86,11 @@ router.post('/', requireAuth, requirePermission('exams', 'write'), asyncHandler(
   res.status(201).json(row);
 }));
 
-router.put('/:id', requireAuth, asyncHandler(async (req, res) => {
+// Editing exam metadata (date/time/room/invigilator/type) is a registrar/exam-officer/admin-level
+// action, not a faculty ownership right — faculty keep exams:R, so requirePermission('exams',
+// 'write') rejects them here even though canManageExam's ownership branch (via canManageCourse)
+// would otherwise let a faculty member manage their own course's exam.
+router.put('/:id', requireAuth, requirePermission('exams', 'write'), asyncHandler(async (req, res) => {
   const existing = await get('SELECT * FROM exams WHERE id = ?', [req.params.id]);
   if (!existing) return res.status(404).json({ error: 'Not found' });
   if (!(await canManageExam(req, existing))) return res.status(403).json({ error: 'You do not have access to this exam.' });

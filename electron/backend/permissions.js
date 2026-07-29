@@ -13,10 +13,10 @@
 // Every access-controlled area of the app. Backend route guards and the
 // frontend sidebar both key off these module names.
 const MODULES = [
-  'dashboard', 'reports', 'timetable', 'rooms', 'courses', 'teachers',
+  'dashboard', 'reports', 'timetable', 'rooms', 'courses', 'teachers', 'students',
   'departments', 'terms', 'exams', 'enrollment', 'attendance', 'grades',
   'gradingScale', 'admissions', 'conflicts', 'finance', 'users', 'audit',
-  'backup', 'branding',
+  'backup', 'branding', 'announcements',
 ];
 
 // Access levels. WRITE implies READ. Absence of a role from a module's row
@@ -66,8 +66,12 @@ const POLICY = {
   rooms:        { registrar:W, dean:R, dept_head:R, exam_officer:R, viewer:R },
   courses:      { registrar:W, dean:W, dept_head:W, exam_officer:R, records_officer:R, viewer:R, faculty:R, student:R },
   teachers:     { registrar:R, dean:W, dept_head:W, viewer:R },
+  // The canonical per-student academic view (Students page) — a read surface over data owned by
+  // admissions/enrollment/finance, not a separate write path, so every role here gets read-only
+  // ('View') access regardless of level; nothing writes through this module.
+  students:     { registrar:W, records_officer:W, admissions_officer:R, dean:R, dept_head:R, bursar:R, viewer:R },
   departments:  { registrar:R, dean:R, dept_head:R, admissions_officer:R, exam_officer:R, records_officer:R, viewer:R },
-  terms:        { registrar:W, dean:R, dept_head:R, exam_officer:R, records_officer:R, admissions_officer:R, viewer:R, faculty:R, student:R },
+  terms:        { registrar:W, dean:R, dept_head:R, exam_officer:R, records_officer:R, admissions_officer:R, bursar:R, viewer:R, faculty:R, student:R },
   exams:        { registrar:W, exam_officer:W, dean:W, dept_head:W, viewer:R, faculty:R, student:R },
   // enrollment/grades are course-keyed aggregate surfaces not yet department-
   // filtered per-course, so dean/dept_head are excluded for now (they manage
@@ -76,15 +80,29 @@ const POLICY = {
   attendance:   { faculty:W, viewer:R, student:R },
   grades:       { records_officer:W, faculty:W, viewer:R, student:R },
   gradingScale: { records_officer:W, viewer:R },
-  admissions:   { admissions_officer:W, dean:R, dept_head:R, viewer:R },
+  // registrar is the university-wide operations role (see announcements below) and needs read
+  // visibility into admissions to answer "has this student been admitted" questions — write stays
+  // with admissions_officer, who owns the decision workflow.
+  admissions:   { registrar:R, admissions_officer:W, dean:R, dept_head:R, viewer:R },
   conflicts:    { registrar:R, exam_officer:R, viewer:R },
   // Fees, payments and balances. Students read their own statement via
   // /finance/me (self-scoped, not module-gated); this governs staff access.
-  finance:      { bursar:W, viewer:R },
+  // Finance is Bursar + Super Admin only — Viewer's "explicitly authorized read-only data" does
+  // not extend to every student's financial statements by default (RBAC hardening, 2026-07-28).
+  finance:      { bursar:W },
   users:        { /* Super Admin only */ },
-  audit:        { viewer:R },
+  // Audit Logs are Super Admin only per the RBAC role table — Viewer previously had unscoped,
+  // unredacted read on the entire audit trail (RBAC hardening, 2026-07-28).
+  audit:        { },
   backup:       { /* Super Admin only */ },
   branding:     { /* Super Admin only */ },
+  // Manage/compose university-wide announcements. registrar is the university-wide operations
+  // role (targets any audience); dean/dept_head get write too but are confined to their own
+  // college/department when targeting (enforced server-side in noticeTargeting.js, on top of
+  // this module check — same layering as courses/timetable above). Every authenticated user,
+  // regardless of this policy, can always read notices addressed to them via the self-scoped
+  // /notices/me endpoints (not module-gated, matching /finance/me).
+  announcements: { registrar:W, dean:W, dept_head:W, viewer:R },
 };
 
 /** Access level (0/1/2) a role has for a module. admin always WRITE. */

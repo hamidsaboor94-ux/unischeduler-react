@@ -12,6 +12,7 @@ const { isValidEmail } = require('../validate');
 const { createAccountWithTempPassword } = require('../accounts');
 const { sendMail } = require('../mailer');
 const { createNotification } = require('../notificationTypes');
+const { AID_TYPES, AID_BASES, resyncApplicationAidForBilledTerms } = require('../finance');
 
 const router = express.Router();
 
@@ -41,12 +42,13 @@ const STATUSES_VIA_ROUTE = STATUSES.filter(s => s !== 'Accepted');
 // routine internal triage, not worth a notification.
 const EMAIL_ON_STATUS = new Set(['Entry Test Scheduled', 'Waitlisted', 'Rejected']);
 
-const NUMERIC_FIELDS = new Set(['previousGraduationYear', 'desiredDepartmentId', 'entryTestMarks']);
+const NUMERIC_FIELDS = new Set(['previousGraduationYear', 'desiredDepartmentId', 'entryTestMarks', 'aidValue']);
 // Every applications column an admin may correct after intake.
 const ADMIN_FIELDS = [
   'fullName', 'fatherName', 'grandfatherName', 'gender', 'dateOfBirth', 'nationality', 'nationalId', 'passportNumber',
   'presentAddress', 'permanentAddress', 'mobileNumber', 'emergencyContact', 'personalEmail',
   'previousSchoolName', 'previousGraduationYear', 'desiredDepartmentId', 'entryTestMarks',
+  'aidType', 'aidBasis', 'aidValue', 'aidReason',
 ];
 function statusMessage(orgName, status, decisionNote) {
   const lines = {
@@ -201,6 +203,11 @@ router.get('/:id', requireAuth, requirePermission('admissions', 'read'), asyncHa
 router.put('/:id', requireAuth, requirePermission('admissions', 'write'), asyncHandler(async (req, res) => {
   const application = await get('SELECT * FROM applications WHERE id = ?', [req.params.id]);
   if (!application) return res.status(404).json({ error: 'Application not found' });
+  // The financial aid panel submits '' for "no aid" / a cleared field — normalize to null so it
+  // reads the same as never having been set, rather than storing an empty string.
+  for (const f of ['aidType', 'aidBasis', 'aidValue', 'aidReason']) {
+    if (req.body[f] === '') req.body[f] = null;
+  }
   const cols = ADMIN_FIELDS.filter(f => req.body[f] !== undefined);
   if (!cols.length) return res.status(400).json({ error: 'No fields to update' });
   if (cols.includes('personalEmail') && !isValidEmail(req.body.personalEmail)) {
@@ -211,12 +218,29 @@ router.put('/:id', requireAuth, requirePermission('admissions', 'write'), asyncH
       return res.status(400).json({ error: `${f} must be a number` });
     }
   }
+  if (cols.includes('aidType') && req.body.aidType !== null && !AID_TYPES.includes(req.body.aidType)) {
+    return res.status(400).json({ error: `aidType must be one of: ${AID_TYPES.join(', ')}` });
+  }
+  if (cols.includes('aidBasis') && req.body.aidBasis !== null && !AID_BASES.includes(req.body.aidBasis)) {
+    return res.status(400).json({ error: `aidBasis must be one of: ${AID_BASES.join(', ')}` });
+  }
+  if (cols.includes('aidValue') && req.body.aidValue !== null) {
+    const n = Number(req.body.aidValue);
+    if (!(n > 0)) return res.status(400).json({ error: 'aidValue must be a positive number' });
+    if (req.body.aidBasis === 'percentage' && n > 100) return res.status(400).json({ error: 'A percentage award cannot exceed 100' });
+  }
   const values = cols.map(c => (NUMERIC_FIELDS.has(c) && req.body[c] !== null ? Number(req.body[c]) : req.body[c]));
   await run(
     `UPDATE applications SET ${cols.map(c => `${c} = ?`).join(', ')}, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
     [...values, req.params.id]
   );
   await logAudit(req.user, 'update', 'applications', req.params.id, req.body);
+  // If this application has already been converted to a student, an aid edit should be reflected
+  // in any term they're already billed for right away, not silently wait for the next "Generate
+  // charges" run for that term.
+  if (application.createdStudentId && cols.some(f => f.startsWith('aid'))) {
+    await resyncApplicationAidForBilledTerms(application.createdStudentId, req.user);
+  }
   res.json(await get('SELECT * FROM applications WHERE id = ?', [req.params.id]));
 }));
 
@@ -278,6 +302,7 @@ router.post('/:id/approve', requireAuth, requirePermission('admissions', 'write'
        presentAddress = ?, permanentAddress = ?, mobileNumber = ?, emergencyContact = ?,
        entryTestMarks = ?, departmentId = ?, programSemester = ?,
        previousSchoolName = ?, previousGraduationYear = ?,
+       applicationId = ?, enrollmentDate = DATE('now'),
        admissionStatus = 'Approved', enrollmentStatus = 'Regular', updatedAt = CURRENT_TIMESTAMP
      WHERE studentId = ?`,
     [
@@ -286,6 +311,7 @@ router.post('/:id/approve', requireAuth, requirePermission('admissions', 'write'
       application.presentAddress, application.permanentAddress, application.mobileNumber, application.emergencyContact,
       application.entryTestMarks, departmentId, programSemester,
       application.previousSchoolName, application.previousGraduationYear,
+      req.params.id,
       account.id,
     ]
   );

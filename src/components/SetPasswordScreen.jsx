@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../api.js';
 import { useAppData } from '../context/AppDataContext.jsx';
 import { useAsyncAction } from '../hooks/useAsyncAction.js';
+import { setToken, clearToken, isPersistentToken } from '../tokenStorage.js';
 
 export default function SetPasswordScreen() {
   const { t } = useTranslation(['shell', 'common']);
@@ -17,8 +18,9 @@ export default function SetPasswordScreen() {
     setError('');
     if (newPassword !== confirm) { setError(t('shell:setPassword.mismatch')); return; }
     try {
-      const { token, user } = await run(api('PUT', '/auth/set-password', { newPassword }));
-      localStorage.setItem('token', token);
+      const rememberMe = isPersistentToken();
+      const { token, user } = await run(api('PUT', '/auth/set-password', { newPassword, rememberMe }));
+      setToken(token, rememberMe);
       await boot(user);
     } catch (err) {
       setError(err.message);
@@ -26,7 +28,7 @@ export default function SetPasswordScreen() {
   }
 
   function setpwCancel() {
-    localStorage.removeItem('token');
+    clearToken();
     // Reload is the simplest faithful way to get back to a fresh 'login' authPhase without
     // threading a cross-cutting "cancel" action through AppDataContext for this one link.
     window.location.reload();

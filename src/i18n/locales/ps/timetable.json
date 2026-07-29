@@ -9,6 +9,7 @@
     "allDepartments": "ټول ډیپارتمنټونه",
     "filterSemester": "د پروګرام سمستر له مخې فلټر",
     "semesterOption": "سمستر {{n}}",
+    "allSemesters": "ټول سمسترونه",
     "noSemesterSet": "سمستر ټاکل شوی نه دی",
     "noClassesYet": "تر اوسه پورې هیڅ ټولګی نشته",
     "filterSection": "د سیکشن له مخې فلټر",
@@ -29,6 +30,7 @@
     "semesterScopeLabel": "سمستر {{n}}",
     "toasts": {
       "noEntriesToReset": "د اوسني فلټر لپاره د بیا تنظیمولو هیڅ د مهالویش ننوتنه نشته.",
+      "selectSpecificSemesterToReset": "د مهالویش له بیا تنظیمولو دمخه یو ځانګړی سمستر (یا \"سمستر ټاکل شوی نه دی\") وټاکئ.",
       "selectSemesterBeforeImport": "د مهالویش له وارداتو دمخه یو سمستر وټاکئ.",
       "noClassesInPdf": "په دې PDF کې هیڅ ټولګی ونه موندل شو."
     }
@@ -44,6 +46,10 @@
     "movedInBadge": "لیږدول شوی",
     "movedInFromBadge": "د {{date}} څخه لیږدول شوی",
     "semBadge": "سمستر {{n}}",
+    "semesterGroupHeading": "سمستر {{n}}",
+    "semesterGroupUnassigned": "بې ټاکل شوي سمستر",
+    "semesterGroupCount_one": "{{count}} ټولګی",
+    "semesterGroupCount_other": "{{count}} ټولګي",
     "finalGradeTitle": "د دې کورس وروستۍ درجه",
     "cancelTitle": "دا ټولګی لغوه کړئ",
     "cancelAriaLabel": "{{code}} د {{date}} په ورځ لغوه کړئ",
@@ -101,7 +107,7 @@
     "kindCancellation": "لغوه کول",
     "kindReschedule": "بیا وخت ټاکل",
     "sessionDateLabel": "د بدلون لپاره د ناستې نېټه",
-    "wrongWeekdayHint": "دا {{actualDay}} ده — دا ټولګی په {{slotDay}} کې جوړیږي.",
+    "noUpcomingSessions": "دا ټولګی په دې نیم‌کال کې نورې راتلونکې ناستې نلري.",
     "whatHappensLabel": "څه پیښیږي",
     "cancelledOption": "لغوه شوی (بې ټولګي)",
     "rescheduledOption": "لیږدول شوی (نوی وخت/خونه)",
@@ -113,7 +119,6 @@
     "clashHint": "لیږدول شوې ناسته د خپل نوي وخت لپاره د خونې او ښوونکي شخړو لپاره چیک کیږي — هرڅه چې وموندل شي، د شخړو په پاڼه کې ښکاري.",
     "addExceptionButton": "استثنا اضافه کړئ",
     "toastPickDate": "د بدلون لپاره د ناستې نېټه وټاکئ.",
-    "toastWrongWeekday": "{{code}} په {{day}} کې جوړیږي — یو {{day}} وټاکئ.",
     "toastCancelledSuccess": "ناسته د هغې نېټې لپاره لغوه شوه.",
     "toastMovedSuccess": "ناسته د هغې نېټې لپاره لیږدول شوه."
   },
@@ -194,9 +199,12 @@
   "courseActionsModal": {
     "assignments": "دندې",
     "takeAttendance": "حاضري ونیسئ",
+    "takeAttendanceHint": "د نننۍ ټولګي حاضري",
     "enterMarks": "نمرې ورکړئ",
+    "enterMarksHint": "نمرې ثبتول",
     "postAnnouncement": "اعلان خپور کړئ",
-    "viewRoster": "د ټولګي لیست وګورئ"
+    "viewRoster": "د ټولګي لیست وګورئ",
+    "viewRosterHint": "نومول شوي زده کوونکي"
   },
   "courseActivityModal": {
     "announcements": "اعلانونه",
@@ -213,5 +221,12 @@
     "confirmMove": "لیږد تایید کړئ",
     "toastMoved": "ناسته ولیږدول شوه.",
     "cancelledHint": "دا ناسته لغوه شوې ده — لومړی لغوه کول بېرته کړئ ترڅو یې ولیږدوئ."
+  },
+  "rescheduleCancelledSession": {
+    "gone": "دا لغوه شوې ناسته نور شتون نلري.",
+    "intro": "د {{code}} هغه درس بیا مهالویش کړئ چې د {{date}} لپاره لغوه شوی و. دا یوازې همدا یوه ناسته بدلوي.",
+    "toastPickDate": "د دې ناستې لپاره نوې نېټه وټاکئ.",
+    "toastSuccess": "ناسته بیا مهالویش شوه.",
+    "saveButton": "ناسته بیا مهالویش کړئ"
   }
 }

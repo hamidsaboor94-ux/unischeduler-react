@@ -8,10 +8,12 @@
  * createNotification() with that type — nothing may insert into the notifications table any
  * other way, so this list is always the true, complete picture of what can appear in it. */
 const NOTIFICATION_TYPES = new Set([
-  'class_cancelled',       // a scheduled class session was cancelled — alerts the instructor
+  'class_cancelled',       // a scheduled class session was cancelled — alerts the instructor and enrolled students
+  'class_rescheduled',     // a cancelled/moved session was given a new date/time/room — alerts the instructor and enrolled students
   'assignment_posted',     // a new assignment was posted in a course the recipient is enrolled in
   'announcement_posted',   // a new announcement was posted in a course the recipient is enrolled in
   'application_submitted', // a new admissions application is awaiting review — alerts admins
+  'notice_published',      // a targeted university-wide announcement (see routes/notices.js) was published to this recipient
 ]);
 
 const { run } = require('./db');

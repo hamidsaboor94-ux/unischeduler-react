@@ -20,7 +20,7 @@
  * scripts/copy-backend.mjs — run that (or `npm run dist`) after changing
  * anything under "uni scheduling/api/src".
  */
-const { app, BrowserWindow, dialog, shell } = require('electron');
+const { app, BrowserWindow, dialog, shell, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -192,6 +192,24 @@ async function ensureDefaultAdmin(get, run, nextIdNumberForRole) {
   );
   console.log('Seeded default admin account: admin@example.edu / ChangeMe123');
 }
+
+// "Download Receipt as PDF" in the renderer (see src/components/ReceiptView.jsx): renders the
+// current page to PDF exactly as printToPDF/window.print() would (same @media print CSS, so it's
+// just the receipt document — see the print rules in style.css), then a native save dialog picks
+// where the file goes. Falls back to window.print()'s own "Save as PDF" destination in plain
+// browser dev (no Electron bridge there — see preload.cjs).
+ipcMain.handle('print-to-pdf', async (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const pdfBuffer = await win.webContents.printToPDF({ printBackground: true, pageSize: 'A4' });
+  const { canceled, filePath } = await dialog.showSaveDialog(win, {
+    title: 'Save Receipt',
+    defaultPath: 'receipt.pdf',
+    filters: [{ name: 'PDF', extensions: ['pdf'] }],
+  });
+  if (canceled || !filePath) return { canceled: true };
+  fs.writeFileSync(filePath, pdfBuffer);
+  return { canceled: false, filePath };
+});
 
 function createWindow(apiBase, devServerUrl) {
   const win = new BrowserWindow({

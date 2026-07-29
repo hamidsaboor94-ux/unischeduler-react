@@ -1,5 +1,6 @@
 {
   "appName": "UniScheduler",
+  "orConjunction": "یا",
   "actions": {
     "save": "خوندي کول",
     "cancel": "لغوه کول",
@@ -92,5 +93,6 @@
     "switchToDark": "تیاره حالت ته اړول"
   },
   "noneYet": "تر اوسه هیڅ نشته",
-  "notApplicable": "—"
+  "notApplicable": "—",
+  "accessDenied": "تاسو د دې کتلو اجازه نلرئ."
 }

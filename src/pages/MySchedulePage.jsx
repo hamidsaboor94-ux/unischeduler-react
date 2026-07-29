@@ -10,7 +10,7 @@ import { DAYS, courseById, roomName, termName, icsEscape, nextDateForDay, downlo
 
 export default function MySchedulePage() {
   const { t } = useTranslation(['academics', 'common']);
-  const { slots, courses, rooms, terms, activeTermId, myEnrollments, afterMutate, slotExceptions, branding, unviewedActivityCourseIds, myFinalGrades } = useAppData();
+  const { slots, courses, rooms, terms, activeTermId, myEnrollments, afterMutate, slotExceptions, branding, unviewedActivityCourseIds, unviewedActivityCounts, myFinalGrades } = useAppData();
   const { openModal } = useModal();
   const { toast } = useToast();
   const [dayFilter, setDayFilter] = useState('');
@@ -75,8 +75,9 @@ export default function MySchedulePage() {
         {/* Current-week dates so students see this week's cancellations/moves on their own schedule. */}
         <WeeklyCalendar slotsToShow={mySlots} editable={false} addable={false} dayFilter={dayFilter}
           weekDates={weekDatesFrom(mondayOf(new Date()))} exceptions={slotExceptions}
-          onCardClick={(course) => openModal('course-activity', course.id)}
-          unviewedCourseIds={unviewedActivityCourseIds} finalGradesByCourseId={myFinalGrades} />
+          onCardClick={(course, slot) => openModal('course-quicklook', course.id, { slot })}
+          unviewedCourseIds={unviewedActivityCourseIds} unviewedCounts={unviewedActivityCounts}
+          finalGradesByCourseId={myFinalGrades} />
         <div className="panel">
           <div className="panel-header">
             <div>
@@ -103,8 +104,16 @@ export default function MySchedulePage() {
             </tr></thead>
             <tbody>
               {myEnrollments.length ? myEnrollments.map(e => (
-                <tr key={e.enrollmentId}>
-                  <td>{e.code}</td><td>{e.name}</td>
+                <tr key={e.enrollmentId} style={{ cursor: 'pointer' }} onClick={() => openModal('course-quicklook', e.id, { course: e })}>
+                  <td>
+                    {e.code}
+                    {!!unviewedActivityCounts.get(e.id) && (
+                      <span className="unseen-badge" style={{ marginInlineStart: 6 }} title={t('academics:mySchedulePage.unseenCountTitle', { count: unviewedActivityCounts.get(e.id) })}>
+                        {unviewedActivityCounts.get(e.id)}
+                      </span>
+                    )}
+                  </td>
+                  <td>{e.name}</td>
                   <td>
                     {termName(terms, e.termId)}
                     {e.termId !== activeTermId && <span className="pill pill-gray" style={{ marginInlineStart: 4 }}>{t('academics:mySchedulePage.otherTerm')}</span>}
@@ -113,7 +122,7 @@ export default function MySchedulePage() {
                   <td><span className={'pill ' + (e.status === 'waitlisted' ? 'pill-amber' : 'pill-green')}>{e.status === 'waitlisted' ? t('academics:mySchedulePage.waitlisted') : t('academics:mySchedulePage.enrolled')}</span></td>
                   <td>{renderGradeCell(e.id)}</td>
                   <td>
-                    <button className="icon-btn danger" aria-label={t('academics:mySchedulePage.withdrawAriaLabel', { code: e.code })} onClick={() => afterMutate(withdrawFromCourse(e.enrollmentId), t('academics:mySchedulePage.withdrawn'))}>
+                    <button className="icon-btn danger" aria-label={t('academics:mySchedulePage.withdrawAriaLabel', { code: e.code })} onClick={(ev) => { ev.stopPropagation(); afterMutate(withdrawFromCourse(e.enrollmentId), t('academics:mySchedulePage.withdrawn')); }}>
                       <i className="ti ti-x" aria-hidden="true"></i>
                     </button>
                   </td>

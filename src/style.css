@@ -57,6 +57,10 @@
   --danger-bg: rgba(232,99,90,0.15);
   --info: #5AA7E8;
   --info-bg: rgba(90,167,232,0.14);
+  /* Neutral/gray semantic — for states that are neither success/warning/danger/info, e.g. an
+     unbilled or not-yet-applicable status badge (see Finance). */
+  --neutral: #9099A6;
+  --neutral-bg: rgba(144,153,166,0.14);
   --shadow-card: 0 1px 2px rgba(0,0,0,0.3);
   --shadow-card-hover: 0 10px 24px rgba(0,0,0,0.45);
   --chip-overlay: rgba(255,255,255,0.14);
@@ -75,9 +79,15 @@
   --course-pink: #F472B6;
   --course-purple: #C084FC;
   --course-indigo: #818CF8;
+
+  /* Tells the browser which palette to render its own native chrome in — the date-picker popup,
+     the file-input "Choose File" button before we override it, scrollbars — for controls CSS
+     can't fully restyle otherwise. Without this they default to light regardless of our theme. */
+  color-scheme: dark;
 }
 
 :root[data-theme="light"] {
+  color-scheme: light;
   --accent: #4B7FE8;
   --accent-light: #6B97F0;
   --accent-dim: rgba(75,127,232,0.15);
@@ -107,6 +117,8 @@
   --danger-bg: #FDECEA;
   --info: #185FA5;
   --info-bg: #E6F1FB;
+  --neutral: #64708A;
+  --neutral-bg: rgba(100,112,138,0.12);
   --shadow-card: 0 1px 2px rgba(15,28,63,0.05);
   --shadow-card-hover: 0 8px 16px rgba(15,28,63,0.12);
   --chip-overlay: rgba(0,0,0,0.12);
@@ -285,6 +297,72 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
   background: var(--surface-recessed); border: 1px solid var(--border); border-radius: var(--radius-sm);
 }
 .profile-doc-upload input[type="text"] { flex: 1; min-width: 140px; }
+/* Everything above only themes the container — the raw <input>/<select> inside (text, number,
+   date, checkbox, file) are unstyled native controls otherwise, so they render as a light-theme
+   browser widget sitting inside our dark panel. Match the .form-row treatment used elsewhere. */
+.profile-doc-upload input[type="text"], .profile-doc-upload input[type="number"],
+.profile-doc-upload input[type="date"], .profile-doc-upload select {
+  padding: 7px 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  color: var(--text-primary); font-size: 12.5px; font-family: inherit;
+  outline: none;
+}
+.profile-doc-upload input[type="text"]:focus, .profile-doc-upload input[type="number"]:focus,
+.profile-doc-upload input[type="date"]:focus, .profile-doc-upload select:focus { border-color: var(--accent); }
+.profile-doc-upload input::placeholder { color: var(--text-muted); }
+.profile-doc-upload label.field-hint { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.profile-doc-upload input[type="checkbox"] { accent-color: var(--accent); width: 14px; height: 14px; }
+.profile-doc-upload input[type="file"] {
+  background: var(--surface-card); color: var(--text-secondary); font-size: 12px; max-width: 190px;
+}
+.profile-doc-upload input[type="file"]::file-selector-button {
+  padding: 6px 12px; margin-inline-end: 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-base);
+  color: var(--text-primary); font-size: 12px; font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.profile-doc-upload input[type="file"]::file-selector-button:hover { background: var(--surface-recessed); }
+
+/* StudentDetailsCards.jsx — compact student-detail overview (Admissions application-detail,
+   and anywhere else a dense read-only student summary is useful). Deliberately denser than the
+   .form-row label-over-value stacks used elsewhere: most fields are a single space-between row. */
+.sdc-header { display: flex; align-items: center; gap: 14px; }
+.sdc-avatar {
+  width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+  background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; font-weight: 600;
+}
+.sdc-header-name { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.sdc-header-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.sdc-header-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-inline-start: auto; flex-shrink: 0; }
+
+.sdc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 12px; }
+/* Rendered as <Card variant="flat" size="compact"> — background/border/radius/padding come
+   from .card/.card--flat/.card--compact; this only carries the content font-size. */
+.sdc-card { font-size: 13px; }
+.sdc-card-title {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 7px;
+}
+.sdc-card-title:not(:first-child) { margin-top: 4px; }
+.sdc-divider { height: 1px; background: var(--border); margin: 10px 0; }
+.sdc-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 3px 0; }
+.sdc-row-label { color: var(--text-muted); flex-shrink: 0; }
+.sdc-row-value { color: var(--text-primary); text-align: end; overflow-wrap: anywhere; }
+.sdc-row-value.sdc-muted { color: var(--text-muted); }
+.sdc-row-value.sdc-accent { color: var(--accent-light); }
+.sdc-stack-row { padding: 3px 0; }
+.sdc-stack-row .sdc-row-label { display: block; margin-bottom: 2px; }
+.sdc-stack-row .sdc-row-value { text-align: start; display: block; }
+.sdc-doc-row { display: flex; align-items: baseline; gap: 6px; padding: 3px 0; }
+.sdc-doc-row .sdc-row-label { flex-shrink: 0; }
+.sdc-doc-empty { color: var(--text-muted); font-size: 12px; }
 
 #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--surface-base); }
 
@@ -345,6 +423,15 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
 .btn-sm:hover { background: var(--surface-recessed); }
 
 #content { flex: 1; overflow-y: auto; padding: 18px 22px; }
+/* Opt-in for pages whose #content holds ONLY the weekly calendar (TimetablePage — applied via
+   className="cal-content" on its #content div). #content itself stops being the scroll
+   container and instead just lays out as a flex column; .panel-cal (see its rule further down)
+   takes over as the calendar's real scroll viewport for both axes, which is what lets the
+   sticky day-header resolve against a container that actually produces vertical scroll offset.
+   Not applied on My Schedule, whose #content stacks other content below the calendar and needs
+   to keep scrolling everything together as one unit — see the .panel-cal comment for the
+   consequence there. */
+#content.cal-content { overflow: visible; display: flex; flex-direction: column; min-height: 0; }
 
 .dash-notice-panel { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
 .dash-notice {
@@ -354,47 +441,151 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
   border-radius: var(--radius);
   font-size: 12.5px; color: var(--danger);
 }
-.dash-notice i.ti-calendar-off { font-size: 17px; flex-shrink: 0; }
+/* Rescheduled class notices are a resolved confirmation, not a still-needs-action alert — same
+   shape, calmer info palette, and (unlike the cancelled/danger state) dismissable. */
+.dash-notice.dash-notice-info { background: var(--info-bg); border-color: var(--info); color: var(--info); }
+.dash-notice i { font-size: 17px; flex-shrink: 0; }
 .dash-notice-msg { flex: 1; }
+/* A cancelled notice a faculty member can act on (reschedule that one session) — hover/focus
+   affordance only, the click target is the whole row. */
+.dash-notice-clickable { cursor: pointer; }
+.dash-notice-clickable:hover { filter: brightness(1.1); }
+.dash-notice-clickable:focus-visible { outline: 2px solid var(--danger); outline-offset: 2px; }
+.dash-notice-chevron { font-size: 15px !important; opacity: 0.65; }
 
 /* auto-fit rather than a fixed column count — admin sees 5 cards, other roles see 3; each
    count fills the row evenly with no dangling empty columns either way. */
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 18px; }
-.stat-card {
-  background: var(--surface-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  position: relative;
-  overflow: hidden;
+
+/* "Icon chip + delta" KPI tile (components/ui/StatCard.jsx) — a flat surface distinct from
+   .card's gradient-wash/left-accent-border look, since this is only for summary/KPI rows and
+   must never restyle content cards. Chip hues are fixed brand colors (not theme vars) by
+   design; the pill and text still use theme vars so the tile adapts to light/dark. */
+.kpi-card { background: var(--surface-card); border: 0.5px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.kpi-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.kpi-chip {
+  width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; color: #fff;
 }
-.stat-card::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 3px;
-}
-.stat-accent-blue::before { background: var(--accent); }
-.stat-accent-green::before { background: var(--success); }
-.stat-accent-gold::before { background: var(--gold); }
-.stat-accent-red::before { background: var(--danger); }
-.stat-accent-purple::before { background: var(--course-purple); }
-.stat-card .s-icon {
+.kpi-chip--teal   { background: linear-gradient(135deg, #0F6E56, #1D9E75); }
+.kpi-chip--amber  { background: linear-gradient(135deg, #854F0B, #EF9F27); }
+.kpi-chip--indigo { background: linear-gradient(135deg, #3C3489, #7F77DD); }
+.kpi-chip--red    { background: linear-gradient(135deg, #791F1F, #E24B4A); }
+.kpi-pill { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 999px; line-height: 1.5; white-space: nowrap; }
+.kpi-pill--positive { background: var(--success-bg); color: var(--success); }
+.kpi-pill--negative { background: var(--danger-bg); color: var(--danger); }
+.kpi-pill--warning  { background: var(--warning-bg); color: var(--warning); }
+.kpi-pill--neutral  { background: var(--neutral-bg); color: var(--neutral); }
+.kpi-label { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+.kpi-value { font-family: ui-monospace, 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; font-size: 30px; font-weight: 500; color: var(--text-primary); line-height: 1.15; }
+.kpi-sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+/* Student dashboard KPI strip — same tile system as .stat-grid/.kpi-card, just a narrower
+   auto-fit minmax so all 4 tiles (GPA, Attendance, Credits, Fee Balance) sit on one row at
+   typical widths. Falls back to fewer columns on its own at narrow widths (auto-fit). */
+.kpi-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+
+/* GPA tile's two-value split (term vs. cumulative) sharing one .kpi-card. */
+.kpi-split { display: flex; align-items: center; gap: 12px; }
+.kpi-split-item { flex: 1; min-width: 0; }
+.kpi-split-divider { width: 1px; align-self: stretch; background: var(--border); }
+.kpi-value--split { font-size: 20px; }
+
+/* Compact stat carousel replacing the old 3-card stat-grid — see DashboardPage.jsx's
+   StatCarouselCard, rendered as a <Card> (shell/background/border/padding come from .card).
+   Sized to match a single one of the old cards rather than stretching full width. Rows are
+   spaced with gap only, no divider lines between them. */
+.stat-carousel-card { width: 100%; max-width: 280px; margin-bottom: 18px; }
+.stat-carousel-viewport { overflow: hidden; }
+.stat-carousel-track { display: flex; flex-direction: column; transition: transform 0.5s ease; }
+.stat-carousel-row { display: flex; align-items: center; gap: 10px; height: 60px; box-sizing: border-box; padding: 5px 0; }
+
+.stat-carousel-icon-wrap {
   width: 34px; height: 34px; border-radius: var(--radius-sm);
   display: flex; align-items: center; justify-content: center;
-  font-size: 17px; margin-bottom: 10px;
+  font-size: 16px; flex-shrink: 0;
 }
-.s-blue   { background: var(--info-bg);    color: var(--info); }
-.s-green  { background: var(--success-bg); color: var(--success); }
-.s-gold   { background: var(--warning-bg); color: var(--warning); }
-.s-red    { background: var(--danger-bg);  color: var(--danger); }
-.s-purple { background: color-mix(in srgb, var(--course-purple) 16%, transparent); color: var(--course-purple); }
-.stat-label { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
-.stat-value { font-size: 24px; font-weight: 500; color: var(--text-primary); line-height: 1.1; }
-.stat-sub { font-size: 11px; margin-top: 4px; }
+.stat-carousel-icon-wrap.teal  { background: color-mix(in srgb, var(--course-teal) 16%, transparent); color: var(--course-teal); animation: stat-pulse-teal 2.6s ease-in-out infinite; }
+.stat-carousel-icon-wrap.green { background: var(--success-bg); color: var(--success); animation: stat-pulse-green 2.6s ease-in-out infinite; }
+.stat-carousel-icon-wrap.amber { background: var(--warning-bg); color: var(--warning); animation: stat-pulse-amber 2.6s ease-in-out infinite; }
+.stat-carousel-icon-wrap.teal i  { filter: drop-shadow(0 0 3px var(--course-teal)); }
+.stat-carousel-icon-wrap.green i { filter: drop-shadow(0 0 3px var(--success)); }
+.stat-carousel-icon-wrap.amber i { filter: drop-shadow(0 0 3px var(--warning)); }
+
+@keyframes stat-pulse-teal {
+  0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--course-teal) 25%, transparent), 0 0 8px color-mix(in srgb, var(--course-teal) 30%, transparent); }
+  50%      { box-shadow: 0 0 0 1px color-mix(in srgb, var(--course-teal) 40%, transparent), 0 0 16px color-mix(in srgb, var(--course-teal) 55%, transparent); }
+}
+@keyframes stat-pulse-green {
+  0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--success) 25%, transparent), 0 0 8px color-mix(in srgb, var(--success) 30%, transparent); }
+  50%      { box-shadow: 0 0 0 1px color-mix(in srgb, var(--success) 40%, transparent), 0 0 16px color-mix(in srgb, var(--success) 55%, transparent); }
+}
+@keyframes stat-pulse-amber {
+  0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--warning) 25%, transparent), 0 0 8px color-mix(in srgb, var(--warning) 30%, transparent); }
+  50%      { box-shadow: 0 0 0 1px color-mix(in srgb, var(--warning) 40%, transparent), 0 0 16px color-mix(in srgb, var(--warning) 55%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stat-carousel-icon-wrap { animation: none !important; }
+  .stat-carousel-track { transition: none !important; }
+}
+
+.stat-carousel-info { flex: 1; min-width: 0; }
+.stat-carousel-label { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat-carousel-value-line { display: flex; align-items: baseline; gap: 8px; }
+.stat-carousel-value { font-size: 22px; font-weight: 500; color: var(--text-primary); line-height: 1.1; }
+.stat-carousel-subnote { font-size: 11px; }
+.stat-carousel-subnote.teal  { color: var(--course-teal); }
+.stat-carousel-subnote.green { color: var(--success); }
+.stat-carousel-subnote.amber { color: var(--warning); }
+
 .ok  { color: var(--success); }
 .warn { color: var(--warning); }
 .bad  { color: var(--danger); }
 
 .panel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+
+/* Student dashboard's main-content/sidebar split — wider main column than the generic
+   .panel-row 1fr/1fr, applied together with .panel-row (className="panel-row dash-two-col")
+   so it inherits the same max-width:860px collapse to a single column for free. */
+.dash-two-col { grid-template-columns: 1.9fr 1fr; gap: 16px; }
+.dash-col { display: flex; flex-direction: column; gap: 14px; }
+
+/* Greeting + semester pill header row above the KPI strip. */
+.dash-welcome-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.dash-welcome-title { font-size: 18px; font-weight: 600; color: var(--text-primary); }
+.dash-semester-pill { font-size: 12px; padding: 5px 12px; gap: 6px; }
+.dash-semester-pill i { font-size: 13px; }
+/* Super Admin dashboard header's system-health pill — same sizing as .dash-semester-pill. */
+.dash-health-pill { font-size: 12px; padding: 5px 12px; gap: 6px; display: inline-flex; align-items: center; }
+.dash-health-pill i { font-size: 13px; }
+
+/* Registrar dashboard — Inter for UI text, IBM Plex Mono for KPI figures; scoped to this page only
+   (every other dashboard keeps --font-sans/Lexend). Fonts vendored in
+   public/vendor/registrar-dashboard-fonts.css, loaded in index.html. */
+.registrar-dash { font-family: 'Inter', var(--font-sans); }
+.registrar-dash .kpi-value { font-family: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; }
+.dash-registration-pill { font-size: 12px; padding: 5px 12px; gap: 6px; display: inline-flex; align-items: center; }
+.dash-registration-pill i { font-size: 13px; }
+.dash-queue-count {
+  font-family: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-weight: 600; font-size: 15px; color: var(--text-primary);
+  min-width: 26px; text-align: end; flex-shrink: 0;
+}
+/* Same monospace/end-aligned treatment as .dash-queue-count, for money figures in dashboard
+   alert-list rows (Bursar dashboard's overdue/upcoming/recent-payments panels) — not scoped to
+   any one dashboard's font choice, unlike .registrar-dash .kpi-value. */
+.dash-figure-mono {
+  font-family: ui-monospace, 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-weight: 600; font-size: 13.5px; color: var(--text-primary);
+  text-align: end; flex-shrink: 0; white-space: nowrap;
+}
+/* The add/drop queue row has no destination yet (see queue.addDropNotBuilt) — same shape as the
+   other rows, minus the hover/click affordance. */
+.dash-queue-row--static { cursor: default; opacity: 0.7; }
+.dash-queue-row--static:hover { border-color: transparent; }
+.dash-student-search { width: 100%; border-radius: var(--radius-sm); }
+
 .panel {
   background: var(--surface-card);
   border: 1px solid var(--border);
@@ -416,6 +607,59 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
   padding: 14px; color: var(--text-muted); font-size: 12px;
 }
 .dash-all-clear i { color: var(--success); font-size: 16px; }
+
+/* ============ Super Admin oversight dashboard ============ */
+.pulse-banner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; border-inline-start: 3px solid var(--success); }
+.pulse-banner.pulse-attention { border-inline-start-color: var(--danger); }
+.pulse-banner.pulse-unknown { border-inline-start-color: var(--border-strong); }
+.pulse-verdict { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--text-primary); }
+.pulse-banner.pulse-ok .pulse-verdict i { color: var(--success); }
+.pulse-banner.pulse-attention .pulse-verdict i { color: var(--danger); }
+.pulse-banner.pulse-unknown .pulse-verdict i { color: var(--text-muted); }
+.pulse-vitals { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: var(--text-secondary); }
+.pulse-vitals span { display: flex; align-items: center; gap: 5px; }
+.pulse-vitals i { color: var(--text-muted); font-size: 13px; }
+
+/* Academic Snapshot strip — soft filled tiles, no borders, so it reads as calm reference data
+   rather than another bordered card competing with the KPI grid above it. */
+.snapshot-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.snapshot-tile { background: var(--surface-recessed); border-radius: var(--radius); padding: 12px 14px; }
+.snapshot-value { font-size: 20px; font-weight: 500; color: var(--text-primary); line-height: 1.1; }
+.snapshot-label { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+.snapshot-tile-stack { display: flex; flex-direction: column; gap: 8px; }
+.snapshot-stack-row { display: flex; align-items: baseline; gap: 6px; }
+.snapshot-stack-row .snapshot-value { font-size: 15px; }
+.snapshot-stack-row .snapshot-label { margin-top: 0; }
+
+.quick-actions-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.health-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+.health-card { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--surface-recessed); border-radius: var(--radius); font-size: 12.5px; color: var(--text-primary); }
+
+.alert-neutral { background: var(--surface-recessed); }
+.alert-neutral i { color: var(--text-muted); }
+
+/* Users & roles card's role-breakdown bar — proportional segments (flex-grow: count) plus a
+   wrapping legend below, colored deterministically per role (see roleColor() in
+   SuperAdminDashboard.jsx) from the same PALETTE used for course-color dots. */
+.role-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--surface-recessed); margin-bottom: 10px; }
+.role-bar-seg { min-width: 3px; }
+.role-bar-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 12px; color: var(--text-secondary); }
+.role-bar-legend-item { display: flex; align-items: center; gap: 6px; }
+.role-bar-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.role-bar-legend-count { font-family: ui-monospace, 'SFMono-Regular', Consolas, 'Liberation Mono', monospace; color: var(--text-primary); }
+
+/* System status card's service rows — a colored dot (live health) + label + value, and a plain
+   "Last backup" row using the same shape without a dot. */
+.svc-list { display: flex; flex-direction: column; gap: 8px; }
+.svc-row { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: var(--surface-recessed); border-radius: var(--radius); font-size: 12.5px; color: var(--text-primary); }
+.svc-row i { color: var(--text-muted); font-size: 14px; }
+.svc-label { flex: 1; }
+.svc-value { color: var(--text-secondary); font-size: 12px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.status-dot--ok { background: var(--success); }
+.status-dot--down { background: var(--danger); }
+.status-dot--unknown { background: var(--text-muted); }
 
 /* ============ Calendar (weekly timetable / my schedule) — card list per day ============ */
 .cal-wrap { display: flex; flex-direction: column; }
@@ -461,33 +705,83 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
   border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
   border-radius: var(--radius-lg);
 }
-/* Soft, borderless card: a subtle course-tint wash anchored at the leading edge fades into
-   the neutral surface within the card, and a thin accent strip sits on that same edge. Just
-   ~13% tint near the edge keeps each card gently color-coded without breaking the calm grid.
-   (Physical `to right` here is flipped for RTL below so the wash always hugs the leading edge.) */
-.slot {
-  position: relative; box-sizing: border-box; cursor: pointer;
+/* ---------- Global Card design system (see src/components/ui/Card.jsx) ----------
+   Rounded corners, an accent-tinted gradient wash anchored at the leading edge fading into
+   the neutral surface, and a thin accent strip on that same edge — the look was designed for
+   the Timetable's course cards below and generalized here so any card-shaped UI in the app can
+   share it. --card-accent/--card-surface default to the ordinary card palette so a plain
+   <Card> looks right with zero props; .slot overrides both to keep its per-course-color/
+   brighter-surface treatment. (Physical `to right` here is flipped for RTL below so the wash
+   always hugs the leading edge.) */
+.card {
+  --card-accent: var(--accent);
+  --card-surface: var(--surface-card);
+  position: relative; box-sizing: border-box;
   border-radius: var(--radius); padding: 13px 14px 14px;
-  /* Direction is a custom prop (flipped for RTL below) so the wash always hugs the leading
-     edge — and so exception states can still override `background` wholesale without the RTL
-     rule's specificity getting in the way. */
   background: linear-gradient(
-    var(--slot-wash-dir, to right),
-    color-mix(in srgb, var(--slot-hue, var(--accent)) 13%, var(--slot-surface)) 0%,
-    var(--slot-surface) 65%
+    var(--card-wash-dir, to right),
+    color-mix(in srgb, var(--card-accent) 13%, var(--card-surface)) 0%,
+    var(--card-surface) 65%
   );
   border: none;
-  border-inline-start: 3px solid var(--slot-hue, var(--accent));
+  border-inline-start: 3px solid var(--card-accent);
   box-shadow: var(--shadow-card);
   transition: transform 0.14s ease, box-shadow 0.14s ease;
 }
-[dir="rtl"] .slot { --slot-wash-dir: to left; }
-@media (prefers-reduced-motion: reduce) { .slot { transition: none; } }
-.slot:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-card-hover);
+[dir="rtl"] .card { --card-wash-dir: to left; }
+@media (prefers-reduced-motion: reduce) { .card { transition: none; } }
+
+/* Neutral surface, no colored wash/accent strip — for informational tiles that have no
+   natural accent color of their own (e.g. StudentDetailsCards' sdc-card sections). */
+.card--flat {
+  background: var(--card-surface);
+  border: 1px solid var(--border);
+  border-inline-start: 1px solid var(--border);
 }
-.slot:focus-visible { outline: 2px solid var(--slot-hue, var(--accent)); outline-offset: 2px; }
+/* Translucent/blurred surface, available for spots that want the glassmorphism treatment;
+   still keeps the accent strip so it reads as the same family. */
+.card--glass {
+  background: color-mix(in srgb, var(--card-surface) 70%, transparent);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-inline-start: 3px solid var(--card-accent);
+}
+
+.card--compact { padding: 9px 11px 10px; border-radius: var(--radius-sm); }
+.card--large { padding: 20px 22px; border-radius: var(--radius-lg); }
+
+.card--clickable { cursor: pointer; }
+.card--clickable:hover { transform: translateY(-2px); box-shadow: var(--shadow-card-hover); }
+.card--clickable:focus-visible { outline: 2px solid var(--card-accent); outline-offset: 2px; }
+
+.card-header { position: relative; display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.card-header-text { flex: 1; min-width: 0; }
+.card-title { font-size: 13.5px; font-weight: 500; color: var(--text-primary); }
+.card-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.card-icon {
+  width: 34px; height: 34px; border-radius: var(--radius-sm); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 17px;
+  background: color-mix(in srgb, var(--card-accent) 16%, transparent);
+  color: var(--card-accent);
+  margin-bottom: 10px;
+}
+.card-header .card-icon { margin-bottom: 0; }
+.card-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.card-content { position: relative; }
+.card-footer {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border);
+}
+
+/* Timetable/exam course cards: a thin skin on top of .card (both WeeklyCalendar.jsx and
+   ExamsPage.jsx render these as <Card clickable className="slot ...">) — the gradient wash,
+   left accent, shadow, hover-lift and focus-ring all come from .card/.card--clickable above.
+   This class only maps the per-course --slot-hue and the brighter --slot-surface onto the
+   generic tokens, plus the exception-state overrides (conflict/suspended/moved) below. */
+.slot {
+  --card-accent: var(--slot-hue, var(--accent));
+  --card-surface: var(--slot-surface);
+}
 
 /* Per-course accent — deterministic on courseId (see utils.js courseColor), so the same
    course keeps the same color on every card, everywhere it appears. It drives only the thin
@@ -547,6 +841,24 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
 .slot-meta-row.slot-time { font-weight: 600; }
 .slot-meta-row.slot-time i { opacity: 0.85; }
 
+/* ---------- "All semesters" grouping — one collapsible week-grid per semester ---------- */
+.cal-semester-groups { display: flex; flex-direction: column; gap: 4px; }
+.cal-semester-group + .cal-semester-group { border-top: 1px solid var(--border); padding-top: 18px; margin-top: 14px; }
+.cal-semester-group-header {
+  display: flex; align-items: center; gap: 8px; cursor: pointer; list-style: none;
+  padding: 4px 0 12px; user-select: none;
+}
+.cal-semester-group-header::-webkit-details-marker { display: none; }
+.cal-semester-group-caret { font-size: 13px; color: var(--text-muted); transition: transform 0.15s ease; }
+.cal-semester-group[open] > .cal-semester-group-header .cal-semester-group-caret { transform: rotate(90deg); }
+[dir="rtl"] .cal-semester-group-caret { transform: scaleX(-1); }
+[dir="rtl"] .cal-semester-group[open] > .cal-semester-group-header .cal-semester-group-caret { transform: scaleX(-1) rotate(90deg); }
+.cal-semester-group-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.cal-semester-group-count {
+  font-size: 11px; font-weight: 600; color: var(--text-muted);
+  background: var(--surface-recessed); border-radius: 10px; padding: 2px 9px;
+}
+
 /* ---------- empty-state day — an intentional placeholder instead of blank space ---------- */
 .cal-day-empty {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -594,6 +906,22 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
   margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border);
   display: flex; flex-direction: column; gap: 8px;
 }
+
+/* Conflicts page "Recently resolved" panel — one card per resolution returned by
+   POST /conflicts/auto-resolve, showing exactly what changed. */
+.resolution-list { display: flex; flex-direction: column; gap: 8px; }
+.resolution-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--success-bg);
+  font-size: 12px;
+}
+.resolution-item i.ti-circle-check { font-size: 16px; margin-top: 1px; flex-shrink: 0; color: var(--success); }
+.resolution-action { font-weight: 500; color: var(--text-primary); }
+.resolution-reason { color: var(--text-secondary); margin-top: 2px; font-size: 11px; }
+.resolution-diff { display: flex; align-items: center; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.resolution-diff i { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
 
 .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .data-table th { padding: 7px 10px; text-align: start; font-weight: 500; font-size: 10.5px; color: var(--text-muted); border-bottom: 1px solid var(--border); background: var(--surface-card); position: sticky; top: 0; z-index: 1; }
@@ -738,6 +1066,7 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
   flex-direction: column;
 }
 .modal-box.modal-wide { width: 1080px; }
+.modal-box.modal-medium { width: 640px; }
 #modal-body { flex: 1; min-height: 0; overflow-y: auto; }
 .modal-header, .modal-footer { flex-shrink: 0; }
 .pdf-import-scroll { max-height: 62vh; overflow-y: auto; }
@@ -755,19 +1084,76 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
 .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 14px; }
 .modal-title { font-size: 14px; font-weight: 500; color: var(--text-primary); }
 .modal-close { background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 18px; line-height: 1; }
+/* Course quick-look card (My Schedule class-card click, or a My Courses row) — description reads
+   as a subtitle right under the modal's own title (in the header, just above #modal-body), capped
+   to 3 lines so a long one can't blow out this compact card. Rows below use the same icon+text
+   row language as .slot-meta-row on the timetable cards themselves, just sized for modal text. */
+.quicklook-description {
+  font-size: 12.5px; line-height: 1.5; color: var(--text-secondary);
+  margin-bottom: 14px;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.quicklook-rows { display: flex; flex-direction: column; gap: 8px; }
+.quicklook-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); }
+.quicklook-row i { flex-shrink: 0; font-size: 13px; opacity: 0.75; width: 16px; text-align: center; }
 .form-row { margin-bottom: 13px; }
 .form-label { font-size: 11px; font-weight: 500; color: var(--text-secondary); margin-bottom: 5px; }
-.form-row input, .form-row select {
+.form-row input, .form-row select, .form-row textarea {
   width: 100%; padding: 8px 10px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   background: var(--surface-card);
-  color: var(--text-primary); font-size: 13px;
+  color: var(--text-primary); font-size: 13px; font-family: inherit;
   outline: none;
   transition: border-color 0.12s;
 }
-.form-row input:focus, .form-row select:focus { border-color: var(--accent); }
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--accent); }
+.form-row textarea::placeholder, .form-row input::placeholder { color: var(--text-muted); }
+/* input[type=file]'s own text ("No file chosen") isn't covered by the `color` above in every
+   engine — set it explicitly. The OS file-picker dialog itself is native chrome, unthemeable. */
+.form-row input[type="file"] { background: var(--surface-card); color: var(--text-secondary); font-size: 12px; padding: 6px 8px; }
+.form-row input[type="file"]::file-selector-button {
+  padding: 6px 12px; margin-inline-end: 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-recessed);
+  color: var(--text-primary); font-size: 12px; font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.form-row input[type="file"]::file-selector-button:hover { background: var(--surface-base); }
 .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Faculty course-actions card: Attendance/Marks/Roster tiles — vertical icon+label+hint stack,
+   one accent color per action, applied directly to the icon glyph instead of a badge. */
+.course-action-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.course-action-tile {
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 5px;
+  padding: 18px 16px;
+  background: var(--surface-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.course-action-tile:hover { background: var(--slot-surface); }
+.course-action-tile.blue:hover  { border-color: var(--info); }
+.course-action-tile.green:hover { border-color: var(--success); }
+.course-action-tile.amber:hover { border-color: var(--warning); }
+.course-action-tile-icon { font-size: 26px; }
+.course-action-tile.blue  .course-action-tile-icon { color: var(--info); }
+.course-action-tile.green .course-action-tile-icon { color: var(--success); }
+.course-action-tile.amber .course-action-tile-icon { color: var(--warning); }
+.course-action-tile-label { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+.course-action-tile-hint { font-size: 11px; color: var(--text-muted); }
+
+/* Student dashboard's Quick Links — same bordered-tile look as .course-action-tile, sized down
+   (compact, no hint line) for a 2-col grid in the sidebar column. */
+.quick-link-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.quick-link-tiles .course-action-tile { padding: 14px 10px; gap: 4px; }
+.quick-link-tiles .course-action-tile-icon { font-size: 20px; }
+.quick-link-tiles .course-action-tile-label { font-size: 12px; }
 .form-static { font-size: 12.5px; color: var(--text-primary); }
 .form-divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
@@ -854,6 +1240,22 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
 .slot-quick:hover { background: var(--accent); color: #fff; opacity: 1; }
 [dir="rtl"] .slot-quick i { transform: scaleX(-1); }
 
+/* Count of unseen assignments/announcements/materials for this course (student view only) —
+   see AppDataContext's unviewedActivityCounts. Shared circular look; .slot-unseen-badge adds the
+   card-corner positioning for the timetable cards, while the My Courses table just uses the base
+   class inline next to the course code (a table row has no "corner" to overlap). */
+.unseen-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 999px;
+  background: var(--danger); color: #fff;
+  font-size: 10px; font-weight: 700; line-height: 1;
+}
+.slot-unseen-badge {
+  position: absolute; top: -6px; inset-inline-end: -6px;
+  z-index: 2;
+}
+
 .slot-sem-badge {
   display: inline-block; margin-top: 4px;
   font-size: 8.5px; font-weight: 600; letter-spacing: 0.2px;
@@ -916,6 +1318,17 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
 .checkbox-list { max-height: 160px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; }
 .checkbox-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 12.5px; }
 .checkbox-row input { width: auto; }
+
+.student-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; padding: 14px; }
+.student-card {
+  border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px;
+  display: flex; flex-direction: column; gap: 8px; background: var(--surface-card); cursor: pointer;
+}
+.student-card:hover { border-color: var(--accent); }
+.student-card-header { display: flex; align-items: center; gap: 10px; }
+.student-card-name { font-weight: 600; font-size: 13px; }
+.student-card-meta { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.student-card-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border); }
 .day-off-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 10px; }
 
 .roster-list { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
@@ -993,6 +1406,14 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
 .attendance-status-btn.late.active { background: var(--warning-bg); border-color: var(--gold); color: var(--warning); }
 .notif-item-time { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
 .notif-empty { padding: 16px 14px; font-size: 11.5px; color: var(--text-muted); text-align: center; }
+.notif-item-clickable { cursor: pointer; }
+.notif-item-clickable:hover { background: var(--surface-hover, var(--surface-recessed)); }
+
+/* Announcement message body — output of noticeMessage.js's escape-then-format renderer. */
+.notice-message p { margin: 0 0 8px; line-height: 1.5; }
+.notice-message p:last-child { margin-bottom: 0; }
+.notice-message ul { margin: 0 0 8px; padding-inline-start: 20px; }
+.notice-message a { color: var(--accent); }
 
 .form-row select[multiple] { height: auto; }
 .field-hint { font-size: 10.5px; color: var(--text-muted); margin-top: 3px; }
@@ -1023,6 +1444,23 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
 .auth-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
 .auth-brand .brand-name { font-size: 17px; font-weight: 500; color: var(--text-primary); }
 .auth-form .form-row { margin-bottom: 14px; }
+.auth-options-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: -4px 0 14px; font-size: 12px;
+}
+.auth-remember-me { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); cursor: pointer; }
+.auth-remember-me input { width: auto; }
+.auth-options-row .link-button { font-size: 12px; }
+.auth-forgot-panel {
+  background: var(--surface-recessed);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-top: 14px;
+  font-size: 12px;
+}
+.auth-forgot-panel strong { display: block; margin-bottom: 6px; color: var(--text-primary); font-size: 12.5px; }
+.auth-forgot-panel p { color: var(--text-secondary); margin-bottom: 8px; line-height: 1.5; }
 /* A plain inline text link rendered as a <button> (so it's keyboard/click accessible without
    navigating anywhere) — used for "Apply for admission" / "Back to login" on the auth screen. */
 .link-button {
@@ -1242,9 +1680,27 @@ button.btn-loading { pointer-events: none; opacity: 0.75; }
 /* The calendar isn't a card — it sits directly on the page canvas with no frame, so the course
    cards (a brighter --slot-surface) can lift off the darker background instead of blending into a
    same-coloured container. Overrides the shared .panel surface/border/padding; keeps only the
-   horizontal-scroll behaviour it needs (see the note above). */
+   horizontal-scroll behaviour it needs (see the note above).
+
+   flex/min-height/overflow: auto (both axes) make .panel-cal the calendar's OWN real scroll
+   viewport, on pages that opt in via #content.cal-content below (currently just TimetablePage —
+   see that rule for why). This is what lets the day-header's position:sticky actually work:
+   overflow-x:auto alone (needed for horizontal scroll on narrow viewports) is enough to make
+   .panel-cal count as a "scroll container" for position:sticky purposes regardless of which axis
+   you set it on (per the CSS spec, ANY ancestor with overflow != visible on either axis becomes
+   the resolution boundary for a sticky descendant) — so as long as SOME overflow value sits here,
+   sticky will resolve against .panel-cal one way or another. The only fix is to make that
+   resolution correct by having .panel-cal actually BE the real scrolling element (bounded height
+   via flex:1, genuinely producing vertical scroll offset), rather than trying to dodge the rule.
+   On pages that don't add .cal-content (My Schedule, which stacks other content below the
+   calendar in the same #content and still needs #content itself to scroll everything together),
+   these three properties are inert no-ops: .panel-cal isn't a flex item there and has no
+   constrained height, so it keeps its original intrinsic-height behaviour — the day-header simply
+   isn't sticky there, same as before this fix. */
 .panel-cal {
-  overflow-x: auto;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -1312,12 +1768,15 @@ button.btn-loading { pointer-events: none; opacity: 0.75; }
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
   .panel-row { grid-template-columns: 1fr; }
   .form-row-2 { grid-template-columns: 1fr; }
+  .course-action-tiles { grid-template-columns: repeat(2, 1fr); }
 
   #content { padding: 14px; }
 }
 
 @media (max-width: 480px) {
   .stat-grid { grid-template-columns: 1fr; }
+  .course-action-tiles { grid-template-columns: 1fr; }
+  .quick-link-tiles { grid-template-columns: 1fr; }
 }
 
 /* Print — introduced for the Student Profile page's Print button (no print styles existed
@@ -1328,6 +1787,9 @@ button.btn-loading { pointer-events: none; opacity: 0.75; }
   #sidebar, #sidebar-toggle, #sidebar-overlay, .utility-tray, #loading-bar, .no-print { display: none !important; }
   #app, #main { display: block !important; height: auto !important; overflow: visible !important; }
   #content { overflow: visible !important; padding: 0 !important; }
+  /* .panel-cal is now a real scroll viewport on-screen (see its rule above) — must be forced
+     back to unclipped for print, or a tall/wide timetable would print cropped to screen height. */
+  .panel-cal { overflow: visible !important; }
   body, #app-wrapper, #app, .section.active { background: #fff !important; }
   .topbar { border-bottom: 2px solid #000; color: #000; background: #fff !important; }
   .topbar h2, .topbar i { color: #000 !important; }
@@ -1336,8 +1798,230 @@ button.btn-loading { pointer-events: none; opacity: 0.75; }
     border: 1px solid #ccc !important; box-shadow: none !important;
     break-inside: avoid; margin-bottom: 10px !important;
   }
-  .panel-title, .form-label, .stat-label { color: #000 !important; }
-  .form-static, .stat-value, .field-hint, .data-table, .profile-header-name { color: #111 !important; }
+  .panel-title, .form-label, .kpi-label { color: #000 !important; }
+  .form-static, .kpi-value, .field-hint, .data-table, .profile-header-name { color: #111 !important; }
   .pill { border: 1px solid #999; background: #fff !important; color: #000 !important; }
   .avatar-lg { background: #333 !important; color: #fff !important; }
+  .sdc-card { background: #fff !important; border: 1px solid #ccc !important; break-inside: avoid; }
+  .sdc-avatar { background: #333 !important; color: #fff !important; }
+  .sdc-row-label, .sdc-card-title, .sdc-header-sub, .sdc-doc-empty { color: #444 !important; }
+  .sdc-row-value, .sdc-header-name { color: #111 !important; }
+}
+
+/* Payment receipt (ReceiptView.jsx) — portalled to document.body (a sibling of #app-wrapper, not
+   inside the clipped/scrolling modal system) so it can print as one clean A4 document regardless
+   of screen size. On screen it's a centered scrollable overlay with its own toolbar; printed, only
+   .receipt-doc survives — see the body.receipt-open rules below, which override the generic
+   #app/#main print rules above (higher specificity: a class + an id beats a bare id). */
+.receipt-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(10, 16, 40, 0.6);
+  overflow-y: auto;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 24px 16px 48px;
+}
+.receipt-toolbar {
+  position: sticky; top: 0; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  width: 210mm; max-width: 100%;
+  background: var(--surface-card); border: 1px solid var(--border-strong); border-radius: var(--radius-md);
+  padding: 10px 14px; margin-bottom: 14px;
+}
+.receipt-toolbar-title { font-weight: 600; font-size: 13px; }
+.receipt-toolbar-actions { display: flex; gap: 8px; align-items: center; }
+.receipt-doc {
+  background: #fff; color: #111; width: 210mm; max-width: 100%; min-height: 140mm;
+  padding: 16mm 14mm; border-radius: var(--radius-sm); box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+  font-size: 12.5px; line-height: 1.5;
+}
+.receipt-void-banner {
+  background: #fdeaea; color: #a11; border: 1px solid #e8b4b4; border-radius: 4px;
+  padding: 8px 12px; margin-bottom: 14px; font-weight: 600; text-align: center;
+}
+.receipt-reconstructed-note {
+  background: #fff8e1; color: #7a5a00; border: 1px solid #e8d48b; border-radius: 4px;
+  padding: 6px 10px; margin-bottom: 14px; font-size: 11.5px;
+}
+.receipt-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 2px solid #111; padding-bottom: 12px; margin-bottom: 16px; }
+.receipt-org { display: flex; align-items: center; gap: 10px; }
+.receipt-org-logo {
+  width: 44px; height: 44px; border-radius: 8px; color: #fff; font-weight: 700; font-size: 15px;
+  display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
+}
+.receipt-org-logo img { width: 100%; height: 100%; object-fit: contain; }
+.receipt-org-name { font-size: 16px; font-weight: 700; }
+.receipt-org-sub { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.04em; }
+.receipt-meta { text-align: end; font-size: 11.5px; }
+.receipt-meta div { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 2px; }
+.receipt-meta span { color: #555; }
+.receipt-section { margin-bottom: 16px; }
+.receipt-section h4 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+.receipt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
+.receipt-grid div { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dotted #ddd; padding-bottom: 3px; }
+.receipt-grid span { color: #555; }
+.receipt-amount { font-size: 14px; }
+/* .data-table's text/background colors follow the app theme (--text-primary etc.), which is
+   wrong here: the receipt paper is always white regardless of theme, and in dark mode
+   --text-primary resolves to a near-white color — invisible until :hover's darker row
+   background happens to contrast against it. Pin the allocation table to the same fixed
+   light-paper palette as the rest of the receipt. */
+.receipt-doc .data-table th { color: #555; background: transparent; position: static; }
+.receipt-doc .data-table td { color: #111; border-bottom: 1px solid #ddd; }
+.receipt-doc .data-table th { border-bottom: 1px solid #ddd; }
+.receipt-doc .data-table tbody tr { cursor: default; }
+.receipt-doc .data-table tbody tr:hover td { background: transparent; }
+.receipt-footer { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-top: 28px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 11px; }
+.receipt-signature-line { width: 160px; border-bottom: 1px solid #333; margin-bottom: 4px; height: 28px; }
+.receipt-footer-note { color: #777; max-width: 260px; text-align: end; }
+
+@media print {
+  body.receipt-open #app-wrapper { display: none !important; }
+  body.receipt-open .receipt-overlay {
+    position: static; background: none; padding: 0; display: block; overflow: visible;
+  }
+  body.receipt-open .receipt-doc {
+    box-shadow: none; width: auto; min-height: 0; margin: 0; padding: 0;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  body.receipt-open .receipt-toolbar { display: none !important; }
+}
+
+/* Generic muted placeholder text — used across several pages (Finance, Advisees, Departments,
+   My Fees, ReceiptView) for "nothing here yet" states. Was referenced but never actually defined;
+   filled in here since the Finance redesign leans on it heavily for empty student/aid/payment
+   lists and it should read consistently wherever else it already appears. */
+.empty-state { padding: 20px 14px; text-align: center; color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+
+/* ============ Finance dashboard redesign ============
+   FinancePage.jsx — layout only; all data still comes from the existing /finance API (see
+   finance.js/routes/finance.js). Term Fee Configuration keeps its full existing functionality,
+   just moved into a slide-over drawer (FeeConfigDrawer.jsx) instead of an always-open panel, so
+   the main dashboard stays close to the reference screenshot. */
+.fin-subtitle { font-size: 12px; color: var(--text-muted); margin: -12px 0 16px; }
+
+/* Filter tabs — used by the redesigned dashboard's Student Billing Status panel
+   (FinanceBillingStatusPanel.jsx) and by the fee-config drawer's own dropdown chrome. */
+.fin-pill-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.fin-pill-tab {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--surface-recessed); color: var(--text-secondary);
+  font-size: 11.5px; font-weight: 500; cursor: pointer; transition: all 0.12s; font-family: inherit;
+}
+.fin-pill-tab:hover { border-color: var(--border-strong); color: var(--text-primary); }
+.fin-pill-tab.active { background: var(--accent-dim); border-color: color-mix(in srgb, var(--accent) 45%, transparent); color: var(--accent-light); }
+.fin-pill-tab-count { font-size: 10px; opacity: 0.75; }
+
+.fin-student-name { font-size: 12.5px; font-weight: 500; color: var(--text-primary); }
+.fin-student-idnum { font-size: 10.5px; color: var(--text-muted); margin-top: 1px; }
+
+.fin-charge-card { background: var(--surface-base); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 14px; margin: 12px 0; }
+.fin-charge-line { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 9px 0; }
+.fin-charge-line + .fin-charge-line { border-top: 1px dashed var(--border); }
+.fin-charge-line-label { font-size: 12.5px; font-weight: 500; color: var(--text-primary); }
+.fin-charge-line-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 1px; }
+.fin-charge-line-amt { font-size: 12.5px; font-weight: 600; color: var(--text-primary); flex-shrink: 0; white-space: nowrap; }
+
+.fin-summary-stats { display: flex; flex-wrap: wrap; gap: 18px 22px; padding: 12px 0; margin-bottom: 6px; border-block: 1px solid var(--border); }
+.fin-summary-stat-label { font-size: 10.5px; color: var(--text-muted); margin-bottom: 2px; }
+.fin-summary-stat-value { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+
+.fin-section { margin-top: 16px; }
+.fin-section-title { font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+
+.fin-installment-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; background: var(--surface-base); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 6px; }
+.fin-installment-name { font-size: 12px; font-weight: 500; color: var(--text-primary); }
+.fin-installment-due { font-size: 10.5px; color: var(--text-muted); margin-top: 1px; }
+.fin-installment-amt-wrap { text-align: end; flex-shrink: 0; }
+.fin-installment-amt { font-size: 12.5px; font-weight: 600; color: var(--text-primary); }
+
+.fin-form-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.fin-form-panel { padding: 12px; background: var(--surface-base); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; }
+
+/* Fee/Term Configuration — slide-over drawer (FeeConfigDrawer.jsx), portalled like ReceiptView so
+   it isn't clipped by the finance panels' own scroll/overflow. */
+.fin-drawer-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(10,16,40,0.5); display: flex; justify-content: flex-end; }
+[dir="rtl"] .fin-drawer-overlay { justify-content: flex-start; }
+.fin-drawer {
+  width: 640px; max-width: 100%; height: 100%;
+  background: var(--surface-card); border-inline-start: 1px solid var(--border-strong);
+  box-shadow: -12px 0 30px rgba(0,0,0,0.25);
+  display: flex; flex-direction: column;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fin-drawer { animation: finDrawerIn 0.22s cubic-bezier(0.16,1,0.3,1); }
+  [dir="rtl"] .fin-drawer { animation-name: finDrawerInRtl; }
+  @keyframes finDrawerIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  @keyframes finDrawerInRtl { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+}
+.fin-drawer-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 16px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.fin-drawer-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.fin-drawer-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
+.fin-drawer-body { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 20px 28px; }
+@media (max-width: 680px) { .fin-drawer { width: 100%; } }
+
+/* ============ Redesigned Finance dashboard: billing status panel ============ */
+.fin-billing-panel { margin-bottom: 16px; }
+.fin-billing-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+.fin-billing-table-wrap { max-height: 520px; overflow-y: auto; }
+.fin-row-active td { background: var(--accent-dim); }
+
+/* ============ Students page filter bar (compact toolbar + chips + advanced panel) ============ */
+/* Replaces the old always-expanded 11-filter block: a single wrapping toolbar row up top, a
+   removable-chip summary of whatever's actually applied, and the long tail of less-used filters
+   tucked behind "More filters" so the page reads as a student table first, not a filter form. */
+.stf-panel { padding-bottom: 12px; }
+.stf-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.stf-search { flex: 1 1 220px; min-width: 160px; }
+.stf-toolbar > select.select-sm { flex: 0 1 160px; min-width: 120px; }
+
+.stf-more-btn { position: relative; display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.stf-more-btn.active { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); background: var(--accent-dim); }
+.stf-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  background: var(--accent); color: #fff;
+  font-size: 9.5px; font-weight: 600; border-radius: 8px;
+}
+
+.stf-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+.stf-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 6px 4px 10px;
+  background: var(--accent-dim); color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 999px; font-size: 11px; font-weight: 500;
+}
+[dir="rtl"] .stf-chip { padding: 4px 10px 4px 6px; }
+.stf-chip-warning { background: var(--warning-bg); color: var(--warning); border-color: color-mix(in srgb, var(--warning) 40%, transparent); }
+.stf-chip-remove {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 15px; height: 15px; border-radius: 50%; border: none;
+  background: transparent; color: inherit; font-size: 13px; line-height: 1;
+  cursor: pointer; opacity: 0.75; font-family: inherit;
+}
+.stf-chip-remove:hover { opacity: 1; background: rgba(0,0,0,0.08); }
+.stf-clear-all {
+  background: none; border: none; padding: 4px 2px; margin-inline-start: 2px;
+  color: var(--text-muted); font-size: 11.5px; font-weight: 500;
+  text-decoration: underline; cursor: pointer; font-family: inherit;
+}
+.stf-clear-all:hover { color: var(--text-primary); }
+
+.stf-advanced { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.stf-advanced-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.stf-flagged-check { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+.stf-advanced-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.stf-group { display: flex; flex-direction: column; gap: 8px; }
+.stf-group-label { font-size: 10.5px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text-muted); }
+.stf-group .select-sm { width: 100%; text-align: start; }
+.stf-date-range { display: flex; flex-direction: column; gap: 4px; margin-top: 2px; }
+.stf-date-inputs { display: flex; align-items: center; gap: 8px; }
+.stf-date-inputs .select-sm { flex: 1 1 0; }
+.stf-date-inputs span { color: var(--text-muted); font-size: 11px; }
+.stf-advanced-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+@media (max-width: 860px) {
+  .stf-toolbar > select.select-sm { flex: 1 1 auto; min-width: 0; }
+  .stf-advanced-grid { grid-template-columns: 1fr; }
 }

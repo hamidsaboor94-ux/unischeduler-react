@@ -13,6 +13,8 @@ import ConflictsPage from '../pages/ConflictsPage.jsx';
 import RoomsPage from '../pages/RoomsPage.jsx';
 import CoursesPage from '../pages/CoursesPage.jsx';
 import TeachersPage from '../pages/TeachersPage.jsx';
+import StudentsPage from '../pages/StudentsPage.jsx';
+import StudentDetailPage from '../pages/StudentDetailPage.jsx';
 import DepartmentsPage from '../pages/DepartmentsPage.jsx';
 import SemestersPage from '../pages/SemestersPage.jsx';
 import UsersPage from '../pages/UsersPage.jsx';
@@ -27,10 +29,13 @@ import MyGradesPage from '../pages/MyGradesPage.jsx';
 import BrandingSettingsPage from '../pages/BrandingSettingsPage.jsx';
 import GradingScalePage from '../pages/GradingScalePage.jsx';
 import StudentProfilePage from '../pages/StudentProfilePage.jsx';
+import TeacherProfilePage from '../pages/TeacherProfilePage.jsx';
+import FacultyOnboardingPage from '../pages/FacultyOnboardingPage.jsx';
 import ApplicationsPage from '../pages/ApplicationsPage.jsx';
 import AdviseesPage from '../pages/AdviseesPage.jsx';
 import FinancePage from '../pages/FinancePage.jsx';
 import MyFeesPage from '../pages/MyFeesPage.jsx';
+import AnnouncementsPage from '../pages/AnnouncementsPage.jsx';
 
 export default function AppShell() {
   const { isLoading } = useAppData();
@@ -66,6 +71,8 @@ export default function AppShell() {
           <RoomsPage />
           <CoursesPage />
           <TeachersPage />
+          <StudentsPage />
+          <StudentDetailPage />
           <DepartmentsPage />
           <SemestersPage />
           <UsersPage />
@@ -80,10 +87,13 @@ export default function AppShell() {
           <BrandingSettingsPage />
           <GradingScalePage />
           <StudentProfilePage />
+          <TeacherProfilePage />
+          <FacultyOnboardingPage />
           <ApplicationsPage />
           <AdviseesPage />
           <FinancePage />
           <MyFeesPage />
+          <AnnouncementsPage />
         </div>
       </div>
 

@@ -17,6 +17,7 @@
       "rooms": "خونې",
       "courses": "کورسونه",
       "teachers": "ښوونکي",
+      "students": "زده کوونکي",
       "departments": "څانګې",
       "semesters": "سمسترونه",
       "examSchedule": "د ازموینو مهالویش",
@@ -38,7 +39,8 @@
       "myProfile": "زما پروفایل",
       "admissions": "غوښتنلیکونه",
       "finance": "مالي چارې",
-      "myFees": "زما فیسونه"
+      "myFees": "زما فیسونه",
+      "announcements": "اعلانونه"
     },
     "noTermsYet": "تر اوسه هیڅ سمستر نشته"
   },
@@ -75,6 +77,8 @@
     "addTeacher": "ښوونکی اضافه کول",
     "editDepartment": "څانګه سمول",
     "addDepartment": "څانګه اضافه کول",
+    "editProgram": "پروګرام سمول",
+    "addProgram": "پروګرام اضافه کول",
     "editSemester": "سمستر سمول",
     "addSemester": "سمستر اضافه کول",
     "copyCoursesInto": "کورسونه {{term}} ته کاپي کول",
@@ -86,6 +90,7 @@
     "scheduleExam": "ازموینه مهالویش کول",
     "autoGenerateExamType": "ازموینې په خپلکاره توګه جوړول",
     "roster": "{{code}} فهرست",
+    "enrollStudents": "زده کوونکي ثبت کول — {{code}}",
     "affectedStudents": "اغیزمن شوي زده کوونکي ({{count}})",
     "createAccount": "حساب جوړول",
     "accountCreated": "حساب جوړ شو",
@@ -94,6 +99,7 @@
     "myProfile": "زما پروفایل",
     "conflictDetail": "د ټکر جزئیات",
     "moveSlot": "لیږدول — {{code}}",
+    "rescheduleCancelledSession": "د لغوه شوي درس بیا مهالویش — {{code}}",
     "applicationStatusChange": "حالت تازه کول — {{name}}",
     "applicationApprove": "منل — {{name}}",
     "closeDialog": "دیالوګ بندول"
@@ -104,6 +110,11 @@
     "emailPlaceholder": "you@university.edu",
     "passwordPlaceholder": "••••••••",
     "signIn": "ننوتل",
+    "rememberMe": "ما په یاد ولره",
+    "forgotPassword": "پټنوم مو هیر شوی؟",
+    "forgotPasswordTitle": "د پټنوم بیا ټاکل",
+    "forgotPasswordNoEmailHint": "دا نصب شوی سیسټم د پټنوم بیا ټاکلو ایمیلونو لیږلو لپاره تنظیم شوی نه دی. د خپل پټنوم بیا ټاکلو لپاره له اډمین سره اړیکه ونیسئ — هغوی کولی شي تاسو ته د کاروونکو له برخې څخه یو نوی لنډمهاله پټنوم درکړي.",
+    "forgotPasswordClose": "سمه ده",
     "noSelfRegistration": "پخپله نومليکنه شتون نلري — یو اډمین ستاسو حساب جوړوي او تاسو ته یو لنډمهاله پټنوم درکوي.",
     "applyPrompt": "لا تر اوسه زده کوونکی نه یاست؟",
     "applyLink": "د منلو غوښتنلیک"

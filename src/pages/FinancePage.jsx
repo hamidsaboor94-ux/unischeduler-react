@@ -7,57 +7,219 @@ import { useModal } from '../context/ModalContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { useAsyncAction } from '../hooks/useAsyncAction.js';
 import { can } from '../permissions.js';
+import { summarizeFinanceWorklist, findPreviousTermId } from '../utils.js';
+import ReceiptView from '../components/ReceiptView.jsx';
+import FeeConfigDrawer from '../components/FeeConfigDrawer.jsx';
+import FinanceStatCards from '../components/finance/FinanceStatCards.jsx';
+import FinanceBillingStatusPanel from '../components/finance/FinanceBillingStatusPanel.jsx';
+import FinanceQuickInsights from '../components/finance/FinanceQuickInsights.jsx';
+import FinanceStudentDetail from '../components/finance/FinanceStudentDetail.jsx';
 import {
-  fetchFinanceSettings, saveFinanceSettings, fetchFinanceStudents,
-  fetchStudentStatement, recordPayment, voidPayment,
+  fetchFinanceStudents, fetchStudentStatement, recordPayment, voidPayment,
+  fetchTermFeeConfig, saveTermFeeConfig, createFeeItem, updateFeeItem, deleteFeeItem,
+  createFeeRule, updateFeeRule, deleteFeeRule,
+  saveStudentType, deleteStudentType,
+  fetchFeePlan, saveFeePlan, generateCharges,
 } from '../api.js';
 
-const METHODS = ['cash', 'bank', 'card', 'mobile', 'other'];
+const emptyFeeRuleForm = { scope: 'university', scopeId: '', studentTypeId: '', feePerCredit: '', effectiveDate: '' };
+const emptyFeeItemForm = { name: '', amount: '', scope: 'university', scopeId: '', studentTypeId: '', feeType: 'other', mandatory: true, effectiveDate: '' };
 
 export default function FinancePage() {
   const { t } = useTranslation(['finance', 'common']);
-  const { currentUser } = useAppData();
-  const { activeSection } = useNavigation();
+  const { currentUser, terms, activeTermId, colleges, departments, programs, studentTypes, afterMutate } = useAppData();
+  const { activeSection, sectionFocus } = useNavigation();
   const { confirmAction } = useModal();
   const { toast } = useToast();
   const { run: runPay, loading: paying } = useAsyncAction();
+  const { run: runGenerate, loading: generating } = useAsyncAction();
   const canWrite = can(currentUser.role, 'finance', 'write');
+  // Fee Configuration (rate, fee items, fee rules, installment plan) sets billing policy, not a
+  // day-to-day billing operation — restricted to admin even though the Bursar has 'finance' write
+  // access to everything else (generate charges, payments, aid). Enforced server-side too (see
+  // routes/finance.js) — this only controls what the UI offers.
+  const isAdmin = currentUser.role === 'admin';
 
-  const [settings, setSettings] = useState({ perCreditFee: 0, currency: '' });
+  const [termId, setTermId] = useState(activeTermId || null);
+  const [termConfig, setTermConfig] = useState(null); // { feePerCredit, currency, feeItems, feePlan }
   const [rate, setRate] = useState('');
   const [currency, setCurrency] = useState('');
+  const [configOpen, setConfigOpen] = useState(false);
+  const [feeItemForm, setFeeItemForm] = useState(emptyFeeItemForm);
+  const [ruleForm, setRuleForm] = useState(emptyFeeRuleForm);
+  const [newTypeName, setNewTypeName] = useState('');
+  const [planForm, setPlanForm] = useState({ installmentCount: 1, installments: [] });
+
   const [students, setStudents] = useState([]);
+  const [previousSummary, setPreviousSummary] = useState(null); // {totalCharged, totalPaid, balance, overdueCount} for the prior term, or null
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [selected, setSelected] = useState(null); // full statement
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('cash');
   const [reference, setReference] = useState('');
+  const [receiptId, setReceiptId] = useState(null);
 
-  const money = (n) => `${Number(n).toLocaleString()}${settings.currency ? ' ' + settings.currency : ''}`;
+  const money = (n) => `${Number(n || 0).toLocaleString()}${(selected?.currency || termConfig?.currency) ? ' ' + (selected?.currency || termConfig?.currency) : ''}`;
 
-  async function load() {
-    const [s, list] = await Promise.all([fetchFinanceSettings(), fetchFinanceStudents()]);
-    setSettings(s); setRate(String(s.perCreditFee ?? '')); setCurrency(s.currency ?? '');
+  useEffect(() => { if (!termId && activeTermId) setTermId(activeTermId); }, [activeTermId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function loadWorklist() {
+    const list = await fetchFinanceStudents(termId);
     setStudents(list.students);
+  }
+  /** The stat cards' "vs last term" deltas need the same aggregate for the immediately preceding
+   *  term — reuses the existing worklist endpoint rather than a new one (there's only ever one
+   *  extra term to fetch here). Left null (deltas hidden) when there's no prior term. */
+  async function loadPreviousSummary() {
+    const previousTermId = findPreviousTermId(terms, termId);
+    if (!previousTermId) { setPreviousSummary(null); return; }
+    const list = await fetchFinanceStudents(previousTermId);
+    setPreviousSummary(summarizeFinanceWorklist(list.students));
+  }
+  async function loadTermConfig() {
+    if (!termId) { setTermConfig(null); return; }
+    const [cfg, plan] = await Promise.all([fetchTermFeeConfig(termId), fetchFeePlan(termId)]);
+    setTermConfig(cfg);
+    setRate(String(cfg.feePerCredit ?? '')); setCurrency(cfg.currency ?? '');
+    setPlanForm(plan || { installmentCount: 1, installments: [] });
   }
   useEffect(() => {
     if (!can(currentUser.role, 'finance', 'read')) return;
-    load().catch(() => {});
+    loadWorklist().catch(() => {});
+    loadPreviousSummary().catch(() => {});
+    loadTermConfig().catch(() => {});
+    if (selected) openStudent(selected.student.id).catch(() => {});
+    // Deliberately NOT depending on `terms`: every page stays mounted (see CLAUDE.md), and
+    // AppDataContext.reload() — triggered by afterMutate() calls anywhere in the app — hands out
+    // a new `terms` array reference on every unrelated mutation. Depending on it here would
+    // refetch this whole page's finance data any time something elsewhere in the app saves.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser.role, activeSection]);
+  }, [currentUser.role, activeSection, termId]);
+
+  // The Students page's "View Finance" quick action navigates here with a studentId focus —
+  // openStudent() only needs the id (it fetches the statement directly), not a row from the
+  // worklist, so this works regardless of whether that student is in the currently loaded list.
+  useEffect(() => {
+    if (sectionFocus?.section === 'finance' && sectionFocus.studentId != null) {
+      openStudent(Number(sectionFocus.studentId)).catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sectionFocus]);
 
   async function openStudent(id) {
-    try { setSelected(await fetchStudentStatement(id)); setAmount(''); setReference(''); }
-    catch (err) { toast(err.message, 'error'); }
+    try {
+      setSelected(await fetchStudentStatement(id, termId));
+      setAmount(''); setReference('');
+    } catch (err) { toast(err.message, 'error'); }
   }
 
   async function saveRate() {
     try {
-      const s = await saveFinanceSettings({ perCreditFee: Number(rate) || 0, currency: currency.trim() });
-      setSettings(s);
+      const cfg = await saveTermFeeConfig(termId, { feePerCredit: Number(rate) || 0, currency: currency.trim() });
+      setTermConfig(c => ({ ...c, ...cfg }));
       toast(t('finance:financePage.rateSaved'));
-      await load();
-      if (selected) openStudent(selected.student.id);
+      await Promise.all([loadWorklist(), selected ? openStudent(selected.student.id) : Promise.resolve()]);
+    } catch (err) { toast(err.message, 'error'); }
+  }
+
+  async function addFeeItem() {
+    const amt = Number(feeItemForm.amount);
+    if (!feeItemForm.name.trim() || !(amt > 0)) return;
+    if (feeItemForm.scope !== 'university' && !feeItemForm.scopeId) return;
+    try {
+      const item = await createFeeItem(termId, {
+        name: feeItemForm.name.trim(), amount: amt, scope: feeItemForm.scope,
+        scopeId: feeItemForm.scopeId || undefined, studentTypeId: feeItemForm.studentTypeId || undefined,
+        feeType: feeItemForm.feeType, mandatory: feeItemForm.mandatory, effectiveDate: feeItemForm.effectiveDate || undefined,
+      });
+      setTermConfig(c => ({ ...c, feeItems: [...(c.feeItems || []), item] }));
+      setFeeItemForm(emptyFeeItemForm);
+    } catch (err) { toast(err.message, 'error'); }
+  }
+  async function removeFeeItem(id) {
+    try {
+      await deleteFeeItem(id);
+      setTermConfig(c => ({ ...c, feeItems: (c.feeItems || []).filter(f => f.id !== id) }));
+    } catch (err) { toast(err.message, 'error'); }
+  }
+  async function toggleFeeItemActive(item) {
+    try {
+      const updated = await updateFeeItem(item.id, { ...item, isActive: !item.isActive });
+      setTermConfig(c => ({ ...c, feeItems: (c.feeItems || []).map(f => f.id === item.id ? updated : f) }));
+    } catch (err) { toast(err.message, 'error'); }
+  }
+
+  async function addFeeRule() {
+    const amt = Number(ruleForm.feePerCredit);
+    if (!(amt >= 0)) return;
+    if (ruleForm.scope !== 'university' && !ruleForm.scopeId) return;
+    try {
+      const rule = await createFeeRule(termId, {
+        scope: ruleForm.scope, scopeId: ruleForm.scopeId || undefined, studentTypeId: ruleForm.studentTypeId || undefined,
+        feePerCredit: amt, effectiveDate: ruleForm.effectiveDate || undefined,
+      });
+      setTermConfig(c => ({ ...c, feeRules: [...(c.feeRules || []), rule] }));
+      setRuleForm(emptyFeeRuleForm);
+      toast(t('finance:financePage.feeRules.added'));
+    } catch (err) { toast(err.message, 'error'); }
+  }
+  async function toggleFeeRuleActive(rule) {
+    try {
+      const updated = await updateFeeRule(rule.id, { isActive: !rule.isActive });
+      setTermConfig(c => ({ ...c, feeRules: (c.feeRules || []).map(r => r.id === rule.id ? { ...r, ...updated } : r) }));
+    } catch (err) { toast(err.message, 'error'); }
+  }
+  async function removeFeeRule(id) {
+    try {
+      await deleteFeeRule(id);
+      setTermConfig(c => ({ ...c, feeRules: (c.feeRules || []).filter(r => r.id !== id) }));
+    } catch (err) { toast(err.message, 'error'); }
+  }
+
+  async function addStudentType() {
+    const name = newTypeName.trim();
+    if (!name) return;
+    try {
+      await afterMutate(saveStudentType({ name, isActive: true, sortOrder: studentTypes.length }), t('finance:financePage.studentTypes.added'));
+      setNewTypeName('');
+    } catch (err) { toast(err.message, 'error'); }
+  }
+  async function toggleStudentTypeActive(st) {
+    try { await afterMutate(saveStudentType({ name: st.name, isActive: !st.isActive, sortOrder: st.sortOrder }, st.id)); }
+    catch (err) { toast(err.message, 'error'); }
+  }
+  function removeStudentType(st) {
+    confirmAction(t('finance:financePage.studentTypes.confirmDelete', { name: st.name }), async () => {
+      try { await afterMutate(deleteStudentType(st.id), t('finance:financePage.studentTypes.removed')); }
+      catch (err) { toast(err.message, 'error'); }
+    });
+  }
+
+  function setInstallmentCount(n) {
+    const count = Math.max(1, Math.min(24, Number(n) || 1));
+    setPlanForm(p => {
+      const installments = Array.from({ length: count }, (_, i) => p.installments.find(x => x.installmentNo === i + 1) || { installmentNo: i + 1, dueDate: '', percentage: '' });
+      return { installmentCount: count, installments };
+    });
+  }
+  function updateInstallmentDef(no, field, value) {
+    setPlanForm(p => ({ ...p, installments: p.installments.map(x => x.installmentNo === no ? { ...x, [field]: value } : x) }));
+  }
+  async function savePlan() {
+    try {
+      const plan = await saveFeePlan(termId, planForm);
+      setPlanForm(plan);
+      toast(t('finance:financePage.planSaved'));
+    } catch (err) { toast(err.message, 'error'); }
+  }
+
+  async function doGenerateCharges() {
+    try {
+      const res = await runGenerate(generateCharges(termId));
+      toast(t('finance:financePage.chargesGenerated', { count: res.studentsCharged, total: money(res.totalAmount) }));
+      await loadWorklist();
+      if (selected) await openStudent(selected.student.id);
     } catch (err) { toast(err.message, 'error'); }
   }
 
@@ -65,11 +227,11 @@ export default function FinancePage() {
     const amt = Number(amount);
     if (!(amt > 0)) return;
     try {
-      const res = await runPay(recordPayment(selected.student.id, { amount: amt, method, reference: reference.trim() || undefined }));
+      const res = await runPay(recordPayment(selected.student.id, { amount: amt, method, reference: reference.trim() || undefined, termId }));
       setSelected(s => ({ ...s, ...res.statement }));
       setAmount(''); setReference('');
       toast(t('finance:financePage.paymentRecorded', { receipt: res.payment.receiptNo }));
-      await load();
+      await loadWorklist();
     } catch (err) { toast(err.message, 'error'); }
   }
 
@@ -79,114 +241,89 @@ export default function FinancePage() {
         await voidPayment(p.id);
         toast(t('finance:financePage.voided'));
         await openStudent(selected.student.id);
-        await load();
+        await loadWorklist();
       } catch (err) { toast(err.message, 'error'); }
     });
   }
 
-  const q = search.trim().toLowerCase();
-  const shown = q ? students.filter(s => (s.name || '').toLowerCase().includes(q) || (s.idNumber || '').toLowerCase().includes(q)) : students;
+  // ---- Derived view state (client-side only — every figure below is summed from the same
+  // `students` worklist the table renders, itself straight from GET /finance/students). ----
+  const summary = summarizeFinanceWorklist(students);
+  const selectedTermName = terms.find(term => term.id === termId)?.name || '';
 
   return (
     <Section name="finance">
       <div className="topbar">
         <i className="ti ti-cash" style={{ color: 'var(--text-muted)', fontSize: 16 }} aria-hidden="true"></i>
         <h2>{t('finance:financePage.title')}</h2>
-        {canWrite && (
-          <div className="topbar-actions">
-            <label style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('finance:financePage.rateLabel')}</label>
-            <input type="number" min="0" className="select-sm" style={{ width: 90 }} value={rate} onChange={e => setRate(e.target.value)} />
-            <input type="text" className="select-sm" style={{ width: 70 }} placeholder={t('finance:financePage.currencyLabel')} value={currency} onChange={e => setCurrency(e.target.value)} />
-            <button className="btn-sm" onClick={saveRate}><i className="ti ti-check"></i> {t('finance:financePage.save')}</button>
-          </div>
-        )}
-      </div>
-      <div id="content" style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1fr) minmax(320px, 1fr)', gap: 16, alignItems: 'start' }}>
-        <div className="panel">
-          <div style={{ padding: 10 }}>
-            <input type="text" className="select-sm" style={{ width: '100%' }} placeholder={t('finance:financePage.searchPlaceholder')} value={search} onChange={e => setSearch(e.target.value)} />
-          </div>
-          <table className="data-table">
-            <thead><tr>
-              <th>{t('finance:financePage.columns.student')}</th>
-              <th>{t('finance:financePage.columns.charged')}</th>
-              <th>{t('finance:financePage.columns.paid')}</th>
-              <th>{t('finance:financePage.columns.balance')}</th>
-              <th>{t('finance:financePage.columns.status')}</th>
-            </tr></thead>
-            <tbody>
-              {shown.map(s => (
-                <tr key={s.studentId} onClick={() => openStudent(s.studentId)} style={{ cursor: 'pointer', background: selected?.student?.id === s.studentId ? 'var(--surface-2, rgba(0,0,0,0.04))' : undefined }}>
-                  <td>{s.name}<div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{s.idNumber}</div></td>
-                  <td>{money(s.totalCharged)}</td>
-                  <td>{money(s.totalPaid)}</td>
-                  <td>{money(s.balance)}</td>
-                  <td>{s.hasHold
-                    ? <span className="pill pill-red">{t('finance:financePage.hold')}</span>
-                    : <span className="pill pill-green">{t('finance:financePage.clear')}</span>}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="panel" style={{ padding: 16 }}>
-          {!selected ? (
-            <div className="empty-state">{t('finance:financePage.selectStudent')}</div>
-          ) : (
-            <>
-              <h3 style={{ marginTop: 0 }}>{selected.student.name} · {t('finance:financePage.statementTitle')}</h3>
-              <table className="data-table" style={{ marginBottom: 12 }}>
-                <thead><tr><th>{t('finance:financePage.course')}</th><th>{t('finance:financePage.credits')}</th><th>{t('finance:financePage.fee')}</th></tr></thead>
-                <tbody>
-                  {selected.courses.map(c => (
-                    <tr key={c.id}><td>{c.code} — {c.name}</td><td>{c.credits}</td><td>{money(c.fee)}</td></tr>
-                  ))}
-                </tbody>
-              </table>
-              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 12 }}>
-                <div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('finance:financePage.totalCharged')}</div><strong>{money(selected.totalCharged)}</strong></div>
-                <div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('finance:financePage.totalPaid')}</div><strong>{money(selected.totalPaid)}</strong></div>
-                <div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t('finance:financePage.balance')}</div>
-                  <strong style={{ color: selected.hasHold ? 'var(--danger, #d33)' : 'inherit' }}>{money(selected.balance)}</strong></div>
-              </div>
-
-              {canWrite && (
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 14, paddingBottom: 14, borderBottom: '1px solid var(--border)' }}>
-                  <input type="number" min="0" className="select-sm" style={{ width: 110 }} placeholder={t('finance:financePage.amount')} value={amount} onChange={e => setAmount(e.target.value)} />
-                  <select className="select-sm" value={method} onChange={e => setMethod(e.target.value)}>
-                    {METHODS.map(m => <option key={m} value={m}>{t(`finance:financePage.methods.${m}`)}</option>)}
-                  </select>
-                  <input type="text" className="select-sm" style={{ width: 130 }} placeholder={t('finance:financePage.reference')} value={reference} onChange={e => setReference(e.target.value)} />
-                  <button className={'btn-primary' + (paying ? ' btn-loading' : '')} disabled={paying} onClick={submitPayment}>
-                    {paying ? <span className="spinner"></span> : <><i className="ti ti-plus"></i> {t('finance:financePage.record')}</>}
-                  </button>
-                </div>
-              )}
-
-              <h4 style={{ margin: '0 0 6px' }}>{t('finance:financePage.payments')}</h4>
-              {selected.payments.length === 0 ? (
-                <div className="empty-state">{t('finance:financePage.noPayments')}</div>
-              ) : (
-                <table className="data-table">
-                  <thead><tr><th>{t('finance:financePage.receiptNo')}</th><th>{t('finance:financePage.amount')}</th><th>{t('finance:financePage.method')}</th><th>{t('finance:financePage.date')}</th>{canWrite && <th></th>}</tr></thead>
-                  <tbody>
-                    {selected.payments.map(p => (
-                      <tr key={p.id}>
-                        <td><code>{p.receiptNo}</code></td>
-                        <td>{money(p.amount)}</td>
-                        <td>{t(`finance:financePage.methods.${p.method || 'cash'}`)}</td>
-                        <td>{(p.paidAt || '').split(' ')[0]}</td>
-                        {canWrite && <td><button className="icon-btn danger" aria-label={t('finance:financePage.voidAria', { receipt: p.receiptNo })} onClick={() => doVoid(p)}><i className="ti ti-trash" aria-hidden="true"></i></button></td>}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </>
+        <div className="topbar-actions no-print">
+          {canWrite && termId && (
+            <button className={'btn-sm' + (generating ? ' btn-loading' : '')} disabled={generating} onClick={doGenerateCharges}>
+              {generating ? <span className="spinner"></span> : <><i className="ti ti-refresh"></i> {t('finance:financePage.generateCharges')}</>}
+            </button>
           )}
+          {isAdmin && termId && (
+            <button className="btn-sm" onClick={() => setConfigOpen(true)}>
+              <i className="ti ti-settings"></i> {t('finance:financePage.termConfig.button')}
+            </button>
+          )}
+          <label style={{ fontSize: 12, color: 'var(--text-muted)' }}>{t('finance:financePage.termLabel')}</label>
+          <select className="select-sm" value={termId || ''} onChange={e => { setSelected(null); setTermId(Number(e.target.value) || null); }}>
+            <option value="">{t('finance:financePage.selectTerm')}</option>
+            {terms.map(term => <option key={term.id} value={term.id}>{term.name}</option>)}
+          </select>
         </div>
       </div>
+
+      <div id="content">
+        <div className="fin-subtitle no-print">{t('finance:financePage.subtitle')}</div>
+
+        <FinanceStatCards summary={summary} previousSummary={previousSummary} money={money} />
+
+        <FinanceQuickInsights students={students} />
+
+        <FinanceBillingStatusPanel
+          students={students}
+          search={search} setSearch={setSearch}
+          statusFilter={statusFilter} setStatusFilter={setStatusFilter}
+          money={money}
+          selectedStudentId={selected?.student?.id ?? null}
+          onSelectStudent={openStudent}
+        />
+      </div>
+
+      {configOpen && (
+        <FeeConfigDrawer
+          onClose={() => setConfigOpen(false)}
+          termName={selectedTermName}
+          money={money}
+          rate={rate} setRate={setRate} currency={currency} setCurrency={setCurrency} saveRate={saveRate}
+          studentTypes={studentTypes} newTypeName={newTypeName} setNewTypeName={setNewTypeName}
+          addStudentType={addStudentType} toggleStudentTypeActive={toggleStudentTypeActive} removeStudentType={removeStudentType}
+          termConfig={termConfig} ruleForm={ruleForm} setRuleForm={setRuleForm}
+          addFeeRule={addFeeRule} toggleFeeRuleActive={toggleFeeRuleActive} removeFeeRule={removeFeeRule}
+          feeItemForm={feeItemForm} setFeeItemForm={setFeeItemForm}
+          addFeeItem={addFeeItem} removeFeeItem={removeFeeItem} toggleFeeItemActive={toggleFeeItemActive}
+          planForm={planForm} setInstallmentCount={setInstallmentCount} updateInstallmentDef={updateInstallmentDef} savePlan={savePlan}
+          colleges={colleges} departments={departments} programs={programs}
+        />
+      )}
+      {selected && (
+        <FinanceStudentDetail
+          onClose={() => setSelected(null)}
+          selected={selected}
+          termId={termId}
+          canWrite={canWrite}
+          money={money}
+          amount={amount} setAmount={setAmount}
+          method={method} setMethod={setMethod}
+          reference={reference} setReference={setReference}
+          submitPayment={submitPayment} paying={paying}
+          doVoid={doVoid}
+          onOpenReceipt={setReceiptId}
+        />
+      )}
+      {receiptId && <ReceiptView paymentId={receiptId} onClose={() => setReceiptId(null)} />}
     </Section>
   );
 }

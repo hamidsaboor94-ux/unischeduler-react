@@ -5,7 +5,7 @@ import { useModal } from '../../context/ModalContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useAsyncAction } from '../../hooks/useAsyncAction.js';
 import { api } from '../../api.js';
-import { ASSIGNABLE_ROLES, isDepartmentScoped, isCollegeScoped } from '../../permissions.js';
+import { ASSIGNABLE_ROLES, isDepartmentScoped, isCollegeScoped, can } from '../../permissions.js';
 import { roleLabel } from '../../roleNames.js';
 
 // Every role a Super Admin can create here. Admin is excluded (an existing
@@ -17,10 +17,15 @@ const roleNeedsCollege = (role) => isCollegeScoped(role);
 
 export default function CreateAccountForm() {
   const { t } = useTranslation(['admin', 'common', 'shell']);
-  const { departments, colleges, reload, branding } = useAppData();
+  const { departments, colleges, currentUser, reload, branding } = useAppData();
   const { openModal, closeModal } = useModal();
   const { toast } = useToast();
   const { run, loading } = useAsyncAction();
+
+  // Account creation is Super Admin only (the 'users' module has no other role in POLICY) —
+  // mirrors the server's requireRole('admin') on POST /users. See RoomForm.jsx for why this
+  // check exists client-side too, given every page (and this modal) stays reachable in the DOM.
+  const canWrite = can(currentUser.role, 'users', 'write');
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -53,15 +58,15 @@ export default function CreateAccountForm() {
       <div id="modal-body">
         <div className="form-row">
           <div className="form-label">{t('common:fields.fullName')}</div>
-          <input type="text" placeholder={t('admin:createAccountForm.namePlaceholder')} value={name} onChange={e => setName(e.target.value)} />
+          <input type="text" disabled={!canWrite} placeholder={t('admin:createAccountForm.namePlaceholder')} value={name} onChange={e => setName(e.target.value)} />
         </div>
         <div className="form-row">
           <div className="form-label">{t('common:fields.email')}</div>
-          <input type="email" placeholder={t('shell:auth.emailPlaceholder')} value={email} onChange={e => setEmail(e.target.value)} />
+          <input type="email" disabled={!canWrite} placeholder={t('shell:auth.emailPlaceholder')} value={email} onChange={e => setEmail(e.target.value)} />
         </div>
         <div className="form-row">
           <div className="form-label">{t('common:fields.role')}</div>
-          <select value={role} onChange={e => setRole(e.target.value)}>
+          <select value={role} disabled={!canWrite} onChange={e => setRole(e.target.value)}>
             {CREATABLE_ROLES.map(r => (
               <option key={r} value={r}>{roleLabel(r, t, branding)}</option>
             ))}
@@ -70,7 +75,7 @@ export default function CreateAccountForm() {
         {roleNeedsDepartment(role) && (
           <div className="form-row">
             <div className="form-label">{t('common:fields.department')}</div>
-            <select value={departmentId} onChange={e => setDepartmentId(e.target.value)}>
+            <select value={departmentId} disabled={!canWrite} onChange={e => setDepartmentId(e.target.value)}>
               <option value="" disabled>{t('admin:usersPage.selectDepartment')}</option>
               {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
@@ -79,7 +84,7 @@ export default function CreateAccountForm() {
         {roleNeedsCollege(role) && (
           <div className="form-row">
             <div className="form-label">{t('common:fields.college')}</div>
-            <select value={collegeId} onChange={e => setCollegeId(e.target.value)}>
+            <select value={collegeId} disabled={!canWrite} onChange={e => setCollegeId(e.target.value)}>
               <option value="" disabled>{t('admin:usersPage.selectCollege')}</option>
               {colleges.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
@@ -88,10 +93,12 @@ export default function CreateAccountForm() {
         <div className="field-hint">{t('admin:createAccountForm.tempPasswordHint')}</div>
       </div>
       <div id="modal-footer" className="modal-footer">
-        <button className="btn-sm" onClick={closeModal}>{t('common:actions.cancel')}</button>
+        <button className="btn-sm" onClick={closeModal}>{canWrite ? t('common:actions.cancel') : t('common:actions.close')}</button>
+        {canWrite && (
         <button className={'btn-primary' + (loading ? ' btn-loading' : '')} disabled={loading} onClick={handleCreate}>
           {loading ? <span className="spinner"></span> : t('admin:createAccountForm.submit')}
         </button>
+        )}
       </div>
     </>
   );

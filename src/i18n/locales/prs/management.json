@@ -83,6 +83,12 @@
     "maxStudentsLabel": "حداکثر محصلین",
     "termLabel": "دوره",
     "prerequisitesLabel": "پیش‌نیازها",
+    "prerequisitesHint": "پیش‌نیازهایی که د یک شماره OR-ګروپ ولري بدیل شمرل کیږي — تکمیل کولو د یکی کافی است. برای پیش‌نیاز اجباری (باید تکمیل شود) ګروپ ره خالی بگذارید.",
+    "prereqType": {
+      "prerequisite": "پیش‌نیاز (باید اول تکمیل شود)",
+      "corequisite": "هم‌نیاز (می‌توان همزمان اخذ کرد)"
+    },
+    "orGroupPlaceholder": "شماره ګروپ OR",
     "noOtherCourses": "هنوز کورس دیگری وجود ندارد.",
     "saveFirstHint": "ابتدا کورس را ذخیره کنید، سپس آن را دوباره باز کنید تا پیش‌نیازها را تعیین کنید.",
     "validateRequired": "کود و نام کورس لازمی است.",
@@ -96,11 +102,21 @@
     "searchPlaceholder": "نام یا شماره هویت استادی را جستجو کنید…",
     "addTeacher": "افزودن استاد",
     "columns": {
-      "facultyId": "شماره هویت استادی",
+      "facultyId": "شماره هویت کارمند",
+      "rank": "رتبه علمی",
       "courses": "کورس‌های تدریس شده",
-      "sessions": "جلسات هفته‌وار"
+      "sessions": "جلسات هفته‌وار",
+      "completion": "تکمیل پروفایل",
+      "status": "وضعیت پروفایل"
+    },
+    "filters": {
+      "allDepartments": "همه دیپارتمنت‌ها",
+      "allRanks": "همه رتبه‌ها",
+      "allEmploymentTypes": "همه نوعیت‌های استخدام",
+      "allProfileStatuses": "همه وضعیت‌های پروفایل"
     },
     "noCourses": "هیچ",
+    "fullProfile": "پروفایل کامل",
     "deleteAria": "حذف استاد {{name}}",
     "confirmDelete": "استاد {{name}} حذف شود؟",
     "toastRemoved": "استاد حذف شد"
@@ -111,9 +127,119 @@
     "fullNameLabel": "نام کامل",
     "fullNamePlaceholder": "مثلاً دوکتور سمیت",
     "noDepartment": "— بدون دیپارتمنت —",
+    "onboardingHint": "این کار ثبت اساسی استاد را ایجاد می‌کند. بلافاصله پس از آن، پروفایل کامل انتزاعی او — شخصی، تماس، استخدام، تحصیلات و اسناد — را تکمیل خواهید کرد.",
     "validateName": "لطفاً یک نام وارد کنید.",
     "confirmDelete": "استاد {{name}} حذف شود؟",
     "toastRemoved": "استاد حذف شد"
+  },
+  "studentsPage": {
+    "title": "محصلین",
+    "searchAriaLabel": "جستجوی محصلین با نام، ایمیل، شماره هویت محصل، یا تیلفون",
+    "searchPlaceholder": "نام، ایمیل یا شماره هویت محصل را جستجو کنید",
+    "columns": {
+      "studentId": "شماره هویت محصل",
+      "program": "پروگرام",
+      "semester": "سمستر",
+      "batch": "بچ",
+      "status": "وضعیت"
+    },
+    "filters": {
+      "allColleges": "همه دانشکده‌ها",
+      "allDepartments": "همه دیپارتمنت‌ها",
+      "allPrograms": "همه پروگرام‌ها",
+      "allStudentTypes": "همه انواع محصل",
+      "allStatuses": "همه وضعیت‌ها",
+      "allStudentStatuses": "همه وضعیت‌های محصل",
+      "allEnrollmentStatuses": "همه وضعیت‌های ثبت‌نام",
+      "allSemesters": "همه سمستر‌ها",
+      "allCourses": "همه مضامین",
+      "batchPlaceholder": "بچ / دوره…",
+      "admissionDateFrom": "تاریخ ثبت‌نام از",
+      "admissionDateTo": "تاریخ ثبت‌نام تا",
+      "flaggedOnly": "فقط مشکلات دیتا نشان بده",
+      "clearFilters": "پاک کردن فیلترها",
+      "moreFilters": "فیلترهای بیشتر",
+      "clearAll": "پاک کردن همه",
+      "advancedFiltersTitle": "فیلترهای پیشرفته",
+      "academicScope": "محدوده علمی",
+      "enrollmentGroup": "ثبت‌نام",
+      "enrolledBetween": "تاریخ ثبت‌نام (از - تا)",
+      "applyFilters": "اعمال فیلترها",
+      "semesterChip": "سمستر {{semester}}"
+    },
+    "flags": {
+      "role_mismatch": "رول تغییر یافته",
+      "no_account": "بدون حساب",
+      "unlinked_user": "غیرمرتبط",
+      "no_account_hint": "درخواستی منظور شده، اما هیچ حسابی برای آن ایجاد نشده — حساب را در بخش پذیرش‌ها ایجاد/منظور کنید.",
+      "unlinked_user_hint": "شماره هویت محصل {{id}} در {{sources}} دیده می‌شود اما هیچ حساب کاربری مطابق ندارد — احتمالاً یک مشکل دیتا است."
+    },
+    "quickActions": {
+      "viewProfile": "دیدن پروفایل",
+      "edit": "ویرایش",
+      "academicRecord": "سوابق اکادمیک",
+      "finance": "امور مالی"
+    },
+    "bulk": {
+      "selectedCount_one": "{{count}} محصل انتخاب شد",
+      "selectedCount_other": "{{count}} محصل انتخاب شد",
+      "updateStatus": "به‌روزرسانی وضعیت",
+      "reassign": "تغییر دیپارتمنت/پروگرام",
+      "sendAnnouncement": "ارسال اعلامیه",
+      "clearSelection": "پاک کردن انتخاب",
+      "reasonPlaceholder": "دلیل (اختیاری)",
+      "pickStatus": "ابتدا یک وضعیت انتخاب کنید.",
+      "pickTarget": "ابتدا یک دیپارتمنت یا پروگرام انتخاب کنید.",
+      "toastUpdated_one": "{{count}} محصل به‌روزرسانی شد.",
+      "toastUpdated_other": "{{count}} محصل به‌روزرسانی شد."
+    },
+    "export": {
+      "exportFiltered": "صادرات",
+      "exportSelected": "صادرات موارد انتخاب‌شده",
+      "toastExported": "محصلین صادر شدند."
+    },
+    "pagination": {
+      "summary": "نمایش {{from}}–{{to}} از {{total}}",
+      "perPage": "{{count}} / صفحه",
+      "pageOf": "صفحه {{page}} از {{totalPages}}"
+    },
+    "semesterPill": "سمستر {{semester}}",
+    "reviewInAdmissions": "بررسی در پذیرش‌ها",
+    "viewDetails": "دیدن جزئیات",
+    "noStudentsMatch": "هیچ محصلی با فیلترهای فعلی مطابقت ندارد."
+  },
+  "studentDetailPage": {
+    "title": "جزئیات محصل",
+    "noStudentSelected": "برای دیدن جزئیات، یک محصل را از لیست محصلین انتخاب کنید.",
+    "fullProfile": "پروفایل کامل",
+    "roleMismatchBanner": "رول این شخص اکنون \"{{role}}\" است — سابقه محصلی او فقط به صورت خواندنی نمایش داده می‌شود.",
+    "sections": {
+      "application": "درخواستی",
+      "finance": "خلاصه امور مالی",
+      "enrollments": "ثبت‌نام‌ها"
+    },
+    "noApplication": "هیچ درخواستی ثبت نشده است — حساب این محصل به‌طور مستقیم ایجاد شده است.",
+    "noEnrollments": "این محصل هنوز در هیچ کورسی ثبت‌نام نشده است.",
+    "fields": {
+      "applicationStatus": "وضعیت درخواستی",
+      "applicationSource": "منبع",
+      "applicationDecidedAt": "تاریخ فیصله",
+      "applicationEmail": "ایمیل درخواست‌دهنده",
+      "balance": "باقیمانده حساب",
+      "totalCharged": "مجموع تحمیل شده",
+      "totalPaid": "مجموع پرداخت شده"
+    },
+    "columns": {
+      "course": "کورس",
+      "term": "سمستر",
+      "enrollmentStatus": "وضعیت",
+      "grade": "نمره"
+    },
+    "enrollmentStatus": {
+      "enrolled": "ثبت‌نام شده",
+      "dropped": "لغو شده",
+      "waitlisted": "در لیست انتظار"
+    }
   },
   "departmentsPage": {
     "title": "مدیریت دیپارتمنت‌ها",
@@ -143,6 +269,32 @@
     "noCollege": "— بدون پوهنځی —",
     "confirmDelete": "دیپارتمنت {{name}} حذف شود؟",
     "toastRemoved": "دیپارتمنت حذف شد"
+  },
+  "programsPanel": {
+    "title": "پروگرام‌ها / اسناد تحصیلی",
+    "none": "تا حال هیچ پروگرامی وجود ندارد — برای تنظیم فیس مختص به پروگرام یکی اضافه کنید.",
+    "addProgram": "افزودن پروگرام",
+    "degreeLevel": "سطح سند",
+    "totalCredits": "مجموع کریدیت‌ها",
+    "deleteAria": "حذف پروگرام {{name}}"
+  },
+  "programForm": {
+    "nameLabel": "نام پروگرام",
+    "namePlaceholder": "مثلاً لیسانس کمپیوتر ساینس",
+    "validateName": "لطفاً نام پروگرام را وارد کنید.",
+    "noDepartment": "— بدون دیپارتمنت —",
+    "degreeLevel": "سطح سند",
+    "degreeLevels": {
+      "Certificate": "سرتیفیکیت",
+      "Diploma": "دیپلوم",
+      "Associate": "اسوشیت",
+      "Bachelor": "لیسانس",
+      "Master": "ماستری",
+      "Doctorate": "دوکتورا"
+    },
+    "totalCredits": "کریدیت‌های لازم",
+    "confirmDelete": "پروگرام {{name}} حذف شود؟",
+    "toastRemoved": "پروگرام حذف شد"
   },
   "bulkAssignDept": {
     "description_one": "این کار دیپارتمنت را برای {{count}} کورس تعیین می‌کند — هر کورسی که با جستجو/فلترهای فعلی صفحه کورس‌ها مطابقت داشته باشد.",
@@ -187,7 +339,11 @@
     "examStartDateLabel": "شروع دوره امتحانات",
     "examEndDateLabel": "ختم دوره امتحانات",
     "examRangeHint": "توسط «تولید خودکار» در صفحه جدول امتحانات برای انتخاب تاریخ امتحانات استفاده می‌شود. برای پیش‌فرض دو هفته آخر سمستر خالی بگذارید.",
+    "registrationOpensLabel": "آغاز ثبت‌نام",
+    "registrationClosesLabel": "ختم ثبت‌نام",
+    "registrationRangeHint": "در نشان وضعیت ثبت‌نام در داشبورد رجستر نشان داده می‌شود. برای نمایش فقط باز/بسته بر اساس فعال بودن این سمستر، بدون تاریخ، خالی بگذارید.",
     "validateExamRange": "تاریخ ختم دوره امتحانات نمی‌تواند قبل از تاریخ شروع باشد.",
+    "validateRegistrationRange": "تاریخ ختم ثبت‌نام نمی‌تواند قبل از تاریخ آغاز آن باشد.",
     "validateName": "لطفاً نام سمستر را وارد کنید.",
     "confirmDelete": "سمستر {{name}} حذف شود؟",
     "toastRemoved": "سمستر حذف شد",

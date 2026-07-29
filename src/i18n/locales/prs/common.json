@@ -1,5 +1,6 @@
 {
   "appName": "UniScheduler",
+  "orConjunction": "یا",
   "actions": {
     "save": "ذخیره",
     "cancel": "لغو",
@@ -92,5 +93,6 @@
     "switchToDark": "رفتن به حالت تاریک"
   },
   "noneYet": "هنوز چیزی وجود ندارد",
-  "notApplicable": "—"
+  "notApplicable": "—",
+  "accessDenied": "شما اجازه مشاهده این مورد را ندارید."
 }

@@ -9,6 +9,7 @@
     "allDepartments": "همه دیپارتمنت‌ها",
     "filterSemester": "فلتر بر اساس سمستر پروگرام",
     "semesterOption": "سمستر {{n}}",
+    "allSemesters": "همه سمسترها",
     "noSemesterSet": "سمستر تعیین نشده",
     "noClassesYet": "تا حال هیچ صنفی وجود ندارد",
     "filterSection": "فلتر بر اساس سکشن",
@@ -29,6 +30,7 @@
     "semesterScopeLabel": "سمستر {{n}}",
     "toasts": {
       "noEntriesToReset": "برای فلتر جاری هیچ مدخل جدول اوقاتی برای بازنشانی وجود ندارد.",
+      "selectSpecificSemesterToReset": "قبل از بازنشانی جدول اوقات، یک سمستر مشخص (یا \"سمستر تعیین نشده\") را انتخاب کنید.",
       "selectSemesterBeforeImport": "قبل از دریافت جدول اوقات یک سمستر را انتخاب کنید.",
       "noClassesInPdf": "هیچ صنفی در این PDF یافت نشد."
     }
@@ -44,6 +46,10 @@
     "movedInBadge": "انتقال یافته",
     "movedInFromBadge": "انتقال یافته از {{date}}",
     "semBadge": "سمستر {{n}}",
+    "semesterGroupHeading": "سمستر {{n}}",
+    "semesterGroupUnassigned": "سمستر تعیین نشده",
+    "semesterGroupCount_one": "{{count}} صنف",
+    "semesterGroupCount_other": "{{count}} صنف",
     "finalGradeTitle": "نمره نهایی این کورس",
     "cancelTitle": "این صنف را لغو کنید",
     "cancelAriaLabel": "{{code}} را در {{date}} لغو کنید",
@@ -101,7 +107,7 @@
     "kindCancellation": "لغو",
     "kindReschedule": "تغییر وقت",
     "sessionDateLabel": "تاریخ نشستی که باید تغییر کند",
-    "wrongWeekdayHint": "این {{actualDay}} است — این صنف در {{slotDay}} برگزار می‌شود.",
+    "noUpcomingSessions": "این صنف در این ترم نشست آیندهٔ دیگری ندارد.",
     "whatHappensLabel": "چه اتفاقی می‌افتد",
     "cancelledOption": "لغو شده (بدون صنف)",
     "rescheduledOption": "انتقال یافته (وقت/اتاق جدید)",
@@ -113,7 +119,6 @@
     "clashHint": "نشست انتقال‌یافته برای تداخل اتاق و استاد در وقت جدید بررسی می‌شود — هر مورد یافت‌شده در بخش تداخل‌ها نمایش داده می‌شود.",
     "addExceptionButton": "افزودن استثنا",
     "toastPickDate": "تاریخ نشستی را که باید تغییر کند انتخاب کنید.",
-    "toastWrongWeekday": "{{code}} در {{day}} برگزار می‌شود — یک {{day}} انتخاب کنید.",
     "toastCancelledSuccess": "نشست برای آن تاریخ لغو شد.",
     "toastMovedSuccess": "نشست برای آن تاریخ انتقال یافت."
   },
@@ -194,9 +199,12 @@
   "courseActionsModal": {
     "assignments": "وظایف",
     "takeAttendance": "حاضری بگیرید",
+    "takeAttendanceHint": "حاضری صنف امروز",
     "enterMarks": "نمرات را وارد کنید",
+    "enterMarksHint": "ثبت نمرات",
     "postAnnouncement": "اعلان نشر کنید",
-    "viewRoster": "لیست صنف را ببینید"
+    "viewRoster": "لیست صنف را ببینید",
+    "viewRosterHint": "دانشجویان ثبت‌نام شده"
   },
   "courseActivityModal": {
     "announcements": "اعلانات",
@@ -213,5 +221,12 @@
     "confirmMove": "تایید انتقال",
     "toastMoved": "نشست انتقال یافت.",
     "cancelledHint": "این نشست لغو شده — نخست لغو را بازگردانید تا آن را انتقال دهید."
+  },
+  "rescheduleCancelledSession": {
+    "gone": "این نشست لغوشده دیگر وجود ندارد.",
+    "intro": "دوباره‌برنامه‌ریزی صنف {{code}} که برای {{date}} لغو شده بود. این تنها همین یک نشست را تغییر می‌دهد.",
+    "toastPickDate": "یک تاریخ جدید برای این نشست انتخاب کنید.",
+    "toastSuccess": "نشست دوباره برنامه‌ریزی شد.",
+    "saveButton": "دوباره‌برنامه‌ریزی نشست"
   }
 }

@@ -42,6 +42,16 @@ async function createAccountWithTempPassword({ name, email, role, departmentId, 
       resolvedTeacherId = teacherResult.id;
     }
   }
+  // Every student user is a canonical student the moment the account exists — Finance,
+  // Enrollment, Attendance and Gradebook all key off student_profiles.studentId (= this user's
+  // id), so a student created here (User Management / bulk-import) must be exactly as "real" as
+  // one created through the Admissions approval flow, which already creates this row itself.
+  if (role === 'student') {
+    await run(
+      'INSERT OR IGNORE INTO student_profiles (studentId, departmentId, enrollmentDate) VALUES (?, ?, DATE(\'now\'))',
+      [result.id, departmentId ?? null]
+    );
+  }
   return { id: result.id, name, email, role, tempPassword, teacherId: resolvedTeacherId, idNumber };
 }
 

@@ -16,12 +16,17 @@ const STAFF_NAV = [
   { key: 'overview', items: [
     { name: 'dashboard', icon: 'ti-layout-dashboard', label: 'dashboard', module: 'dashboard' },
     { name: 'reports', icon: 'ti-chart-bar', label: 'reports', module: 'reports' },
+    // Every role — including ones with no 'announcements' module write/manage access — is
+    // always at least a recipient of announcements addressed to them (GET /notices/me/list has
+    // no module gate at all), so this item is never filtered out by the module check below.
+    { name: 'announcements', icon: 'ti-speakerphone', label: 'announcements', alwaysVisible: true },
   ] },
   { key: 'scheduling', items: [
     { name: 'timetable', icon: 'ti-calendar-week', label: 'timetable', module: 'timetable' },
     { name: 'rooms', icon: 'ti-door', label: 'rooms', module: 'rooms' },
     { name: 'courses', icon: 'ti-book', label: 'courses', module: 'courses' },
     { name: 'teachers', icon: 'ti-user', label: 'teachers', module: 'teachers' },
+    { name: 'students', icon: 'ti-users', label: 'students', module: 'students' },
     { name: 'departments', icon: 'ti-building-community', label: 'departments', module: 'departments' },
     { name: 'semesters', icon: 'ti-calendar-time', label: 'semesters', module: 'terms' },
   ] },
@@ -63,7 +68,7 @@ function StaffNav({ role, t, conflictCount }) {
   return (
     <div id="nav-staff">
       {STAFF_NAV.map(section => {
-        const items = section.items.filter(it => can(role, it.module, 'read'));
+        const items = section.items.filter(it => it.alwaysVisible || can(role, it.module, 'read'));
         if (!items.length) return null;
         return (
           <div className="nav-section" key={section.key}>
@@ -119,6 +124,7 @@ export default function Sidebar() {
             <div className="nav-section">
               <div className="nav-label">{t('shell:sidebar.sections.overview')}</div>
               <NavItem name="dashboard" icon="ti-layout-dashboard" label={t('shell:sidebar.nav.dashboard')} />
+              <NavItem name="announcements" icon="ti-speakerphone" label={t('shell:sidebar.nav.announcements')} />
               <NavItem name="advisees" icon="ti-users" label={t('shell:sidebar.nav.advisees')} />
             </div>
           </div>
@@ -129,6 +135,7 @@ export default function Sidebar() {
             <div className="nav-section">
               <div className="nav-label">{t('shell:sidebar.sections.overview')}</div>
               <NavItem name="dashboard" icon="ti-layout-dashboard" label={t('shell:sidebar.nav.dashboard')} />
+              <NavItem name="announcements" icon="ti-speakerphone" label={t('shell:sidebar.nav.announcements')} />
             </div>
             <div className="nav-section">
               <div className="nav-label">{t('shell:sidebar.sections.myTeaching')}</div>
@@ -146,7 +153,9 @@ export default function Sidebar() {
           <div id="nav-student">
             <div className="nav-section">
               <div className="nav-label">{t('shell:sidebar.sections.courses')}</div>
+              <NavItem name="dashboard" icon="ti-layout-dashboard" label={t('shell:sidebar.nav.dashboard')} />
               <NavItem name="student-profile" icon="ti-id-badge-2" label={t('shell:sidebar.nav.myProfile')} />
+              <NavItem name="announcements" icon="ti-speakerphone" label={t('shell:sidebar.nav.announcements')} />
               <NavItem name="catalog" icon="ti-book" label={t('shell:sidebar.nav.catalog')} />
               <NavItem name="myschedule" icon="ti-calendar-week" label={t('shell:sidebar.nav.mySchedule')} />
               <NavItem name="my-attendance" icon="ti-clipboard-check" label={t('shell:sidebar.nav.myAttendance')} />

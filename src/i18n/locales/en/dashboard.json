@@ -4,6 +4,7 @@
     "newCourse": "New Course",
     "autoSchedule": "Auto-Schedule",
     "dismiss": "Dismiss",
+    "clickToReschedule": "Click to reschedule this class",
     "fullView": "Full view",
     "statCards": {
       "myCourses": "My Courses",
@@ -56,6 +57,195 @@
       "nameWithStatus": "{{name}} — {{status}}",
       "meta_one": "{{date}} · {{time}} · {{room}} · {{count}} student",
       "meta_other": "{{date}} · {{time}} · {{room}} · {{count}} students"
+    },
+    "superAdmin": {
+      "header": {
+        "title": "Platform overview",
+        "subtitle": "Super admin · system & security",
+        "healthy": "All systems normal",
+        "attention": "Needs attention",
+        "checking": "Checking…"
+      },
+      "kpi": {
+        "totalUsers": "Total Users",
+        "roleChanges": "Role Changes (7d)",
+        "forbiddenAttempts": "Forbidden Attempts (24h)",
+        "failedLogins": "Failed Logins (24h)",
+        "notTracked": "Not tracked yet"
+      },
+      "usersRoles": {
+        "title": "Users & roles",
+        "subtitle": "Accounts by role across the platform",
+        "manage": "Manage roles",
+        "totalUsers": "Total users",
+        "recentChanges": "Recent role changes",
+        "noRecentChanges": "No role changes recorded yet.",
+        "changeLine": "{{actor}} set {{target}}'s role to {{role}}"
+      },
+      "auditTrail": {
+        "title": "Audit trail",
+        "subtitle": "Recent platform events",
+        "empty": "No recent activity.",
+        "eventCount_one": "{{count}} event",
+        "eventCount_other": "{{count}} events"
+      },
+      "systemStatus": {
+        "title": "System status",
+        "api": "API server",
+        "database": "Database",
+        "auth": "Auth service",
+        "ok": "Operational",
+        "down": "Down",
+        "checking": "Checking…",
+        "lastBackup": "Last backup",
+        "noBackup": "No backup on record"
+      },
+      "quickActions": {
+        "title": "Quick Actions",
+        "createUser": "Create User",
+        "manageRoles": "Manage Roles",
+        "platformSettings": "Platform Settings",
+        "viewAuditLog": "View Audit Log"
+      }
+    },
+    "studentDashboard": {
+      "welcome": {
+        "title": "Welcome back, {{name}}",
+        "subtitle": "Here's where things stand this term."
+      },
+      "stats": {
+        "gpa": "GPA",
+        "gpaTerm": "Term",
+        "gpaCumulative": "Cumulative",
+        "balance": "Fee Balance",
+        "balanceDue": "Balance due",
+        "balanceClear": "All clear",
+        "noFees": "Not billed yet",
+        "attendance": "Attendance",
+        "attendanceSub": "Across all courses",
+        "credits": "Credits",
+        "creditsSub": "Earned / attempted"
+      },
+      "semester": {
+        "title": "This Semester",
+        "subtitle": "Your academic standing this term",
+        "credits": "Credits Earned / Attempted",
+        "coursesGraded": "Courses Graded",
+        "failedCourses": "Failed / Repeat Courses"
+      },
+      "enrolled": {
+        "title": "Enrolled Courses ({{count}})",
+        "notYetGraded": "Not yet graded",
+        "inProgress": "In progress",
+        "empty": "You're not enrolled in any courses this term."
+      },
+      "announcements": {
+        "title": "Recent Announcements",
+        "subtitle": "Latest notices for you",
+        "empty": "No announcements yet."
+      },
+      "quickLinks": {
+        "title": "Quick Links",
+        "myFees": "My Fees",
+        "myGrades": "My Grades",
+        "myAttendance": "My Attendance",
+        "catalog": "Course Catalog",
+        "myProfile": "My Profile"
+      }
+    },
+    "registrar": {
+      "header": {
+        "title": "Registrar dashboard",
+        "subtitle": "Student records and the registration lifecycle"
+      },
+      "loadError": "Couldn't load the registrar dashboard data. Try refreshing the page.",
+      "registration": {
+        "open": "Registration open",
+        "openUntil": "Registration open · closes {{date}}",
+        "opensOn": "Registration opens {{date}}",
+        "closed": "Registration closed"
+      },
+      "kpi": {
+        "activeStudents": "Active Students",
+        "newAdmitsPending": "{{count}} new admits pending",
+        "registeredThisTerm": "Registered This Term",
+        "registrationHolds": "Registration Holds",
+        "registrationHoldsSub": "Students with an outstanding balance — not yet a registration block, only exams",
+        "pendingRequests": "Pending Requests",
+        "pendingRequestsSub": "Add/drop request queue isn't built yet"
+      },
+      "workQueue": {
+        "title": "Needs your attention",
+        "subtitle": "Open items requiring registrar action"
+      },
+      "queue": {
+        "notRegistered": "Students not yet registered this term",
+        "newAdmits": "New admits awaiting enrollment",
+        "noApplication": "Students with no application record",
+        "overCapacity": "Sections over capacity",
+        "addDrop": "Add/drop requests to process",
+        "addDropNotBuilt": "This request queue doesn't exist yet — overrides happen inline during enrollment"
+      },
+      "findStudent": {
+        "title": "Find a student",
+        "placeholder": "Search by name or student ID",
+        "empty": "No matching students."
+      },
+      "quickActions": {
+        "title": "Quick Actions",
+        "enrollStudent": "Enroll Student",
+        "openRoster": "Open Roster",
+        "enrollmentReport": "Enrollment Report",
+        "transcripts": "Transcripts"
+      }
+    },
+    "bursar": {
+      "header": {
+        "title": "Bursar dashboard",
+        "subtitle": "Billing, collections & receivables"
+      },
+      "loadError": "Couldn't load the Bursar dashboard data. Try refreshing the page.",
+      "noActiveTerm": "No active term is set — the figures below are totals across every term.",
+      "viewAll": "View all",
+      "overdue": {
+        "title": "Overdue balances",
+        "subtitle": "Students past their installment due date, worst first",
+        "empty": "No overdue balances — everyone is current.",
+        "daysOverdue_one": "{{count}} day overdue",
+        "daysOverdue_other": "{{count}} days overdue"
+      },
+      "upcoming": {
+        "title": "Upcoming installments",
+        "subtitle": "Next 30 days",
+        "empty": "No installments due in the next 30 days.",
+        "studentCount_one": "{{count}} student",
+        "studentCount_other": "{{count}} students"
+      },
+      "recentPayments": {
+        "title": "Recent payments",
+        "subtitle": "Latest recorded payments",
+        "empty": "No payments recorded yet."
+      }
+    },
+    "faculty": {
+      "header": {
+        "title": "Faculty dashboard",
+        "subtitle": "Your courses, students, and exams this term"
+      },
+      "kpi": {
+        "myCourses": "My Courses",
+        "myStudents": "My Students",
+        "myExams": "My Exams"
+      },
+      "today": {
+        "subtitle": "Your sections meeting today"
+      },
+      "attention": {
+        "title": "Needs your attention",
+        "subtitle": "Your exams still waiting on a date and room",
+        "empty": "All of your exams are scheduled.",
+        "unknownCourse": "Course no longer available"
+      }
     }
   },
   "reports": {

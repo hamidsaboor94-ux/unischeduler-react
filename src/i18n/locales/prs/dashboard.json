@@ -4,6 +4,7 @@
     "newCourse": "کورس جدید",
     "autoSchedule": "ترتیب خودکار",
     "dismiss": "رد کردن",
+    "clickToReschedule": "برای دوباره‌برنامه‌ریزی این صنف کلیک کنید",
     "fullView": "نمایش کامل",
     "statCards": {
       "myCourses": "کورس‌های من",
@@ -56,6 +57,195 @@
       "nameWithStatus": "{{name}} — {{status}}",
       "meta_one": "{{date}} · {{time}} · {{room}} · {{count}} محصل",
       "meta_other": "{{date}} · {{time}} · {{room}} · {{count}} محصل"
+    },
+    "superAdmin": {
+      "header": {
+        "title": "نمای کلی پلتفرم",
+        "subtitle": "سوپر ادمین · سیستم و امنیت",
+        "healthy": "همه سیستم‌ها نورمال است",
+        "attention": "نیاز به توجه دارد",
+        "checking": "در حال بررسی…"
+      },
+      "kpi": {
+        "totalUsers": "مجموع کاربران",
+        "roleChanges": "تغییرات نقش (۷ روز)",
+        "forbiddenAttempts": "تلاش‌های منع شده (۲۴ ساعت)",
+        "failedLogins": "ورودهای ناکام (۲۴ ساعت)",
+        "notTracked": "هنوز ردیابی نمی‌شود"
+      },
+      "usersRoles": {
+        "title": "کاربران و نقش‌ها",
+        "subtitle": "کاربران به تفکیک نقش در سراسر پلتفرم",
+        "manage": "مدیریت نقش‌ها",
+        "totalUsers": "مجموع کاربران",
+        "recentChanges": "تغییرات اخیر نقش",
+        "noRecentChanges": "تا کنون هیچ تغییر نقشی ثبت نشده.",
+        "changeLine": "{{actor}} نقش {{target}} را به {{role}} تغییر داد"
+      },
+      "auditTrail": {
+        "title": "مسیر ممیزی",
+        "subtitle": "آخرین رویدادهای پلتفرم",
+        "empty": "هیچ فعالیت اخیری وجود ندارد.",
+        "eventCount_one": "{{count}} رویداد",
+        "eventCount_other": "{{count}} رویداد"
+      },
+      "systemStatus": {
+        "title": "وضعیت سیستم",
+        "api": "سرور API",
+        "database": "پایگاه داده",
+        "auth": "خدمت احراز هویت",
+        "ok": "فعال",
+        "down": "غیرفعال",
+        "checking": "در حال بررسی…",
+        "lastBackup": "آخرین نسخه پشتیبان",
+        "noBackup": "هیچ نسخه پشتیبان ثبت نشده"
+      },
+      "quickActions": {
+        "title": "اقدامات سریع",
+        "createUser": "ایجاد کاربر",
+        "manageRoles": "مدیریت نقش‌ها",
+        "platformSettings": "تنظیمات پلتفرم",
+        "viewAuditLog": "مشاهده لاگ ممیزی"
+      }
+    },
+    "studentDashboard": {
+      "welcome": {
+        "title": "خوش آمدید، {{name}}",
+        "subtitle": "وضعیت این سمستر شما در اینجا است."
+      },
+      "stats": {
+        "gpa": "GPA",
+        "gpaTerm": "سمستر",
+        "gpaCumulative": "مجموعی",
+        "balance": "بیلانس فیس",
+        "balanceDue": "بیلانس باقی است",
+        "balanceClear": "همه چیز تصفیه است",
+        "noFees": "هنوز فیس تنظیم نشده",
+        "attendance": "حاضری",
+        "attendanceSub": "در تمام مضامین",
+        "credits": "کریدیت‌ها",
+        "creditsSub": "کسب‌شده / اخذشده"
+      },
+      "semester": {
+        "title": "این سمستر",
+        "subtitle": "وضعیت اکادمیک شما در این دوره",
+        "credits": "کریدیت‌های کسب‌شده / اخذشده",
+        "coursesGraded": "مضامین نمره‌دهی شده",
+        "failedCourses": "مضامین ناکام / تکراری"
+      },
+      "enrolled": {
+        "title": "مضامین ثبت شده ({{count}})",
+        "notYetGraded": "هنوز نمره‌دهی نشده",
+        "inProgress": "در حال جریان",
+        "empty": "شما در این سمستر در هیچ مضمونی ثبت‌نام نشده‌اید."
+      },
+      "announcements": {
+        "title": "اعلانات اخیر",
+        "subtitle": "آخرین اطلاعیه‌ها برای شما",
+        "empty": "هنوز هیچ اعلانی وجود ندارد."
+      },
+      "quickLinks": {
+        "title": "لینک‌های سریع",
+        "myFees": "فیس من",
+        "myGrades": "نمرات من",
+        "myAttendance": "حاضری من",
+        "catalog": "کتالوگ مضامین",
+        "myProfile": "پروفایل من"
+      }
+    },
+    "registrar": {
+      "header": {
+        "title": "داشبورد رجستر",
+        "subtitle": "سوابق محصلین و پروسه ثبت‌نام"
+      },
+      "loadError": "معلومات داشبورد رجستر بارگیری نشد. صفحه را دوباره بارگیری کنید.",
+      "registration": {
+        "open": "ثبت‌نام باز است",
+        "openUntil": "ثبت‌نام باز است · {{date}} ختم می‌شود",
+        "opensOn": "ثبت‌نام در {{date}} باز می‌شود",
+        "closed": "ثبت‌نام بسته است"
+      },
+      "kpi": {
+        "activeStudents": "محصلین فعال",
+        "newAdmitsPending": "{{count}} پذیرفته‌شده جدید در انتظار",
+        "registeredThisTerm": "ثبت‌نام‌شده این سمستر",
+        "registrationHolds": "بلاک‌های ثبت‌نام",
+        "registrationHoldsSub": "محصلینی که بیلانس باقیمانده دارند — هنوز مانع ثبت‌نام نیست، فقط امتحانات را می‌بندد",
+        "pendingRequests": "درخواست‌های معلق",
+        "pendingRequestsSub": "صف درخواست‌های اضافه/حذف هنوز ساخته نشده است"
+      },
+      "workQueue": {
+        "title": "نیازمند توجه شما",
+        "subtitle": "موارد باز که نیاز به اقدام رجستر دارند"
+      },
+      "queue": {
+        "notRegistered": "محصلینی که هنوز در این سمستر ثبت‌نام نکرده‌اند",
+        "newAdmits": "پذیرفته‌شدگان جدید در انتظار ثبت‌نام",
+        "noApplication": "محصلینی که هیچ سابقه درخواستی ندارند",
+        "overCapacity": "بخش‌هایی که از ظرفیت بیشتر شده‌اند",
+        "addDrop": "درخواست‌های اضافه/حذف برای پردازش",
+        "addDropNotBuilt": "این صف درخواست هنوز ساخته نشده — تغییرات مستقیماً حین ثبت‌نام انجام می‌شود"
+      },
+      "findStudent": {
+        "title": "یافتن محصل",
+        "placeholder": "جستجو با نام یا شماره محصل",
+        "empty": "هیچ محصل مطابقی یافت نشد."
+      },
+      "quickActions": {
+        "title": "اقدامات سریع",
+        "enrollStudent": "ثبت‌نام محصل",
+        "openRoster": "باز کردن لیست",
+        "enrollmentReport": "گزارش ثبت‌نام",
+        "transcripts": "ترانسکریپت‌ها"
+      }
+    },
+    "bursar": {
+      "header": {
+        "title": "داشبورد امور مالی",
+        "subtitle": "محاسبه فیس، جمع‌آوری پول و حساب‌های دریافتنی"
+      },
+      "loadError": "معلومات داشبورد امور مالی بارگیری نشد. صفحه را دوباره بارگیری کنید.",
+      "noActiveTerm": "هیچ سمستر فعالی تنظیم نشده — ارقام زیر مجموع همه سمسترها است.",
+      "viewAll": "دیدن همه",
+      "overdue": {
+        "title": "بیلانس‌های معوقه",
+        "subtitle": "محصلینی که از تاریخ سررسید قسط گذشته‌اند — بدترین مورد اول",
+        "empty": "هیچ بیلانس معوقه‌ای نیست — همه به‌روز هستند.",
+        "daysOverdue_one": "{{count}} روز تأخیر",
+        "daysOverdue_other": "{{count}} روز تأخیر"
+      },
+      "upcoming": {
+        "title": "اقساط آینده",
+        "subtitle": "۳۰ روز آینده",
+        "empty": "هیچ قسطی در ۳۰ روز آینده سررسید ندارد.",
+        "studentCount_one": "{{count}} محصل",
+        "studentCount_other": "{{count}} محصل"
+      },
+      "recentPayments": {
+        "title": "پرداخت‌های اخیر",
+        "subtitle": "آخرین پرداخت‌های ثبت‌شده",
+        "empty": "هنوز هیچ پرداختی ثبت نشده است."
+      }
+    },
+    "faculty": {
+      "header": {
+        "title": "داشبورد استاد",
+        "subtitle": "کورس‌ها، محصلان، و امتحانات شما در این سمستر"
+      },
+      "kpi": {
+        "myCourses": "کورس‌های من",
+        "myStudents": "محصلان من",
+        "myExams": "امتحانات من"
+      },
+      "today": {
+        "subtitle": "بخش‌های شما که امروز دایر می‌شوند"
+      },
+      "attention": {
+        "title": "نیازمند توجه شما",
+        "subtitle": "امتحانات شما که هنوز منتظر تاریخ و اتاق هستند",
+        "empty": "همه امتحانات شما ترتیب شده است.",
+        "unknownCourse": "کورس دیگر موجود نیست"
+      }
     }
   },
   "reports": {

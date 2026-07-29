@@ -1,6 +1,88 @@
 {
   "financePage": {
-    "title": "مالي چارې",
+    "title": "د مالي چارو ډشبورډ",
+    "subtitle": "د زده کوونکو بیل، قسطونه او تادیات",
+    "tabs": {
+      "overview": "عمومي کتنه",
+      "accounts": "د زده کوونکو حسابونه"
+    },
+    "dashboard": {
+      "vsLastTerm": "{{value}} د تېر سمستر په پرتله",
+      "vsLastTermPlain": "د تېر سمستر په پرتله",
+      "billingStatus": { "title": "د زده کوونکو د بیل حالت" },
+      "paymentOverview": {
+        "title": "د تادیاتو کتنه",
+        "empty": "د وروستیو سمسترونو لپاره لا تر اوسه کوم بیل معلومات نشته.",
+        "charged": "ټاکل شوی",
+        "collected": "راټول شوی",
+        "outstanding": "پاتې"
+      },
+      "quickInsights": {
+        "title": "چټک بصیرتونه",
+        "totalStudents": "ټول زده کوونکي",
+        "paidThisTerm": "د دې سمستر تادیه شوي",
+        "pendingPayments": "پاتې تادیات",
+        "notBilled": "نه بیل شوي",
+        "viewReports": "راپورونه وګورئ"
+      }
+    },
+    "overview": {
+      "kpi": {
+        "totalBilled": "ټول بیل شوی",
+        "totalCollected": "ټول راټول شوی",
+        "totalOutstanding": "ټوله پاتې بیله",
+        "overdueStudents": "ناوخته زده کوونکي",
+        "todayCollection": "د نن ورځې راټولونه",
+        "pendingInstallments": "پاتې قسطونه"
+      },
+      "collectionProgress": {
+        "title": "د راټولونې پرمختګ",
+        "collected": "راټول شوی",
+        "outstanding": "پاتې",
+        "empty": "لا تر اوسه د دې دورې لپاره کوم فیس نه دی تولید شوی."
+      },
+      "aging": {
+        "title": "د پاتې بیلونو زړوالی",
+        "subtitle": "نه تادیه شوي قسطونه د ناوخته والي له مخې",
+        "empty": "هیڅ پاتې بیل نشته.",
+        "buckets": {
+          "current": "اوسنی",
+          "1-30": "۱–۳۰ ورځې",
+          "31-60": "۳۱–۶۰ ورځې",
+          "61-90": "۶۱–۹۰ ورځې",
+          "90+": "۹۰+ ورځې"
+        }
+      },
+      "activity": {
+        "title": "وروستي مالي فعالیتونه",
+        "empty": "تر اوسه هیڅ مالي فعالیت نشته.",
+        "by": "د {{name}} لخوا",
+        "types": {
+          "charge": "بیل تولید شو",
+          "payment": "تادیه ترلاسه شوه",
+          "aid": "مالي مرسته",
+          "refund": "بیرته ورکړه",
+          "adjustment": "سمون"
+        }
+      },
+      "quickActions": {
+        "title": "چټک کړنې",
+        "recordPayment": "تادیه ثبت کړئ",
+        "viewOverdue": "ناوخته حسابونه وګورئ",
+        "generateStatement": "د زده کوونکي بیان تولید کړئ",
+        "selectStudentFirst": "لومړی یو زده کوونکی وټاکئ، بیا یې بیان تولید کړئ."
+      }
+    },
+    "summary": {
+      "totalCharged": "ټول ټاکل شوی",
+      "collected": "راټول شوی",
+      "outstanding": "پاتې",
+      "overdueStudents": "ناوخته زده کوونکي"
+    },
+    "filters": {
+      "all": "ټول"
+    },
+    "noStudents": "له دې فلټر سره هیڅ زده کوونکی نه شمېرل کیږي.",
     "rateLabel": "د هر کریډیټ فیس",
     "currencyLabel": "اسعارو",
     "save": "خوندي کول",
@@ -10,6 +92,8 @@
       "student": "زده کوونکی",
       "credits": "کریډیټونه",
       "charged": "ټاکل شوی",
+      "aid": "مرسته",
+      "net": "خالص",
       "paid": "تادیه شوی",
       "balance": "پاتې",
       "status": "حالت"
@@ -34,17 +118,197 @@
     "payments": "تادیات / رسیدونه",
     "receiptNo": "رسید",
     "date": "نېټه",
+    "installmentsCol": "پوښل شوي قسطونه",
+    "creditBalance": "کريډيټ بیله",
     "noPayments": "تر اوسه هیڅ تادیه نه ده ثبت شوې.",
     "voidAria": "تادیه {{receipt}} باطله کړئ",
     "confirmVoid": "تادیه {{receipt}} باطله شي؟ دا به پاتې بیله بیرته راولي.",
     "voided": "تادیه باطله شوه.",
+    "voidedLabel": "باطل شوی",
+    "receipt": {
+      "title": "د تادیې رسید",
+      "printAria": "رسید {{receipt}} وګورئ",
+      "print": "چاپ",
+      "downloadPdf": "د PDF په توګه ډاونلوډ کړئ",
+      "pdfSaved": "رسید خوندي شو.",
+      "pdfFailed": "PDF خوندي نشو کړی.",
+      "officialReceipt": "رسمي د تادیې رسید",
+      "receiptNo": "د رسید شمېره",
+      "date": "نېټه او وخت",
+      "invoiceNo": "د بیل شمېره",
+      "status": "حالت",
+      "statusCompleted": "بشپړ شوی",
+      "statusReversed": "باطل شوی",
+      "voidedBanner": "دا تادیه د {{date}} په نېټه د {{name}} لخوا باطله شوه. دا رسید یوازې د پلټنې لپاره خوندي شوی.",
+      "reconstructedNote": "دا رسید د جزیاتو ثبت کیدو دمخه دی او له لیجر څخه بیا رغول شوی.",
+      "studentInfo": "د زده کوونکي معلومات",
+      "studentName": "د زده کوونکي نوم",
+      "studentId": "د زده کوونکي شمېره",
+      "program": "پروګرام",
+      "department": "څانګه",
+      "term": "سمستر",
+      "academicYear": "تعلیمي کال",
+      "paymentDetails": "د تادیې جزیات",
+      "method": "د تادیې طریقه",
+      "reference": "د معاملې شمېره",
+      "previousBalance": "پخوانۍ پاتې بیله",
+      "previousCredit": "پخوانی کريډيټ بیله",
+      "amountPaid": "تادیه شوې اندازه",
+      "remainingBalance": "پاتې بیله",
+      "remainingCredit": "کريډيټ بیله",
+      "allocation": "د تادیې وېش",
+      "allocationTerm": "سمستر",
+      "allocationInstallment": "قسط",
+      "allocationAmount": "اندازه",
+      "receivedBy": "ترلاسه کوونکی / مالي افسر",
+      "immutableNote": "دا یو سیسټم لخوا رامنځته شوی، بدلون نه منونکی مالي سند دی."
+    },
+    "numberWords": {
+      "1": "يو", "2": "دوه", "3": "درې", "4": "څلور", "5": "پنځه",
+      "6": "شپږ", "7": "اووه", "8": "اته", "9": "نهه", "10": "لس",
+      "11": "یولس", "12": "دولس", "13": "دیارلس", "14": "څوارلس", "15": "پنځلس",
+      "16": "شپاړس", "17": "اووه‌لس", "18": "اتلس", "19": "نولس", "20": "شل"
+    },
     "methods": {
       "cash": "نغدي",
       "bank": "بانکي انتقال",
       "card": "کارت",
       "mobile": "موبایل پیسې",
       "other": "نور"
-    }
+    },
+    "termLabel": "سمستر",
+    "selectTerm": "یو سمستر وټاکئ…",
+    "noTermSelected": "د چارجونو لیدلو یا رامنځته کولو لپاره یو سمستر وټاکئ.",
+    "notGeneratedYet": "د دې سمستر چارجونه لا تر اوسه نه دي رامنځته شوي — یو ژوندی مخکتنه ښودل کیږي.",
+    "generateCharges": "چارجونه رامنځته کړئ",
+    "chargesGenerated": "{{count}} زده کوونکو ته چارج وشو — ټول {{total}}.",
+    "totalAid": "مالي مرسته",
+    "netPayable": "خالص د ورکړې وړ",
+    "status": {
+      "cleared": "تصفیه شوی",
+      "partial": "نیمګړی",
+      "outstanding": "پاتې",
+      "overdue": "ناوخته شوی",
+      "not_billed": "لا نه دی ټاکل شوی"
+    },
+    "rateHint": "دا فیس د پوهنتون تلواله (پیشفرض) ده — کله چې لاندې هیڅ ډېر ځانګړی قانون د زده کوونکي پوهنځي، څانګې، پروګرام، یا ډول سره سمون ونلري، همدا کارول کیږي.",
+    "termConfig": {
+      "title": "د سمستر فیس تنظیمات",
+      "button": "د فیس تنظیمات"
+    },
+    "studentTypes": {
+      "title": "د زده کوونکو ډولونه",
+      "toggleHint": "د فعالولو/غیرفعالولو لپاره کلیک وکړئ",
+      "removeAria": "ډول {{name}} لرې کړئ",
+      "addPlaceholder": "د نوي ډول نوم…",
+      "add": "زیاتول",
+      "added": "ډول زیات شو.",
+      "confirmDelete": "ډول {{name}} لرې شي؟",
+      "removed": "ډول لرې شو."
+    },
+    "feeRules": {
+      "title": "د تحصیل فیس قوانین (د هر کریډیټ فیس)",
+      "hint": "تر ټولو ځانګړی قانون بریالی کیږي: پروګرام + ډول، بیا پروګرام، بیا څانګه + ډول، بیا څانګه، بیا پوهنځی + ډول، بیا پوهنځی، بیا پوهنتون + ډول، او په پای کې پورتنی د پوهنتون تلواله فیس.",
+      "none": "تر اوسه هیڅ قانون نه دی تنظیم شوی — هر زده کوونکی د پورتنۍ تلوالې کچې پر بنسټ تادیه کوي.",
+      "scope": "ساحه",
+      "target": "هدف",
+      "studentType": "د زده کوونکي ډول",
+      "rate": "د هر کریډیټ فیس",
+      "add": "قانون زیات کړئ",
+      "added": "د فیس قانون زیات شو.",
+      "remove": "قانون لرې کړئ",
+      "allTypes": "ټول ډولونه",
+      "selectTarget": "وټاکئ…",
+      "scopes": {
+        "university": "پوهنتون",
+        "college": "پوهنځی",
+        "department": "څانګه",
+        "program": "پروګرام"
+      }
+    },
+    "feeItems": {
+      "title": "ثابت فیسونه",
+      "none": "تر اوسه د دې سمستر لپاره هیڅ ثابت فیس نشته.",
+      "name": "نوم",
+      "amount": "اندازه",
+      "appliesTo": "ساحه",
+      "target": "هدف",
+      "studentType": "د زده کوونکي ډول",
+      "feeType": "د فیس ډول",
+      "mandatory": "اړین",
+      "active": "فعال",
+      "effectiveDate": "د نافذېدو نېټه",
+      "add": "فیس زیات کړئ",
+      "remove": "فیس ډول حذف کړئ",
+      "scopes": {
+        "all": "ټول زده کوونکي",
+        "dept": "یوه څانګه"
+      },
+      "feeTypes": {
+        "tuition": "تحصیلي فیس",
+        "registration": "راجستریشن",
+        "technology": "ټکنالوژي",
+        "library": "کتابتون",
+        "laboratory": "لابراتوار",
+        "activity": "فعالیت",
+        "transport": "ترانسپورت",
+        "hostel": "لیلیه",
+        "other": "نور"
+      }
+    },
+    "feePlan": {
+      "title": "د قسطونو پلان",
+      "count": "د قسطونو شمېر",
+      "dueDate": "د ادا نېټه",
+      "percentage": "سلنه",
+      "save": "پلان خوندي کړئ",
+      "hint": "د مساوي وېش لپاره سلنې تشې پرېږدئ."
+    },
+    "installments": {
+      "title": "د قسطونو مهالویش",
+      "amount": "اندازه",
+      "dueDate": "د ادا نېټه",
+      "paid": "تادیه شوی",
+      "status": {
+        "pending": "په تمه",
+        "partial": "نیمګړی",
+        "paid": "تادیه شوی",
+        "overdue": "ناوخته شوی"
+      }
+    },
+    "aid": {
+      "title": "مالي مرسته",
+      "none": "هیڅ مالي مرسته ثبت شوې نشته.",
+      "pending": "په تمه — کله چې تادیات تولید شي پلي کیږي",
+      "type": "ډول",
+      "value": "ارزښت",
+      "reason": "دلیل (اختیاري)",
+      "award": "ورکړه",
+      "revoke": "مرسته لغوه کړئ",
+      "confirmRevokeAid": "دا مالي مرسته لغوه شي؟ د زده کوونکي پاتې بیله به ډېره شي.",
+      "aidAwarded": "مالي مرسته ورکړل شوه.",
+      "aidRevoked": "مالي مرسته لغوه شوه.",
+      "selectType": "ډول وټاکئ…",
+      "manage": "د مرستې ورکړه / اداره",
+      "awardedBy": "ورکوونکی",
+      "date": "نېټه",
+      "statusActive": "فعال",
+      "statusRevoked": "لغوه شوی",
+      "noAwards": "تر اوسه د دې زده کوونکي لپاره کومه مالي مرسته نشته.",
+      "selectTermFirst": "د مالي مرستې ورکړې یا ادارې لپاره یو سمستر وټاکئ.",
+      "errors": { "percentageMax": "د سلنې مرسته د ۱۰۰ نه زیاته نشي کیدای." },
+      "types": {
+        "scholarship": "بورس",
+        "grant": "مرسته",
+        "waiver": "معافیت",
+        "discount": "تخفیف"
+      },
+      "bases": {
+        "percentage": "سلنه",
+        "fixed": "ثابته اندازه"
+      }
+    },
+    "planSaved": "د قسطونو پلان خوندي شو."
   },
   "myFees": {
     "title": "زما فیسونه",
@@ -54,13 +318,18 @@
     "credits": "کریډیټونه",
     "fee": "فیس",
     "totalCharged": "ټول ټاکل شوی",
+    "totalAid": "مالي مرسته",
+    "netPayable": "خالص د ورکړې وړ",
     "totalPaid": "ټول تادیه شوی",
     "balance": "پاتې",
+    "creditBalance": "کريډيټ بیله",
+    "installments": "د قسطونو مهالویش",
     "receipts": "رسیدونه",
     "receiptNo": "رسید",
     "amount": "اندازه",
     "method": "طریقه",
     "date": "نېټه",
+    "installmentsCol": "پوښل شوي قسطونه",
     "noReceipts": "تر اوسه هیڅ تادیه نشته.",
     "noFees": "تر اوسه فیسونه نه دي تنظیم شوي."
   }

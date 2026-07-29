@@ -45,16 +45,94 @@
     "enrollmentStatus": "د شمولیت حالت",
     "admissionStatus": "د منلو حالت",
     "department": "دیپارتمنت / رشته",
+    "program": "پروګرام / سند",
+    "studentType": "د محصل ډول",
     "programSemester": "اوسنی د پروګرام سمستر",
     "previousSchool": "پخوانۍ زده کړه (ښوونځی / موسسه)",
     "previousGraduationYear": "د پخوانۍ فراغت کال",
     "advisor": "علمي سلاکار",
     "gpa": "ټولیز اوسط (GPA)",
-    "credits": "بشپړ شوي کریډیټونه"
+    "credits": "بشپړ شوي کریډیټونه",
+    "studentStatus": "د زده کوونکي حالت",
+    "batch": "بېچ / دوره"
+  },
+  "batchPlaceholder": "لکه: پاییز ۲۰۲۴",
+  "changePhoto": "انځور بدلول",
+  "cards": {
+    "sections": { "personal": "شخصي", "contact": "اړیکه", "address": "پته", "education": "زده کړه", "documents": "اسناد" },
+    "fields": {
+      "father": "پلار",
+      "grandfather": "نیکه",
+      "gender": "جنسیت",
+      "born": "زېږون",
+      "nationality": "تابعیت",
+      "nationalId": "تذکره",
+      "passport": "پاسپورت",
+      "mobile": "موبایل",
+      "emergency": "بیړنۍ اړیکه",
+      "email": "بریښنالیک",
+      "presentAddress": "اوسنی پته",
+      "permanentAddress": "دایمي پته",
+      "previousSchool": "پخوانی ښوونځی",
+      "gradYear": "د فراغت کال",
+      "program": "پروګرام",
+      "entryTest": "د داخلې ازموینه"
+    },
+    "noDocuments": "هیڅ سند نه دی ضمیمه شوی",
+    "statusAccepted": "منل شوی",
+    "statusPending": "په تمه",
+    "statusRejected": "رد شوی",
+    "entryPill": "کانکور {{score}}"
   },
   "genderOptions": { "Male": "نارینه", "Female": "ښځینه", "Other": "نور" },
   "admissionOptions": { "Approved": "منل شوی", "Pending": "په تمه", "Rejected": "رد شوی" },
   "enrollmentOptions": { "Regular": "منظم", "Part-time": "پاره وخت", "Probation": "ازموینیز حالت", "Withdrawn": "بېرون شوی" },
+  "studentStatusOptions": { "Active": "فعال", "Graduated": "فارغ شوی", "Suspended": "معلق شوی", "Withdrawn": "بېرون شوی", "On Leave": "په رخصتۍ کې" },
+  "semesterStatusOptions": {
+    "In Progress": "روان",
+    "Awaiting Results": "د پایلو تمه",
+    "Passed": "بریالی شوی",
+    "Failed": "ناکام شوی",
+    "On Hold": "ځنډول شوی",
+    "Graduation Eligible": "د فراغت وړ"
+  },
+  "progression": {
+    "title": "علمي پرمختګ",
+    "evaluate": "پرمختګ ارزول",
+    "fields": {
+      "academicYear": "علمي کال",
+      "admissionYear": "د شمولیت/بیچ کال",
+      "semesterStatus": "د اوسني سمستر حالت",
+      "credits": "ترلاسه شوي / هڅه شوي کریډیټونه",
+      "gradedProgress": "{{graded}} د {{total}} مضامینو څخه نمرول شوي",
+      "failedCourses": "ناکام / بیا اخیستل شوي مضامین"
+    },
+    "override": {
+      "toggle": "لاسي بدلون",
+      "semesterNumber": "نوی د سمستر شمېره",
+      "status": "نوی حالت",
+      "reason": "دلیل (اړین دی)",
+      "reasonPlaceholder": "دا بدلون ولې اړین دی؟",
+      "submit": "بدلون تطبیقول",
+      "errors": { "reasonRequired": "د لاسي بدلون لپاره یو دلیل اړین دی." }
+    },
+    "history": {
+      "semester": "سمستر",
+      "semesterValue": "سمستر {{number}}",
+      "status": "حالت",
+      "credits": "کریډیټونه (ترلاسه شوي / هڅه شوي)",
+      "gpa": "د سمستر GPA",
+      "completed": "بشپړ شوی"
+    },
+    "toasts": {
+      "advanced": "سمستر {{semester}} ته وده وکړه.",
+      "noChange": "هیڅ بدلون ونشو — سمستر لا هم روان دی.",
+      "awaitingResults": "لا هم د دې سمستر وروستیو نمرو ته انتظار دی.",
+      "failed": "دا سمستر ناکام په توګه نښه شو — لاسي پریکړې ته اړتیا لري.",
+      "graduationEligible": "دا زده کوونکی اوس د فراغت وړ دی.",
+      "overridden": "د سمستر پرمختګ لاسي بدل شو."
+    }
+  },
   "none": "هیڅ",
   "select": "— وټاکئ —",
   "creditsProgress": "{{completed}} د {{required}} کریډیټونو څخه",
@@ -63,7 +141,8 @@
   "gpaNotAvailable": "لا تر اوسه شتون نلري",
   "toasts": {
     "saved": "پروفایل تازه شو.",
-    "contactSaved": "د اړیکې مالومات تازه شول."
+    "contactSaved": "د اړیکې مالومات تازه شول.",
+    "photoUploaded": "انځور تازه شو."
   },
   "documents": {
     "typeHeader": "ډول",

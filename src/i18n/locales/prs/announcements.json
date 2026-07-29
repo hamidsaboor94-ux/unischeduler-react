@@ -1,0 +1,188 @@
+{
+  "page": {
+    "title": "اعلانات",
+    "manageTab": "مدیریت",
+    "mineTab": "اعلانات من"
+  },
+  "types": {
+    "general": "عمومی",
+    "academic": "علمی",
+    "examination": "امتحان",
+    "admissions": "پذیرش",
+    "finance": "امور مالی",
+    "registration": "راجستریشن",
+    "enrollment": "ثبت‌نام",
+    "timetable": "تقسیم اوقات",
+    "attendance": "حاضری",
+    "gradebook": "نمرات",
+    "event": "رویداد",
+    "emergency": "اضطراری",
+    "holiday": "رخصتی",
+    "system": "سیستم",
+    "maintenance": "ترمیم",
+    "other": "دیگر"
+  },
+  "priorities": {
+    "normal": "عادی",
+    "important": "مهم",
+    "urgent": "فوری",
+    "critical": "بسیار مهم"
+  },
+  "statuses": {
+    "draft": "پیش‌نویس",
+    "scheduled": "زمان‌بندی شده",
+    "published": "نشر شده",
+    "expired": "منقضی شده",
+    "archived": "بایگانی شده",
+    "cancelled": "لغو شده"
+  },
+  "list": {
+    "tabs": {
+      "all": "همه",
+      "draft": "پیش‌نویس‌ها",
+      "scheduled": "زمان‌بندی شده",
+      "published": "نشر شده",
+      "expired": "منقضی شده",
+      "archived": "بایگانی شده"
+    },
+    "allTypes": "همه انواع",
+    "searchPlaceholder": "جستجوی اعلانات…",
+    "newAnnouncement": "اعلان جدید",
+    "empty": "تا حال هیچ اعلانی وجود ندارد.",
+    "pinned": "پین شده",
+    "backToList": "بازگشت به لیست",
+    "table": {
+      "title": "عنوان",
+      "type": "نوع / اولویت",
+      "recipients": "دریافت‌کنندگان",
+      "status": "وضعیت",
+      "date": "تاریخ"
+    },
+    "actions": {
+      "edit": "ویرایش",
+      "duplicate": "کپی کردن",
+      "archive": "بایگانی",
+      "cancelSchedule": "لغو زمان‌بندی",
+      "delete": "حذف"
+    },
+    "confirmArchive": "این اعلان بایگانی شود؟ دیگر به‌عنوان فعال نمایش داده نمی‌شود.",
+    "confirmCancelSchedule": "این اعلان زمان‌بندی‌شده لغو شود؟ ارسال نخواهد شد.",
+    "confirmDelete": "این پیش‌نویس حذف شود؟ این عمل قابل بازگشت نیست.",
+    "toasts": {
+      "duplicated": "به‌عنوان پیش‌نویس جدید کپی شد.",
+      "archived": "اعلان بایگانی شد.",
+      "scheduleCancelled": "زمان‌بندی اعلان لغو شد.",
+      "deleted": "پیش‌نویس حذف شد."
+    },
+    "recipientsPanel": {
+      "title": "دریافت‌کنندگان",
+      "load": "نمایش دریافت‌کنندگان",
+      "empty": "هیچ دریافت‌کننده‌ای وجود ندارد.",
+      "name": "نام",
+      "role": "نقش",
+      "readAt": "زمان خواندن",
+      "ackAt": "زمان تایید"
+    },
+    "analyticsPanel": {
+      "title": "آمار",
+      "load": "نمایش آمار",
+      "total": "مجموع دریافت‌کنندگان",
+      "read": "خوانده شده",
+      "unread": "خوانده نشده",
+      "acknowledged": "تایید شده",
+      "readRate": "نرخ خواندن",
+      "ackRate": "نرخ تایید"
+    }
+  },
+  "mine": {
+    "backToList": "بازگشت به اعلانات من",
+    "empty": "تا حال هیچ اعلانی برای شما نیامده است.",
+    "unread": "جدید",
+    "ackRequired": "نیازمند تایید",
+    "acknowledged": "تایید شده",
+    "acknowledgeAction": "تایید می‌کنم",
+    "toasts": { "acknowledged": "تایید شد." }
+  },
+  "composer": {
+    "createTitle": "ایجاد اعلان",
+    "editTitle": "ویرایش اعلان",
+    "lockedNotice": "این اعلان بایگانی/لغو/منقضی شده و دیگر قابل ویرایش نیست.",
+    "fields": {
+      "title": "عنوان",
+      "titlePlaceholder": "مثلاً: تقسیم اوقات امتحانات نیمسال",
+      "message": "پیام",
+      "messagePlaceholder": "متن اعلان را بنویسید…",
+      "messageHint": "از **درشت**، *ایتالیک*، فهرست با \"- \"، و لینک [متن لینک](https://…) پشتیبانی می‌کند.",
+      "type": "نوع",
+      "priority": "اولویت",
+      "pinned": "این اعلان را در بالا پین کنید",
+      "requiresAck": "از دریافت‌کنندگان تایید بخواهید",
+      "actionLabel": "برچسب دکمه اقدام (اختیاری)",
+      "actionLabelPlaceholder": "مثلاً: مشاهده تقسیم اوقات امتحان",
+      "actionSection": "مقصد دکمه",
+      "actionSectionNone": "بدون دکمه اقدام",
+      "expiresAt": "تاریخ انقضا (اختیاری)",
+      "attachments": "ضمیمه‌ها",
+      "noAttachments": "تا حال هیچ ضمیمه‌ای وجود ندارد.",
+      "uploadAttachment": "بارگذاری"
+    },
+    "sendTo": "ارسال به",
+    "targetingFrozen": "این اعلان قبلاً نشر شده — لیست دریافت‌کنندگان آن ثابت است و قابل تغییر نیست. تغییرات در متن دوباره ارسال نمی‌شود مگر اینکه گزینه «دریافت‌کنندگان را از این به‌روزرسانی مطلع کن» را در پایین انتخاب کنید.",
+    "recipientPreview": {
+      "loading": "در حال محاسبه دریافت‌کنندگان…",
+      "none": "یک گروه دریافت‌کننده اضافه کنید تا تعداد افراد نمایش داده شود.",
+      "total": "دریافت‌کنندگان: {{count}}"
+    },
+    "notifyOnUpdate": "دریافت‌کنندگان فعلی را از این به‌روزرسانی مطلع کن",
+    "actions": {
+      "saveDraft": "ذخیره پیش‌نویس",
+      "schedule": "زمان‌بندی",
+      "confirmSchedule": "تایید زمان‌بندی",
+      "sendNow": "همین حالا ارسال کن",
+      "saveChanges": "ذخیره تغییرات"
+    },
+    "errors": {
+      "titleRequired": "عنوان الزامی است.",
+      "messageRequired": "پیام الزامی است.",
+      "recipientsRequired": "حداقل یک گروه دریافت‌کننده اضافه کنید.",
+      "scheduleRequired": "تاریخ و زمان زمان‌بندی را انتخاب کنید.",
+      "fileRequired": "ابتدا یک فایل انتخاب کنید."
+    },
+    "toasts": {
+      "draftSaved": "پیش‌نویس ذخیره شد.",
+      "published": "اعلان به {{count}} دریافت‌کننده ارسال شد.",
+      "scheduled": "اعلان زمان‌بندی شد.",
+      "updated": "اعلان به‌روزرسانی شد.",
+      "attachmentUploaded": "ضمیمه بارگذاری شد."
+    }
+  },
+  "targeting": {
+    "empty": "تا حال هیچ گروهی وجود ندارد — یکی را در بالا اضافه کنید.",
+    "removeGroup": "حذف این گروه",
+    "audiences": {
+      "students": "محصلان",
+      "faculty": "استادان",
+      "staff": "کارمندان",
+      "roles": "نقش‌ها",
+      "users": "افراد مشخص"
+    },
+    "filters": {
+      "department": "دیپارتمنت",
+      "college": "پوهنځی",
+      "program": "پروگرام",
+      "semester": "سمستر / سطح تحصیلی",
+      "semesterN": "سمستر {{n}}",
+      "section": "بخش",
+      "status": "وضعیت",
+      "course": "کورس",
+      "designation": "رتبه علمی",
+      "employmentType": "نوع استخدام",
+      "staffRole": "نقش کارمند",
+      "role": "نقش",
+      "searchUsers": "افزودن افراد مشخص",
+      "searchUsersPlaceholder": "جستجو با نام، شماره هویت یا ایمیل…",
+      "removeUser": "حذف",
+      "selectedCount": "{{count}} انتخاب شده"
+    }
+  }
+}

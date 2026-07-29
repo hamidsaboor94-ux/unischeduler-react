@@ -1,0 +1,276 @@
+{
+  "title": "Faculty Profile",
+  "noTeacherSelected": "Open a teacher's full profile from Teacher Management to view it here.",
+  "notFound": "This teacher's profile could not be found.",
+  "print": "Print",
+  "editProfile": "Edit Profile",
+  "changePhoto": "Change Photo",
+  "noLoginAccount": "Not assigned — this teacher has no login account yet",
+  "select": "— Select —",
+  "sections": {
+    "personal": "Personal Details",
+    "contact": "Contact Information",
+    "employment": "Employment Details",
+    "academic": "Academic Profile",
+    "education": "Education",
+    "experience": "Professional Experience",
+    "certifications": "Certifications",
+    "documents": "Documents",
+    "courses": "Course Assignments",
+    "auditHistory": "Audit History"
+  },
+  "fields": {
+    "fullName": "Full Name",
+    "preferredName": "Preferred / Display Name",
+    "facultyId": "Faculty ID",
+    "employeeId": "Employee ID",
+    "gender": "Gender",
+    "dateOfBirth": "Date of Birth",
+    "fatherName": "Father's Name",
+    "motherName": "Mother's Name",
+    "nationality": "Nationality",
+    "nationalId": "National ID / Passport Number",
+    "maritalStatus": "Marital Status",
+    "officialEmail": "Official University Email",
+    "personalEmail": "Personal Email",
+    "email": "Email",
+    "phone": "Primary Phone",
+    "secondaryPhone": "Secondary Phone",
+    "emergencyContactName": "Emergency Contact Name",
+    "emergencyContactRelationship": "Emergency Contact Relationship",
+    "emergencyContactPhone": "Emergency Contact Phone",
+    "address": "Current Address",
+    "permanentAddress": "Permanent Address",
+    "city": "City",
+    "province": "Province / State",
+    "country": "Country",
+    "postalCode": "Postal Code",
+    "department": "Department",
+    "college": "College / Faculty",
+    "designation": "Academic Rank",
+    "employmentType": "Employment Type",
+    "status": "Employment Status",
+    "dateOfJoining": "Date of Joining",
+    "contractStartDate": "Contract Start Date",
+    "contractEndDate": "Contract End Date",
+    "officeRoom": "Office / Room Number",
+    "workLocation": "Work Location",
+    "reportingManager": "Reporting Manager",
+    "employeeCategory": "Employee Category",
+    "payrollId": "Payroll ID",
+    "qualifiedSubjects": "Qualified Subjects",
+    "qualifiedSubjectsPlaceholder": "e.g. Data Structures, Algorithms",
+    "bio": "Bio",
+    "expertiseAreas": "Areas of Expertise",
+    "researchInterests": "Research Interests",
+    "teachingInterests": "Teaching Interests",
+    "officeHours": "Office Hours",
+    "officeHoursPlaceholder": "e.g. Mon/Wed 2:00–4:00pm",
+    "publications": "Academic Publications",
+    "awards": "Awards and Honors"
+  },
+  "genderOptions": { "Male": "Male", "Female": "Female", "Other": "Other" },
+  "maritalStatusOptions": {
+    "Single": "Single", "Married": "Married", "Divorced": "Divorced", "Widowed": "Widowed", "Other": "Other"
+  },
+  "designationOptions": {
+    "Lecturer": "Lecturer",
+    "Senior Lecturer": "Senior Lecturer",
+    "Instructor": "Instructor",
+    "Assistant Professor": "Assistant Professor",
+    "Associate Professor": "Associate Professor",
+    "Professor": "Professor",
+    "Teaching Assistant": "Teaching Assistant",
+    "Research Assistant": "Research Assistant",
+    "Visiting Professor": "Visiting Professor",
+    "Visiting Faculty": "Visiting Faculty",
+    "Adjunct Faculty": "Adjunct Faculty",
+    "Other": "Other"
+  },
+  "employmentTypeOptions": {
+    "full-time": "Full-Time",
+    "part-time": "Part-Time",
+    "contract": "Contract",
+    "visiting": "Visiting",
+    "adjunct": "Adjunct"
+  },
+  "statusOptions": {
+    "Active": "Active",
+    "On Leave": "On Leave",
+    "Suspended": "Suspended",
+    "Inactive": "Inactive",
+    "Resigned": "Resigned",
+    "Retired": "Retired",
+    "Terminated": "Terminated"
+  },
+  "degreeOptions": {
+    "High School": "High School",
+    "Diploma": "Diploma",
+    "Bachelor's": "Bachelor's",
+    "Master's": "Master's",
+    "MPhil": "MPhil",
+    "PhD": "PhD",
+    "Postdoctoral": "Postdoctoral",
+    "Other": "Other"
+  },
+  "profileStatus": {
+    "Complete": "Profile Complete",
+    "Under Review": "Under Review",
+    "Incomplete": "Profile Incomplete",
+    "Documents Pending": "Documents Pending"
+  },
+  "completion": {
+    "percent": "{{percent}}% complete",
+    "missingLabel": "Missing:",
+    "section": {
+      "personal": "Personal Information",
+      "contact": "Contact Information",
+      "employment": "Employment Information",
+      "education": "Education",
+      "documents": "Documents"
+    }
+  },
+  "toasts": {
+    "saved": "Profile updated.",
+    "photoUploaded": "Photo updated."
+  },
+  "education": {
+    "add": "Add",
+    "empty": "No education entries yet.",
+    "fieldOfStudyPlaceholder": "Field of study",
+    "institutionPlaceholder": "Institution",
+    "countryPlaceholder": "Country",
+    "startYearPlaceholder": "Start year",
+    "yearPlaceholder": "Graduation year",
+    "gpaPlaceholder": "GPA / Grade",
+    "degreeHeader": "Degree",
+    "fieldHeader": "Field of Study",
+    "institutionHeader": "Institution",
+    "yearHeader": "Year",
+    "certificate": "Certificate",
+    "transcript": "Transcript",
+    "deleteAria": "Delete education entry",
+    "confirmDelete": "Delete this {{degree}} entry? This cannot be undone.",
+    "errors": {
+      "degreeRequired": "Choose a degree."
+    },
+    "toasts": {
+      "added": "Education entry added.",
+      "deleted": "Education entry deleted."
+    }
+  },
+  "experience": {
+    "add": "Add",
+    "empty": "No experience entries yet.",
+    "organizationPlaceholder": "Organization",
+    "positionPlaceholder": "Position / Job Title",
+    "departmentPlaceholder": "Department",
+    "employmentTypePlaceholder": "Employment type",
+    "currentlyWorking": "Currently working here",
+    "responsibilitiesPlaceholder": "Responsibilities",
+    "organizationHeader": "Organization",
+    "positionHeader": "Position",
+    "periodHeader": "Period",
+    "deleteAria": "Delete experience entry",
+    "confirmDelete": "Delete the {{organization}} entry? This cannot be undone.",
+    "errors": {
+      "organizationRequired": "Enter an organization name."
+    },
+    "toasts": {
+      "added": "Experience entry added.",
+      "deleted": "Experience entry deleted."
+    }
+  },
+  "certifications": {
+    "add": "Add",
+    "empty": "No certifications yet.",
+    "namePlaceholder": "Certification name",
+    "issuerPlaceholder": "Issuing organization",
+    "numberPlaceholder": "Certification number",
+    "doesNotExpire": "Does not expire",
+    "nameHeader": "Certification",
+    "issuerHeader": "Issuing Organization",
+    "expiryHeader": "Expiry",
+    "deleteAria": "Delete certification",
+    "confirmDelete": "Delete \"{{name}}\"? This cannot be undone.",
+    "errors": {
+      "nameRequired": "Enter a certification name."
+    },
+    "toasts": {
+      "added": "Certification added.",
+      "deleted": "Certification deleted."
+    }
+  },
+  "documents": {
+    "typeHeader": "Type",
+    "fileHeader": "File",
+    "uploadedHeader": "Uploaded",
+    "issueDate": "Issue Date",
+    "expiryDate": "Expiry Date",
+    "empty": "No documents uploaded yet.",
+    "upload": "Upload",
+    "download": "Download",
+    "delete": "Delete",
+    "confirmDelete": "Delete \"{{fileName}}\"? This cannot be undone.",
+    "types": {
+      "CV": "CV",
+      "certificate": "Certificate",
+      "National ID": "National ID",
+      "Passport": "Passport",
+      "Appointment Letter": "Appointment Letter",
+      "Employment Contract": "Employment Contract",
+      "Experience Certificate": "Experience Certificate",
+      "Teaching Certificate": "Teaching Certificate",
+      "Professional License": "Professional License",
+      "Background Verification": "Background Verification",
+      "other": "Other"
+    },
+    "errors": {
+      "fileRequired": "Choose a file to upload."
+    },
+    "toasts": {
+      "uploaded": "Document uploaded.",
+      "deleted": "Document deleted."
+    }
+  },
+  "courses": {
+    "noneAssigned": "No courses assigned yet.",
+    "assignHint": "Assign an existing course to this teacher (this takes over from whoever currently teaches it).",
+    "showAllDepartments": "Show courses from all departments",
+    "noneAvailable": "No other courses available to assign.",
+    "codeHeader": "Code",
+    "nameHeader": "Course",
+    "currentTeacherHeader": "Currently Taught By",
+    "assign": "Assign {{count}} course(s)",
+    "toasts": {
+      "assigned": "Assigned {{count}} course(s)."
+    }
+  },
+  "auditHistory": {
+    "empty": "No audit history for this faculty member yet.",
+    "timeHeader": "Time",
+    "userHeader": "User",
+    "actionHeader": "Action",
+    "entityHeader": "Record",
+    "unknownUser": "Unknown user"
+  },
+  "verification": {
+    "statusHeader": "Verification",
+    "verify": "Verify",
+    "reject": "Reject",
+    "confirmReject": "Mark this as rejected? The faculty member's HR record will show it needs attention.",
+    "status": {
+      "Pending": "Pending",
+      "Verified": "Verified",
+      "Rejected": "Rejected"
+    },
+    "toasts": {
+      "verified": "Marked as verified.",
+      "rejected": "Marked as rejected."
+    }
+  },
+  "expiry": {
+    "expired": "Expired",
+    "expiringSoon": "Expires in {{count}}d"
+  }
+}

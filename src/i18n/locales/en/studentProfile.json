@@ -45,16 +45,94 @@
     "enrollmentStatus": "Enrollment Status",
     "admissionStatus": "Admission Status",
     "department": "Department / Major",
+    "program": "Program / Degree",
+    "studentType": "Student Type",
     "programSemester": "Current Program Semester",
     "previousSchool": "Previous Education (School / Institution)",
     "previousGraduationYear": "Previous Graduation Year",
     "advisor": "Academic Advisor",
     "gpa": "Cumulative GPA",
-    "credits": "Credits Completed"
+    "credits": "Credits Completed",
+    "studentStatus": "Student Status",
+    "batch": "Batch / Session"
+  },
+  "batchPlaceholder": "e.g. Fall 2024",
+  "changePhoto": "Change photo",
+  "cards": {
+    "sections": { "personal": "Personal", "contact": "Contact", "address": "Address", "education": "Education", "documents": "Documents" },
+    "fields": {
+      "father": "Father",
+      "grandfather": "Grandfather",
+      "gender": "Gender",
+      "born": "Born",
+      "nationality": "Nationality",
+      "nationalId": "National ID",
+      "passport": "Passport",
+      "mobile": "Mobile",
+      "emergency": "Emergency",
+      "email": "Email",
+      "presentAddress": "Present address",
+      "permanentAddress": "Permanent address",
+      "previousSchool": "Previous school",
+      "gradYear": "Grad year",
+      "program": "Program",
+      "entryTest": "Entry test"
+    },
+    "noDocuments": "No documents attached",
+    "statusAccepted": "Accepted",
+    "statusPending": "Pending",
+    "statusRejected": "Rejected",
+    "entryPill": "Entry {{score}}"
   },
   "genderOptions": { "Male": "Male", "Female": "Female", "Other": "Other" },
   "admissionOptions": { "Approved": "Approved", "Pending": "Pending", "Rejected": "Rejected" },
   "enrollmentOptions": { "Regular": "Regular", "Part-time": "Part-time", "Probation": "Probation", "Withdrawn": "Withdrawn" },
+  "studentStatusOptions": { "Active": "Active", "Graduated": "Graduated", "Suspended": "Suspended", "Withdrawn": "Withdrawn", "On Leave": "On Leave" },
+  "semesterStatusOptions": {
+    "In Progress": "In Progress",
+    "Awaiting Results": "Awaiting Results",
+    "Passed": "Passed",
+    "Failed": "Failed",
+    "On Hold": "On Hold",
+    "Graduation Eligible": "Graduation Eligible"
+  },
+  "progression": {
+    "title": "Academic Progression",
+    "evaluate": "Evaluate Progression",
+    "fields": {
+      "academicYear": "Academic Year",
+      "admissionYear": "Batch / Admission Year",
+      "semesterStatus": "Current Semester Status",
+      "credits": "Credits Earned / Attempted",
+      "gradedProgress": "{{graded}} of {{total}} courses graded",
+      "failedCourses": "Failed / Repeat Courses"
+    },
+    "override": {
+      "toggle": "Override",
+      "semesterNumber": "New Semester Number",
+      "status": "New Status",
+      "reason": "Reason (required)",
+      "reasonPlaceholder": "Why is this override necessary?",
+      "submit": "Apply Override",
+      "errors": { "reasonRequired": "A reason is required for a manual override." }
+    },
+    "history": {
+      "semester": "Semester",
+      "semesterValue": "Semester {{number}}",
+      "status": "Status",
+      "credits": "Credits (Earned / Attempted)",
+      "gpa": "Term GPA",
+      "completed": "Completed"
+    },
+    "toasts": {
+      "advanced": "Advanced to Semester {{semester}}.",
+      "noChange": "No change — the semester is still open.",
+      "awaitingResults": "Still awaiting final grades for this semester.",
+      "failed": "This semester was marked Failed — it needs a manual decision.",
+      "graduationEligible": "This student is now Graduation Eligible.",
+      "overridden": "Semester progression overridden."
+    }
+  },
   "none": "None",
   "select": "— Select —",
   "creditsProgress": "{{completed}} of {{required}} credits",
@@ -63,7 +141,8 @@
   "gpaNotAvailable": "Not yet available",
   "toasts": {
     "saved": "Profile updated.",
-    "contactSaved": "Contact info updated."
+    "contactSaved": "Contact info updated.",
+    "photoUploaded": "Photo updated."
   },
   "documents": {
     "typeHeader": "Type",

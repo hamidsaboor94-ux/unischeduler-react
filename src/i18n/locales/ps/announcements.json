@@ -1,0 +1,188 @@
+{
+  "page": {
+    "title": "اعلانونه",
+    "manageTab": "مدیریت",
+    "mineTab": "زما اعلانونه"
+  },
+  "types": {
+    "general": "عمومي",
+    "academic": "علمي",
+    "examination": "امتحان",
+    "admissions": "پذیرش",
+    "finance": "مالي چارې",
+    "registration": "راجستریشن",
+    "enrollment": "شمولیت",
+    "timetable": "مهال‌ویش",
+    "attendance": "حاضري",
+    "gradebook": "نمرې",
+    "event": "پیښه",
+    "emergency": "بیړنی",
+    "holiday": "رخصتي",
+    "system": "سیسټم",
+    "maintenance": "ترمیم",
+    "other": "نور"
+  },
+  "priorities": {
+    "normal": "عادي",
+    "important": "مهم",
+    "urgent": "بیړنی",
+    "critical": "خورا مهم"
+  },
+  "statuses": {
+    "draft": "مسوده",
+    "scheduled": "مهالوېش شوی",
+    "published": "خپور شوی",
+    "expired": "پای ته رسیدلی",
+    "archived": "آرشیف شوی",
+    "cancelled": "لغوه شوی"
+  },
+  "list": {
+    "tabs": {
+      "all": "ټول",
+      "draft": "مسودې",
+      "scheduled": "مهالوېش شوي",
+      "published": "خپاره شوي",
+      "expired": "پای ته رسیدلي",
+      "archived": "آرشیف شوي"
+    },
+    "allTypes": "ټول ډولونه",
+    "searchPlaceholder": "د اعلانونو لټون…",
+    "newAnnouncement": "نوی اعلان",
+    "empty": "تر اوسه هیڅ اعلان نشته.",
+    "pinned": "پن شوی",
+    "backToList": "بېرته لیست ته",
+    "table": {
+      "title": "سرلیک",
+      "type": "ډول / اهمیت",
+      "recipients": "ترلاسه کوونکي",
+      "status": "حالت",
+      "date": "نېټه"
+    },
+    "actions": {
+      "edit": "سمول",
+      "duplicate": "کاپي کول",
+      "archive": "آرشیف کول",
+      "cancelSchedule": "مهالوېش لغوه کول",
+      "delete": "ړنګول"
+    },
+    "confirmArchive": "دا اعلان آرشیف شي؟ نور به فعال نه ښکاري.",
+    "confirmCancelSchedule": "دا مهالوېش شوی اعلان لغوه شي؟ لیږل به نه کیږي.",
+    "confirmDelete": "دا مسوده ړنګه شي؟ دا کار بیرته نشي کیدای.",
+    "toasts": {
+      "duplicated": "د نوې مسودې په توګه کاپي شو.",
+      "archived": "اعلان آرشیف شو.",
+      "scheduleCancelled": "مهالوېش شوی اعلان لغوه شو.",
+      "deleted": "مسوده ړنګه شوه."
+    },
+    "recipientsPanel": {
+      "title": "ترلاسه کوونکي",
+      "load": "ترلاسه کوونکي وښایاست",
+      "empty": "هیڅ ترلاسه کوونکی نشته.",
+      "name": "نوم",
+      "role": "رول",
+      "readAt": "لوستل شوی په",
+      "ackAt": "تایید شوی په"
+    },
+    "analyticsPanel": {
+      "title": "شمېرې او ارقام",
+      "load": "شمېرې وښایاست",
+      "total": "ټول ترلاسه کوونکي",
+      "read": "لوستل شوي",
+      "unread": "نالوستل شوي",
+      "acknowledged": "تایید شوي",
+      "readRate": "د لوستلو کچه",
+      "ackRate": "د تایید کچه"
+    }
+  },
+  "mine": {
+    "backToList": "بېرته زما اعلانونو ته",
+    "empty": "تر اوسه تاسو ته هیڅ اعلان نه دی راغلی.",
+    "unread": "نوی",
+    "ackRequired": "تایید ته اړتیا لري",
+    "acknowledged": "تایید شوی",
+    "acknowledgeAction": "زه یې تایدوم",
+    "toasts": { "acknowledged": "تایید شو." }
+  },
+  "composer": {
+    "createTitle": "د اعلان جوړول",
+    "editTitle": "د اعلان سمول",
+    "lockedNotice": "دا اعلان آرشیف/لغوه/پای ته رسیدلی دی او نور نشي سمېدای.",
+    "fields": {
+      "title": "سرلیک",
+      "titlePlaceholder": "لکه: د نیمایي امتحان مهالوېش",
+      "message": "پیغام",
+      "messagePlaceholder": "د اعلان پیغام ولیکئ…",
+      "messageHint": "**درنګ**، *ایټالیک*، \"- \" د لیست ټکي، او [د لینک متن](https://…) ملاتړ کیږي.",
+      "type": "ډول",
+      "priority": "اهمیت",
+      "pinned": "دا اعلان پورته پن کړئ",
+      "requiresAck": "له ترلاسه کوونکو څخه تایید وغواړئ",
+      "actionLabel": "د تڼۍ لیبل (اختیاري)",
+      "actionLabelPlaceholder": "لکه: د امتحان مهالوېش وګورئ",
+      "actionSection": "د تڼۍ منزل",
+      "actionSectionNone": "هیڅ تڼۍ نشته",
+      "expiresAt": "پای موده (اختیاري)",
+      "attachments": "ضمیمې",
+      "noAttachments": "تر اوسه هیڅ ضمیمه نشته.",
+      "uploadAttachment": "پورته کول"
+    },
+    "sendTo": "ولیږل شي",
+    "targetingFrozen": "دا اعلان دمخه خپور شوی — د هغه د ترلاسه کوونکو لیست منجمد دی او نشي بدلیدای. که تاسو لاندې \"ترلاسه کوونکي د دې تازه کولو په اړه خبر کړئ\" غوره کړئ، بیا به پیغام بدلون بیا واستول شي.",
+    "recipientPreview": {
+      "loading": "د ترلاسه کوونکو شمېرل کیږي…",
+      "none": "لومړی یوه د ترلاسه کوونکو ډله زیاته کړئ.",
+      "total": "ترلاسه کوونکي: {{count}}"
+    },
+    "notifyOnUpdate": "اوسنيو ترلاسه کوونکو ته د دې تازه کولو خبر ورکړئ",
+    "actions": {
+      "saveDraft": "مسوده خوندي کړئ",
+      "schedule": "مهالوېش",
+      "confirmSchedule": "مهالوېش تایید کړئ",
+      "sendNow": "اوس یې واستوئ",
+      "saveChanges": "بدلونونه خوندي کړئ"
+    },
+    "errors": {
+      "titleRequired": "سرلیک اړین دی.",
+      "messageRequired": "پیغام اړین دی.",
+      "recipientsRequired": "لږ تر لږه یوه د ترلاسه کوونکو ډله زیاته کړئ.",
+      "scheduleRequired": "د مهالوېش لپاره نېټه او وخت غوره کړئ.",
+      "fileRequired": "لومړی یوه فایل غوره کړئ."
+    },
+    "toasts": {
+      "draftSaved": "مسوده خوندي شوه.",
+      "published": "اعلان {{count}} ترلاسه کوونکو ته ولېږل شو.",
+      "scheduled": "اعلان مهالوېش شو.",
+      "updated": "اعلان تازه شو.",
+      "attachmentUploaded": "ضمیمه پورته شوه."
+    }
+  },
+  "targeting": {
+    "empty": "تر اوسه هیڅ ډله نشته — پورته یوه زیاته کړئ.",
+    "removeGroup": "دا ډله لرې کړئ",
+    "audiences": {
+      "students": "زده کوونکي",
+      "faculty": "استادان",
+      "staff": "کارمندان",
+      "roles": "رولونه",
+      "users": "ځانګړي کسان"
+    },
+    "filters": {
+      "department": "څانګه",
+      "college": "پوهنځی",
+      "program": "پروګرام",
+      "semester": "سمستر / درجه",
+      "semesterN": "سمستر {{n}}",
+      "section": "برخه",
+      "status": "حالت",
+      "course": "کورس",
+      "designation": "علمي درجه",
+      "employmentType": "د دندې ډول",
+      "staffRole": "د کارمند رول",
+      "role": "رول",
+      "searchUsers": "ځانګړي کسان زیات کړئ",
+      "searchUsersPlaceholder": "د نوم، پیژندپاڼې یا برېښنالیک له مخې لټون…",
+      "removeUser": "لرې کول",
+      "selectedCount": "{{count}} غوره شوي"
+    }
+  }
+}

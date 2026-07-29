@@ -1,6 +1,88 @@
 {
   "financePage": {
-    "title": "Finance",
+    "title": "Finance Dashboard",
+    "subtitle": "Student billing, installments & payments",
+    "tabs": {
+      "overview": "Overview",
+      "accounts": "Student Accounts"
+    },
+    "dashboard": {
+      "vsLastTerm": "{{value}} vs last term",
+      "vsLastTermPlain": "vs last term",
+      "billingStatus": { "title": "Student Billing Status" },
+      "paymentOverview": {
+        "title": "Payment Overview",
+        "empty": "No billing data yet for recent terms.",
+        "charged": "Charged",
+        "collected": "Collected",
+        "outstanding": "Outstanding"
+      },
+      "quickInsights": {
+        "title": "Quick Insights",
+        "totalStudents": "Total Students",
+        "paidThisTerm": "Paid This Term",
+        "pendingPayments": "Pending Payments",
+        "notBilled": "Not Billed",
+        "viewReports": "View Reports"
+      }
+    },
+    "overview": {
+      "kpi": {
+        "totalBilled": "Total Billed",
+        "totalCollected": "Total Collected",
+        "totalOutstanding": "Total Outstanding",
+        "overdueStudents": "Overdue Students",
+        "todayCollection": "Today's Collection",
+        "pendingInstallments": "Pending Installments"
+      },
+      "collectionProgress": {
+        "title": "Collection Progress",
+        "collected": "Collected",
+        "outstanding": "Outstanding",
+        "empty": "No charges generated yet for this term."
+      },
+      "aging": {
+        "title": "Receivables Aging",
+        "subtitle": "Unpaid installment balances by how overdue they are",
+        "empty": "No outstanding receivables.",
+        "buckets": {
+          "current": "Current",
+          "1-30": "1–30 days",
+          "31-60": "31–60 days",
+          "61-90": "61–90 days",
+          "90+": "90+ days"
+        }
+      },
+      "activity": {
+        "title": "Recent Financial Activity",
+        "empty": "No financial activity yet.",
+        "by": "by {{name}}",
+        "types": {
+          "charge": "Charge generated",
+          "payment": "Payment received",
+          "aid": "Financial aid",
+          "refund": "Refund",
+          "adjustment": "Adjustment"
+        }
+      },
+      "quickActions": {
+        "title": "Quick Actions",
+        "recordPayment": "Record Payment",
+        "viewOverdue": "View Overdue Accounts",
+        "generateStatement": "Generate Student Statement",
+        "selectStudentFirst": "Select a student first, then generate their statement."
+      }
+    },
+    "summary": {
+      "totalCharged": "Total charged",
+      "collected": "Collected",
+      "outstanding": "Outstanding",
+      "overdueStudents": "Overdue students"
+    },
+    "filters": {
+      "all": "All"
+    },
+    "noStudents": "No students match this filter.",
     "rateLabel": "Fee per credit",
     "currencyLabel": "Currency",
     "save": "Save",
@@ -10,6 +92,8 @@
       "student": "Student",
       "credits": "Credits",
       "charged": "Charged",
+      "aid": "Aid",
+      "net": "Net",
       "paid": "Paid",
       "balance": "Balance",
       "status": "Status"
@@ -34,17 +118,197 @@
     "payments": "Payments / receipts",
     "receiptNo": "Receipt",
     "date": "Date",
+    "installmentsCol": "Installment(s) covered",
+    "creditBalance": "Credit balance",
     "noPayments": "No payments recorded yet.",
     "voidAria": "Void payment {{receipt}}",
     "confirmVoid": "Void payment {{receipt}}? This restores the balance.",
     "voided": "Payment voided.",
+    "voidedLabel": "Voided",
+    "receipt": {
+      "title": "Payment Receipt",
+      "printAria": "View receipt {{receipt}}",
+      "print": "Print",
+      "downloadPdf": "Download as PDF",
+      "pdfSaved": "Receipt saved.",
+      "pdfFailed": "Could not save the PDF.",
+      "officialReceipt": "Official Payment Receipt",
+      "receiptNo": "Receipt No.",
+      "date": "Date & time",
+      "invoiceNo": "Invoice No.",
+      "status": "Status",
+      "statusCompleted": "Completed",
+      "statusReversed": "Reversed / Void",
+      "voidedBanner": "This payment was voided on {{date}} by {{name}}. This receipt is kept for audit purposes only.",
+      "reconstructedNote": "This receipt predates itemized receipt records and has been reconstructed from the ledger.",
+      "studentInfo": "Student information",
+      "studentName": "Student name",
+      "studentId": "Student ID",
+      "program": "Program",
+      "department": "Department",
+      "term": "Semester / Term",
+      "academicYear": "Academic year",
+      "paymentDetails": "Payment details",
+      "method": "Payment method",
+      "reference": "Transaction / reference no.",
+      "previousBalance": "Previous outstanding balance",
+      "previousCredit": "Previous credit balance",
+      "amountPaid": "Amount paid",
+      "remainingBalance": "Remaining outstanding balance",
+      "remainingCredit": "Credit balance",
+      "allocation": "Payment allocation",
+      "allocationTerm": "Term",
+      "allocationInstallment": "Installment",
+      "allocationAmount": "Amount",
+      "receivedBy": "Received by / Finance Officer",
+      "immutableNote": "This is a system-generated, immutable financial record."
+    },
+    "numberWords": {
+      "1": "One", "2": "Two", "3": "Three", "4": "Four", "5": "Five",
+      "6": "Six", "7": "Seven", "8": "Eight", "9": "Nine", "10": "Ten",
+      "11": "Eleven", "12": "Twelve", "13": "Thirteen", "14": "Fourteen", "15": "Fifteen",
+      "16": "Sixteen", "17": "Seventeen", "18": "Eighteen", "19": "Nineteen", "20": "Twenty"
+    },
     "methods": {
       "cash": "Cash",
       "bank": "Bank transfer",
       "card": "Card",
       "mobile": "Mobile money",
       "other": "Other"
-    }
+    },
+    "termLabel": "Term",
+    "selectTerm": "Select a term…",
+    "noTermSelected": "Select a term to view or generate charges.",
+    "notGeneratedYet": "Charges haven't been generated for this term yet — showing a live preview.",
+    "generateCharges": "Generate charges",
+    "chargesGenerated": "Charged {{count}} student(s) — {{total}} total.",
+    "totalAid": "Financial aid",
+    "netPayable": "Net payable",
+    "status": {
+      "cleared": "Cleared",
+      "partial": "Partial",
+      "outstanding": "Outstanding",
+      "overdue": "Overdue",
+      "not_billed": "Not billed"
+    },
+    "rateHint": "This rate is the University Default — the fallback used when no more specific fee rule below applies to a student's college, department, program, or student type.",
+    "termConfig": {
+      "title": "Term fee configuration",
+      "button": "Fee Configuration"
+    },
+    "studentTypes": {
+      "title": "Student types",
+      "toggleHint": "Click to activate/deactivate",
+      "removeAria": "Remove student type {{name}}",
+      "addPlaceholder": "New student type name…",
+      "add": "Add",
+      "added": "Student type added.",
+      "confirmDelete": "Remove student type {{name}}?",
+      "removed": "Student type removed."
+    },
+    "feeRules": {
+      "title": "Tuition fee rules (fee per credit)",
+      "hint": "The most specific applicable rule wins: Program + Student Type, then Program, then Department + Student Type, then Department, then College + Student Type, then College, then University + Student Type, then the University Default rate above.",
+      "none": "No fee rules configured yet — every student bills at the University Default rate above.",
+      "scope": "Scope",
+      "target": "Target",
+      "studentType": "Student type",
+      "rate": "Fee per credit",
+      "add": "Add rule",
+      "added": "Fee rule added.",
+      "remove": "Remove fee rule",
+      "allTypes": "All student types",
+      "selectTarget": "Select…",
+      "scopes": {
+        "university": "University",
+        "college": "College / Faculty",
+        "department": "Department",
+        "program": "Program"
+      }
+    },
+    "feeItems": {
+      "title": "Fixed fees",
+      "none": "No fixed fees for this term yet.",
+      "name": "Name",
+      "amount": "Amount",
+      "appliesTo": "Scope",
+      "target": "Target",
+      "studentType": "Student type",
+      "feeType": "Fee type",
+      "mandatory": "Mandatory",
+      "active": "Active",
+      "effectiveDate": "Effective date",
+      "add": "Add fee",
+      "remove": "Remove fee item",
+      "scopes": {
+        "all": "All students",
+        "dept": "One department"
+      },
+      "feeTypes": {
+        "tuition": "Tuition",
+        "registration": "Registration",
+        "technology": "Technology",
+        "library": "Library",
+        "laboratory": "Laboratory",
+        "activity": "Activity",
+        "transport": "Transport",
+        "hostel": "Hostel",
+        "other": "Other"
+      }
+    },
+    "feePlan": {
+      "title": "Installment plan",
+      "count": "Number of installments",
+      "dueDate": "Due date",
+      "percentage": "Percentage",
+      "save": "Save plan",
+      "hint": "Leave percentages blank to split evenly."
+    },
+    "installments": {
+      "title": "Installment schedule",
+      "amount": "Amount",
+      "dueDate": "Due date",
+      "paid": "Paid",
+      "status": {
+        "pending": "Pending",
+        "partial": "Partial",
+        "paid": "Paid",
+        "overdue": "Overdue"
+      }
+    },
+    "aid": {
+      "title": "Financial aid",
+      "none": "No financial aid on record.",
+      "pending": "pending — applies once charges are generated",
+      "type": "Type",
+      "value": "Value",
+      "reason": "Reason (optional)",
+      "award": "Award",
+      "revoke": "Revoke aid",
+      "confirmRevokeAid": "Revoke this financial aid award? The student's balance will increase accordingly.",
+      "aidAwarded": "Financial aid awarded.",
+      "aidRevoked": "Financial aid revoked.",
+      "selectType": "Select type…",
+      "manage": "Award / manage aid",
+      "awardedBy": "Awarded by",
+      "date": "Date",
+      "statusActive": "Active",
+      "statusRevoked": "Revoked",
+      "noAwards": "No aid awards for this student yet.",
+      "selectTermFirst": "Select a term to award or manage financial aid.",
+      "errors": { "percentageMax": "A percentage award cannot exceed 100." },
+      "types": {
+        "scholarship": "Scholarship",
+        "grant": "Grant",
+        "waiver": "Waiver",
+        "discount": "Discount"
+      },
+      "bases": {
+        "percentage": "Percentage",
+        "fixed": "Fixed amount"
+      }
+    },
+    "planSaved": "Installment plan saved."
   },
   "myFees": {
     "title": "My Fees",
@@ -54,13 +318,18 @@
     "credits": "Credits",
     "fee": "Fee",
     "totalCharged": "Total charged",
+    "totalAid": "Financial aid",
+    "netPayable": "Net payable",
     "totalPaid": "Total paid",
     "balance": "Balance",
+    "creditBalance": "Credit balance",
+    "installments": "Installment schedule",
     "receipts": "Receipts",
     "receiptNo": "Receipt",
     "amount": "Amount",
     "method": "Method",
     "date": "Date",
+    "installmentsCol": "Installment(s) covered",
     "noReceipts": "No payments yet.",
     "noFees": "No fees have been configured yet."
   }

@@ -9,6 +9,7 @@
     "allDepartments": "All departments",
     "filterSemester": "Filter by program semester",
     "semesterOption": "Semester {{n}}",
+    "allSemesters": "All semesters",
     "noSemesterSet": "No semester set",
     "noClassesYet": "No classes yet",
     "filterSection": "Filter by section",
@@ -29,6 +30,7 @@
     "semesterScopeLabel": "Semester {{n}}",
     "toasts": {
       "noEntriesToReset": "No timetable entries to reset for the current filter.",
+      "selectSpecificSemesterToReset": "Select a specific semester (or \"No semester set\") before resetting the timetable.",
       "selectSemesterBeforeImport": "Select a semester before importing a timetable.",
       "noClassesInPdf": "No classes could be found in this PDF."
     }
@@ -44,6 +46,10 @@
     "movedInBadge": "Moved",
     "movedInFromBadge": "Moved from {{date}}",
     "semBadge": "Sem {{n}}",
+    "semesterGroupHeading": "Semester {{n}}",
+    "semesterGroupUnassigned": "Unassigned",
+    "semesterGroupCount_one": "{{count}} class",
+    "semesterGroupCount_other": "{{count}} classes",
     "finalGradeTitle": "Final grade for this course",
     "cancelTitle": "Cancel this class",
     "cancelAriaLabel": "Cancel {{code}} on {{date}}",
@@ -101,7 +107,7 @@
     "kindCancellation": "cancellation",
     "kindReschedule": "reschedule",
     "sessionDateLabel": "Session date to change",
-    "wrongWeekdayHint": "That's a {{actualDay}} — this class meets on {{slotDay}}s.",
+    "noUpcomingSessions": "This class has no more upcoming sessions this term.",
     "whatHappensLabel": "What happens",
     "cancelledOption": "Cancelled (no class)",
     "rescheduledOption": "Moved (new time/room)",
@@ -113,7 +119,6 @@
     "clashHint": "The moved session is checked for room and instructor clashes at its new time — anything found appears under Conflicts.",
     "addExceptionButton": "Add exception",
     "toastPickDate": "Pick the date of the session to change.",
-    "toastWrongWeekday": "{{code}} meets on {{day}}s — pick a {{day}}.",
     "toastCancelledSuccess": "Session cancelled for that date.",
     "toastMovedSuccess": "Session moved for that date."
   },
@@ -194,9 +199,12 @@
   "courseActionsModal": {
     "assignments": "Assignments",
     "takeAttendance": "Take Attendance",
+    "takeAttendanceHint": "Mark today's class",
     "enterMarks": "Enter Marks",
+    "enterMarksHint": "Record grades",
     "postAnnouncement": "Post Announcement",
-    "viewRoster": "View Class Roster"
+    "viewRoster": "View Class Roster",
+    "viewRosterHint": "Enrolled students"
   },
   "courseActivityModal": {
     "announcements": "Announcements",
@@ -213,5 +221,12 @@
     "confirmMove": "Confirm move",
     "toastMoved": "Session moved.",
     "cancelledHint": "This session is cancelled — undo the cancellation first to move it."
+  },
+  "rescheduleCancelledSession": {
+    "gone": "This cancelled session no longer exists.",
+    "intro": "Reschedule the {{code}} class cancelled for {{date}}. This only changes this one session.",
+    "toastPickDate": "Pick a new date for this session.",
+    "toastSuccess": "Session rescheduled.",
+    "saveButton": "Reschedule session"
   }
 }

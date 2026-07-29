@@ -9,24 +9,38 @@ import { useAsyncAction } from '../hooks/useAsyncAction.js';
 import {
   fetchStudentProfile, updateMyStudentProfile, updateStudentProfile,
   uploadStudentDocument, downloadStudentDocument, deleteStudentDocument,
+  fetchProgressionHistory, fetchCurrentProgression, evaluateProgression, overrideProgression,
 } from '../api.js';
-import { initials, fmtDate } from '../utils.js';
+import { can } from '../permissions.js';
+import { fmtDate, isForbidden } from '../utils.js';
+import { StatCard } from '../components/ui/StatCard.jsx';
+import StudentPhotoUpload from '../components/StudentPhotoUpload.jsx';
 
-const NUMERIC_FIELDS = new Set(['entryTestMarks', 'advisorTeacherId', 'departmentId', 'programSemester', 'previousGraduationYear']);
+const NUMERIC_FIELDS = new Set(['entryTestMarks', 'advisorTeacherId', 'departmentId', 'programId', 'studentTypeId', 'previousGraduationYear']);
 // Every student_profiles column an admin may edit — mirrors ADMIN_FIELDS in api/src/routes/studentProfile.js.
+// programSemester/semesterStatus are deliberately excluded — those are driven by the Academic
+// Progression panel below (automatic evaluation + its audited manual-override action), not a
+// free-text field edit.
 const ADMIN_FIELDS = [
   'fatherName', 'grandfatherName', 'gender', 'dateOfBirth', 'nationality', 'nationalId', 'passportNumber',
   'presentAddress', 'permanentAddress', 'mobileNumber', 'emergencyContact',
-  'entryTestMarks', 'sponsor', 'specialization', 'advisorTeacherId', 'departmentId',
-  'programSemester', 'section', 'admissionStatus', 'enrollmentStatus',
+  'entryTestMarks', 'sponsor', 'specialization', 'advisorTeacherId', 'departmentId', 'programId', 'studentTypeId',
+  'section', 'batch', 'admissionStatus', 'enrollmentStatus', 'studentStatus',
   'previousSchoolName', 'previousGraduationYear',
 ];
 const GENDER_OPTIONS = ['Male', 'Female', 'Other'];
 const ADMISSION_OPTIONS = ['Approved', 'Pending', 'Rejected'];
 const ENROLLMENT_OPTIONS = ['Regular', 'Part-time', 'Probation', 'Withdrawn'];
+const STUDENT_STATUS_OPTIONS = ['Active', 'Graduated', 'Suspended', 'Withdrawn', 'On Leave'];
 const DOCUMENT_TYPES = ['ID Scan', 'Certificate', 'Transcript', 'Passport Copy', 'Other'];
 const ADMISSION_PILL = { Approved: 'pill-green', Pending: 'pill-amber', Rejected: 'pill-red' };
 const ENROLLMENT_PILL = { Regular: 'pill-green', 'Part-time': 'pill-blue', Probation: 'pill-amber', Withdrawn: 'pill-red' };
+const STUDENT_STATUS_PILL = { Active: 'pill-green', Graduated: 'pill-blue', Suspended: 'pill-red', Withdrawn: 'pill-red', 'On Leave': 'pill-amber' };
+const SEMESTER_STATUS_PILL = {
+  'In Progress': 'pill-blue', 'Awaiting Results': 'pill-amber', Passed: 'pill-green', Failed: 'pill-red',
+  'On Hold': 'pill-gray', 'Graduation Eligible': 'pill-green',
+};
+const OVERRIDE_STATUS_OPTIONS = ['In Progress', 'Awaiting Results', 'Passed', 'Failed', 'On Hold', 'Graduation Eligible'];
 
 function formStateFromProfile(profile) {
   const state = {};
@@ -47,16 +61,19 @@ function FieldRow({ label, display, editing, children }) {
 
 export default function StudentProfilePage() {
   const { t } = useTranslation(['studentProfile', 'common']);
-  const { currentUser, departments, teachers } = useAppData();
+  const { currentUser, departments, teachers, programs, studentTypes } = useAppData();
   const { sectionFocus } = useNavigation();
   const { confirmAction } = useModal();
   const { toast } = useToast();
   const { run: runSaveAdmin, loading: savingAdmin } = useAsyncAction();
   const { run: runSaveSelf, loading: savingSelf } = useAsyncAction();
   const { run: runUpload, loading: uploading } = useAsyncAction();
+  const { run: runEvaluate, loading: evaluating } = useAsyncAction();
+  const { run: runOverride, loading: overriding } = useAsyncAction();
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [forbidden, setForbidden] = useState(false);
   const [adminEditing, setAdminEditing] = useState(false);
   const [selfEditing, setSelfEditing] = useState(false);
   const [adminForm, setAdminForm] = useState({});
@@ -64,10 +81,15 @@ export default function StudentProfilePage() {
   const [docType, setDocType] = useState(DOCUMENT_TYPES[0]);
   const [docTitle, setDocTitle] = useState('');
   const docFileRef = useRef(null);
+  const [progressionHistory, setProgressionHistory] = useState([]);
+  const [progressionCurrent, setProgressionCurrent] = useState(null);
+  const [overrideOpen, setOverrideOpen] = useState(false);
+  const [overrideForm, setOverrideForm] = useState({ semesterNumber: '', status: '', reason: '' });
 
   const na = t('common:notApplicable');
   const isAdmin = currentUser.role === 'admin';
   const isStudentSelf = currentUser.role === 'student';
+  const canProgress = can(currentUser.role, 'students', 'write');
   // A student sees their own profile; any staff member who navigated here with a
   // specific student (admin from Users, advisor from My Advisees) sees that one.
   // The backend decides who's actually allowed — an advisor only loads their own
@@ -82,26 +104,72 @@ export default function StudentProfilePage() {
   // only fetch when there's an actual student to show (self, or an admin who navigated here via
   // a specific student), otherwise faculty/other cases would silently 403 on mount.
   useEffect(() => {
-    if (!viewingStudentId || (!isAdmin && !isStudentSelf)) { setData(null); return; }
+    if (!viewingStudentId || (!isAdmin && !isStudentSelf)) { setData(null); setForbidden(false); return; }
     setLoading(true);
+    setForbidden(false);
     setAdminEditing(false);
     setSelfEditing(false);
-    fetchStudentProfile(viewingStudentId)
-      .then(d => {
+    setOverrideOpen(false);
+    Promise.all([fetchStudentProfile(viewingStudentId), fetchProgressionHistory(viewingStudentId), fetchCurrentProgression(viewingStudentId)])
+      .then(([d, history, current]) => {
         setData(d);
         setAdminForm(formStateFromProfile(d.profile));
         setSelfForm({ mobileNumber: d.profile.mobileNumber || '', emergencyContact: d.profile.emergencyContact || '' });
+        setProgressionHistory(history);
+        setProgressionCurrent(current);
+        // The Students page's "Edit" quick action navigates here with autoEdit — jump straight
+        // into edit mode instead of making the admin click Edit again.
+        if (isAdmin && sectionFocus?.autoEdit) setAdminEditing(true);
       })
-      .catch(err => toast(err.message, 'error'))
+      .catch(err => {
+        // See StudentDetailPage.jsx for why a 403 gets its own state instead of a toast.
+        if (isForbidden(err)) { setForbidden(true); return; }
+        toast(err.message, 'error');
+      })
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewingStudentId]);
+  }, [viewingStudentId, sectionFocus?.autoEdit]);
 
   async function refresh() {
-    const fresh = await fetchStudentProfile(viewingStudentId);
+    const [fresh, history, current] = await Promise.all([
+      fetchStudentProfile(viewingStudentId), fetchProgressionHistory(viewingStudentId), fetchCurrentProgression(viewingStudentId),
+    ]);
     setData(fresh);
     setAdminForm(formStateFromProfile(fresh.profile));
     setSelfForm({ mobileNumber: fresh.profile.mobileNumber || '', emergencyContact: fresh.profile.emergencyContact || '' });
+    setProgressionHistory(history);
+    setProgressionCurrent(current);
+  }
+
+  async function handleEvaluate() {
+    try {
+      const result = await runEvaluate(evaluateProgression(viewingStudentId));
+      await refresh();
+      if (result.status === 'Awaiting Results') toast(t('studentProfile:progression.toasts.awaitingResults'), 'info');
+      else if (result.status === 'Failed') toast(t('studentProfile:progression.toasts.failed'), 'warning');
+      else if (result.graduationEligible) toast(t('studentProfile:progression.toasts.graduationEligible'));
+      else if (result.advanced) toast(t('studentProfile:progression.toasts.advanced', { semester: result.semesterNumber }));
+      else toast(t('studentProfile:progression.toasts.noChange'), 'info');
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
+  async function handleOverride() {
+    if (!overrideForm.reason.trim()) { toast(t('studentProfile:progression.override.errors.reasonRequired'), 'warning'); return; }
+    try {
+      await runOverride(overrideProgression(viewingStudentId, {
+        semesterNumber: overrideForm.semesterNumber ? Number(overrideForm.semesterNumber) : undefined,
+        status: overrideForm.status || undefined,
+        reason: overrideForm.reason.trim(),
+      }));
+      await refresh();
+      setOverrideOpen(false);
+      setOverrideForm({ semesterNumber: '', status: '', reason: '' });
+      toast(t('studentProfile:progression.toasts.overridden'));
+    } catch (err) {
+      toast(err.message, 'error');
+    }
   }
 
   async function handleSaveAdmin() {
@@ -186,20 +254,26 @@ export default function StudentProfilePage() {
       </div>
       <div id="content">
         {loading && <div className="field-hint" style={{ padding: 14 }}>{t('common:actions.loading')}</div>}
-        {!loading && !data && <div className="field-hint" style={{ padding: 14 }}>{t('studentProfile:notFound')}</div>}
+        {!loading && forbidden && <div className="field-hint" style={{ padding: 14 }}>{t('common:accessDenied')}</div>}
+        {!loading && !forbidden && !data && <div className="field-hint" style={{ padding: 14 }}>{t('studentProfile:notFound')}</div>}
         {!loading && data && (() => {
-          const { student, profile, department, advisor, activeTerm, gpa, completedCredits, requiredCredits, documents } = data;
+          const { student, profile, department, program, studentType, advisor, activeTerm, gpa, completedCredits, requiredCredits, documents } = data;
           const pct = requiredCredits ? Math.min(100, Math.round((completedCredits / requiredCredits) * 100)) : 0;
+          const admissionYear = profile.enrollmentDate ? profile.enrollmentDate.slice(0, 4) : null;
+          const semesterStatus = profile.semesterStatus || 'In Progress';
+          const openTermName = progressionCurrent?.term?.name;
+          const currentFailedCount = progressionCurrent?.courses?.filter(c => c.grade === 'F').length || 0;
           return (
             <>
               <div className="panel profile-header-panel">
-                <div className="avatar-lg">{initials(student.name || student.email)}</div>
+                <StudentPhotoUpload studentId={student.id} name={student.name || student.email} photoPath={profile.photoPath} canWrite={isAdmin} onUploaded={refresh} size="lg" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="profile-header-name">{student.name || na}</div>
                   <div className="profile-header-meta">
                     {student.idNumber && <span className="pill pill-gray">{student.idNumber}</span>}
                     {profile.admissionStatus && <span className={'pill ' + (ADMISSION_PILL[profile.admissionStatus] || 'pill-gray')}>{t(`studentProfile:admissionOptions.${profile.admissionStatus}`)}</span>}
                     {profile.enrollmentStatus && <span className={'pill ' + (ENROLLMENT_PILL[profile.enrollmentStatus] || 'pill-gray')}>{t(`studentProfile:enrollmentOptions.${profile.enrollmentStatus}`)}</span>}
+                    {profile.studentStatus && <span className={'pill ' + (STUDENT_STATUS_PILL[profile.studentStatus] || 'pill-gray')}>{t(`studentProfile:studentStatusOptions.${profile.studentStatus}`)}</span>}
                   </div>
                   <div className="field-hint" style={{ margin: '4px 0 0' }}>{t('studentProfile:memberSince', { date: (student.createdAt || '').split(' ')[0] || na })}</div>
                 </div>
@@ -213,6 +287,98 @@ export default function StudentProfilePage() {
                       {savingAdmin ? <span className="spinner"></span> : <><i className="ti ti-check"></i> {t('common:actions.save')}</>}
                     </button>
                   </div>
+                )}
+              </div>
+
+              {/* --- Academic Progression --- */}
+              <div className="panel">
+                <div className="panel-header">
+                  <div className="panel-title">{t('studentProfile:progression.title')}</div>
+                  {canProgress && (
+                    <div className="no-print" style={{ display: 'flex', gap: 8 }}>
+                      <button className="btn-sm" onClick={() => setOverrideOpen(o => !o)}>
+                        <i className="ti ti-adjustments"></i> {t('studentProfile:progression.override.toggle')}
+                      </button>
+                      <button className={'btn-sm' + (evaluating ? ' btn-loading' : '')} disabled={evaluating} onClick={handleEvaluate}>
+                        {evaluating ? <span className="spinner"></span> : <><i className="ti ti-refresh"></i> {t('studentProfile:progression.evaluate')}</>}
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div className="form-row-2">
+                  <FieldRow label={t('studentProfile:fields.programSemester')} display={profile.programSemester ?? na} editing={false} />
+                  <FieldRow label={t('studentProfile:progression.fields.academicYear')} display={openTermName || activeTerm?.name || na} editing={false} />
+                </div>
+                <div className="form-row-2">
+                  <FieldRow label={t('studentProfile:progression.fields.admissionYear')} display={admissionYear || na} editing={false} />
+                  <FieldRow
+                    label={t('studentProfile:progression.fields.semesterStatus')}
+                    display={<span className={'pill ' + (SEMESTER_STATUS_PILL[semesterStatus] || 'pill-gray')}>{t(`studentProfile:semesterStatusOptions.${semesterStatus}`, semesterStatus)}</span>}
+                    editing={false}
+                  />
+                </div>
+                <div className="stat-grid" style={{ marginTop: 14, marginBottom: 0 }}>
+                  <StatCard icon="ti-school" hue="indigo" label={t('studentProfile:fields.gpa')}
+                    value={gpa != null ? t('studentProfile:gpaScale', { gpa: gpa.toFixed(2) }) : t('studentProfile:gpaNotAvailable')} />
+                  <StatCard icon="ti-report" hue="teal"
+                    label={t('studentProfile:progression.fields.credits')}
+                    value={progressionCurrent ? `${progressionCurrent.creditsEarned} / ${progressionCurrent.creditsAttempted}` : '—'}
+                    sub={progressionCurrent ? t('studentProfile:progression.fields.gradedProgress', { graded: progressionCurrent.gradedCount, total: progressionCurrent.totalCount }) : undefined}
+                  />
+                  <StatCard icon="ti-alert-triangle" hue={currentFailedCount ? 'red' : 'indigo'}
+                    label={t('studentProfile:progression.fields.failedCourses')}
+                    value={currentFailedCount} />
+                </div>
+                {canProgress && overrideOpen && (
+                  <div className="no-print" style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+                    <div className="form-row-2">
+                      <FieldRow label={t('studentProfile:progression.override.semesterNumber')} editing>
+                        <input type="number" min="1" placeholder={String(profile.programSemester ?? 1)}
+                          value={overrideForm.semesterNumber} onChange={e => setOverrideForm(f => ({ ...f, semesterNumber: e.target.value }))} />
+                      </FieldRow>
+                      <FieldRow label={t('studentProfile:progression.override.status')} editing>
+                        <select value={overrideForm.status} onChange={e => setOverrideForm(f => ({ ...f, status: e.target.value }))}>
+                          <option value="">{t('studentProfile:select')}</option>
+                          {OVERRIDE_STATUS_OPTIONS.map(v => <option key={v} value={v}>{t(`studentProfile:semesterStatusOptions.${v}`, v)}</option>)}
+                        </select>
+                      </FieldRow>
+                    </div>
+                    <FieldRow label={t('studentProfile:progression.override.reason')} editing>
+                      <textarea rows={2} value={overrideForm.reason} onChange={e => setOverrideForm(f => ({ ...f, reason: e.target.value }))}
+                        placeholder={t('studentProfile:progression.override.reasonPlaceholder')} />
+                    </FieldRow>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <button className="btn-sm" onClick={() => { setOverrideOpen(false); setOverrideForm({ semesterNumber: '', status: '', reason: '' }); }}>
+                        {t('common:actions.cancel')}
+                      </button>
+                      <button className={'btn-primary' + (overriding ? ' btn-loading' : '')} disabled={overriding} onClick={handleOverride}>
+                        {overriding ? <span className="spinner"></span> : <><i className="ti ti-check"></i> {t('studentProfile:progression.override.submit')}</>}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {progressionHistory.length > 0 && (
+                  <table className="data-table" style={{ marginTop: 14 }}>
+                    <thead><tr>
+                      <th>{t('studentProfile:progression.history.semester')}</th>
+                      <th>{t('studentProfile:progression.history.status')}</th>
+                      <th>{t('studentProfile:progression.history.credits')}</th>
+                      <th>{t('studentProfile:progression.history.gpa')}</th>
+                      <th>{t('studentProfile:progression.history.completed')}</th>
+                    </tr></thead>
+                    <tbody>
+                      {progressionHistory.map(rec => (
+                        <tr key={rec.id}>
+                          <td>{t('studentProfile:progression.history.semesterValue', { number: rec.semesterNumber })}</td>
+                          <td><span className={'pill ' + (SEMESTER_STATUS_PILL[rec.status] || 'pill-gray')}>{t(`studentProfile:semesterStatusOptions.${rec.status}`, rec.status)}</span></td>
+                          <td>{rec.creditsEarned ?? 0} / {rec.creditsAttempted ?? 0}</td>
+                          <td>{rec.termGpa != null ? rec.termGpa.toFixed(2) : na}</td>
+                          <td>{rec.completedAt ? (rec.completedAt.split(' ')[0]) : na}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 )}
               </div>
 
@@ -334,6 +500,12 @@ export default function StudentProfilePage() {
                   <FieldRow label={t('studentProfile:fields.term')} display={activeTerm?.name || na} editing={false} />
                 </div>
                 <div className="form-row-2">
+                  <FieldRow label={t('studentProfile:fields.batch')} display={profile.batch || na} editing={adminEditing}>
+                    <input type="text" placeholder={t('studentProfile:batchPlaceholder')} value={adminForm.batch} onChange={e => setAdminForm(f => ({ ...f, batch: e.target.value }))} />
+                  </FieldRow>
+                  <div />
+                </div>
+                <div className="form-row-2">
                   <FieldRow label={t('studentProfile:fields.specialization')} display={profile.specialization || na} editing={adminEditing}>
                     <input type="text" value={adminForm.specialization} onChange={e => setAdminForm(f => ({ ...f, specialization: e.target.value }))} />
                   </FieldRow>
@@ -347,15 +519,26 @@ export default function StudentProfilePage() {
                     </select>
                   </FieldRow>
                 </div>
-                <FieldRow
-                  label={t('studentProfile:fields.admissionStatus')}
-                  display={profile.admissionStatus ? t(`studentProfile:admissionOptions.${profile.admissionStatus}`) : na}
-                  editing={adminEditing}
-                >
-                  <select value={adminForm.admissionStatus} onChange={e => setAdminForm(f => ({ ...f, admissionStatus: e.target.value }))}>
-                    {ADMISSION_OPTIONS.map(v => <option key={v} value={v}>{t(`studentProfile:admissionOptions.${v}`)}</option>)}
-                  </select>
-                </FieldRow>
+                <div className="form-row-2">
+                  <FieldRow
+                    label={t('studentProfile:fields.admissionStatus')}
+                    display={profile.admissionStatus ? t(`studentProfile:admissionOptions.${profile.admissionStatus}`) : na}
+                    editing={adminEditing}
+                  >
+                    <select value={adminForm.admissionStatus} onChange={e => setAdminForm(f => ({ ...f, admissionStatus: e.target.value }))}>
+                      {ADMISSION_OPTIONS.map(v => <option key={v} value={v}>{t(`studentProfile:admissionOptions.${v}`)}</option>)}
+                    </select>
+                  </FieldRow>
+                  <FieldRow
+                    label={t('studentProfile:fields.studentStatus')}
+                    display={profile.studentStatus ? t(`studentProfile:studentStatusOptions.${profile.studentStatus}`) : na}
+                    editing={adminEditing}
+                  >
+                    <select value={adminForm.studentStatus} onChange={e => setAdminForm(f => ({ ...f, studentStatus: e.target.value }))}>
+                      {STUDENT_STATUS_OPTIONS.map(v => <option key={v} value={v}>{t(`studentProfile:studentStatusOptions.${v}`)}</option>)}
+                    </select>
+                  </FieldRow>
+                </div>
               </div>
 
               {/* --- Educational Information --- */}
@@ -368,9 +551,25 @@ export default function StudentProfilePage() {
                       {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                     </select>
                   </FieldRow>
-                  <FieldRow label={t('studentProfile:fields.programSemester')} display={profile.programSemester ?? na} editing={adminEditing}>
-                    <input type="number" min="1" value={adminForm.programSemester} onChange={e => setAdminForm(f => ({ ...f, programSemester: e.target.value }))} />
+                  <FieldRow label={t('studentProfile:fields.program')} display={program?.name || na} editing={adminEditing}>
+                    <select value={adminForm.programId} onChange={e => setAdminForm(f => ({ ...f, programId: e.target.value }))}>
+                      <option value="">{t('studentProfile:select')}</option>
+                      {programs
+                        .filter(p => !adminForm.departmentId || String(p.departmentId) === String(adminForm.departmentId))
+                        .map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
                   </FieldRow>
+                </div>
+                <div className="form-row-2">
+                  <FieldRow label={t('studentProfile:fields.studentType')} display={studentType?.name || na} editing={adminEditing}>
+                    <select value={adminForm.studentTypeId} onChange={e => setAdminForm(f => ({ ...f, studentTypeId: e.target.value }))}>
+                      <option value="">{t('studentProfile:select')}</option>
+                      {studentTypes.filter(s => s.isActive).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                  </FieldRow>
+                  {/* Current semester now lives in the Academic Progression panel above — it's
+                      driven by automatic evaluation/manual override, not a free-text edit here. */}
+                  <div />
                 </div>
                 <div className="form-row-2">
                   <FieldRow label={t('studentProfile:fields.previousSchool')} display={profile.previousSchoolName || na} editing={adminEditing}>
@@ -388,20 +587,22 @@ export default function StudentProfilePage() {
                 </FieldRow>
 
                 <div className="stat-grid" style={{ marginTop: 14, marginBottom: 0 }}>
-                  <div className="stat-card stat-accent-blue">
-                    <div className="s-icon s-blue"><i className="ti ti-school"></i></div>
-                    <div className="stat-label">{t('studentProfile:fields.gpa')}</div>
-                    <div className="stat-value">{gpa != null ? t('studentProfile:gpaScale', { gpa: gpa.toFixed(2) }) : t('studentProfile:gpaNotAvailable')}</div>
-                  </div>
-                  <div className="stat-card stat-accent-green">
-                    <div className="s-icon s-green"><i className="ti ti-certificate"></i></div>
-                    <div className="stat-label">{t('studentProfile:fields.credits')}</div>
-                    <div className="stat-value">{completedCredits}</div>
-                    <div className="stat-sub">{requiredCredits ? t('studentProfile:creditsProgress', { completed: completedCredits, required: requiredCredits }) : t('studentProfile:creditsNoTarget', { completed: completedCredits })}</div>
+                  <StatCard
+                    icon="ti-school" hue="indigo"
+                    label={t('studentProfile:fields.gpa')}
+                    value={gpa != null ? t('studentProfile:gpaScale', { gpa: gpa.toFixed(2) }) : t('studentProfile:gpaNotAvailable')}
+                  />
+                  <StatCard
+                    icon="ti-certificate" hue="teal"
+                    label={t('studentProfile:fields.credits')}
+                    value={completedCredits}
+                    sub={requiredCredits ? t('studentProfile:creditsProgress', { completed: completedCredits, required: requiredCredits }) : t('studentProfile:creditsNoTarget', { completed: completedCredits })}
+                    delta={requiredCredits != null ? { label: `${pct}%`, tone: pct === 100 ? 'positive' : 'neutral' } : undefined}
+                  >
                     {requiredCredits != null && (
-                      <div className="profile-progress-bar"><div className="profile-progress-fill" style={{ width: `${pct}%` }}></div></div>
+                      <div className="profile-progress-bar" style={{ marginTop: 8 }}><div className="profile-progress-fill" style={{ width: `${pct}%` }}></div></div>
                     )}
-                  </div>
+                  </StatCard>
                 </div>
               </div>
 

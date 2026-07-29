@@ -123,9 +123,6 @@
   },
   "rosterModal": {
     "gradeSaved": "Grade saved.",
-    "pickStudentFirst": "Pick a student first.",
-    "courseFullWaitlisted": "Course is full — added to the waitlist.",
-    "studentEnrolled": "Student enrolled.",
     "removeConfirm": "Remove {{name}} from this course?",
     "removeAriaLabel": "Remove {{name}} from this course",
     "removed": "Removed",
@@ -139,11 +136,27 @@
     },
     "noStudents": "No students enrolled yet.",
     "gradeNone": "— Grade —",
-    "enrollExisting": "Enroll an existing student",
-    "selectStudent": "— Select a student —",
-    "addToCourse": "Add to course",
+    "enrollStudents": "Enroll students",
     "exportCsv": "Export CSV",
     "waitlistPill": "Waitlist"
+  },
+  "enrollStudentsModal": {
+    "seatsHint": "{{enrolled}} / {{max}} seats filled",
+    "semesterFilter": "Filter by semester",
+    "allSemesters": "All semesters",
+    "semesterOption": "Semester {{semester}}",
+    "selectAllShown": "Select all shown ({{count}})",
+    "selectAllInSemester": "Select all in Semester {{semester}} ({{count}})",
+    "noEligibleStudents": "No eligible students found for this course's department.",
+    "alreadyEnrolledPill": "Enrolled",
+    "pickAtLeastOne": "Select at least one student first.",
+    "enrollSelected": "Enroll ({{count}})",
+    "toastEnrolled": "Enrolled {{count}} student(s).",
+    "toastEnrolledWithSkipped": "Enrolled {{enrolled}} student(s). Skipped {{skipped}}: {{reasons}}.",
+    "warningPrereq": "missing prerequisite: {{codes}}",
+    "warningClash": "schedule conflict with an existing course",
+    "confirmOverride": "{{count}} student(s) have unresolved issues — {{list}}. Enroll them anyway?",
+    "enrollAnywayButton": "Enroll Anyway"
   },
   "studentListModal": {
     "studentFallback": "Student #{{id}}"
@@ -218,7 +231,9 @@
     "gradeInProgress": "In progress",
     "withdrawAriaLabel": "Withdraw from {{code}}",
     "withdrawn": "Withdrawn",
-    "emptyState": "You're not enrolled in anything yet — visit the Catalog to register."
+    "emptyState": "You're not enrolled in anything yet — visit the Catalog to register.",
+    "unseenCountTitle_one": "{{count}} new item",
+    "unseenCountTitle_other": "{{count}} new items"
   },
   "assignmentsPanel": {
     "hint": "Visible to every student enrolled in this course.",
@@ -261,7 +276,10 @@
     "posted": "Material posted.",
     "titleRequired": "Title is required.",
     "fileRequired": "Choose a file to upload.",
-    "empty": "No materials posted yet."
+    "empty": "No materials posted yet.",
+    "deleteConfirm": "Delete material \"{{title}}\"? Enrolled students will no longer be able to download it.",
+    "deleteAriaLabel": "Delete {{title}}",
+    "deleted": "Material deleted."
   },
   "announcementsPanel": {
     "hint": "A short text notice visible to every student enrolled in this course.",
@@ -284,14 +302,51 @@
       "dept": "Dept.",
       "credits": "Credits",
       "instructor": "Instructor",
-      "capacity": "Capacity"
+      "capacity": "Capacity",
+      "sections": "Sections"
     },
     "enrolled": "Enrolled",
     "waitlisted": "Waitlisted",
     "register": "Register",
+    "viewDetails": "View details",
     "toasts": {
       "waitlisted": "Course is full — added to the waitlist.",
       "registered": "Registered."
+    },
+    "sections": {
+      "eligible": "Eligible to Enroll",
+      "currentlyEnrolled": "Currently Enrolled",
+      "completed": "Completed",
+      "notYetEligible": "Not Yet Eligible",
+      "notOffered": "Not Offered This Term"
+    },
+    "emptySection": "Nothing here.",
+    "locked": "Locked",
+    "prerequisitesLabel": "Prerequisites",
+    "grade": "Grade"
+  },
+  "courseDetailModal": {
+    "noDescription": "No description available.",
+    "notInYourDepartment": "This course is not offered in your department.",
+    "sectionsTitle": "Available sections",
+    "noScheduleYet": "Schedule not yet set",
+    "openSeats": "Open",
+    "full": "Full",
+    "seatsRemaining_one": "{{count}} seat left",
+    "seatsRemaining_other": "{{count}} seats left",
+    "joinWaitlist": "Join Waitlist",
+    "reasons": {
+      "enrolledElsewhere": "You're already registered for another section of this course",
+      "notInDepartment": "Not in your program",
+      "missingPrerequisite": "Prerequisite required: {{code}}",
+      "overCreditLimit": "Would exceed your credit limit"
     }
+  },
+  "courseQuickLook": {
+    "credits_one": "{{count}} credit",
+    "credits_other": "{{count}} credits",
+    "prerequisites": "Prerequisites",
+    "noPrerequisites": "None",
+    "noDescription": "No description available."
   }
 }

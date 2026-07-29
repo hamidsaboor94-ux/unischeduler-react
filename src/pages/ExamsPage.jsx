@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import Section from '../components/Section.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
 import { useModal } from '../context/ModalContext.jsx';
+import { Card } from '../components/ui/Card.jsx';
+import { StatCard } from '../components/ui/StatCard.jsx';
 import {
   courseById, roomName, teacherName, fmtDate, fmt12Hour, withinNextDays, examStatus, enrolledCount,
   courseColor, courseProgramSemester, courseSession, weekdayOfDate, EXAM_TYPES,
@@ -16,7 +18,6 @@ export default function ExamsPage() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [semesterFilter, setSemesterFilter] = useState('all');
   const [sessionFilter, setSessionFilter] = useState('all');
-  const [autoGenResult, setAutoGenResult] = useState(null);
   const [collapsedGroups, setCollapsedGroups] = useState(() => new Set());
 
   const isAdmin = currentUser.role === 'admin';
@@ -26,6 +27,9 @@ export default function ExamsPage() {
   const unscheduled = exams.length - scheduled;
   const clashStudentIds = new Set(conflictsData.warnings.filter(w => w.type === 'exam-clash').flatMap(w => w.studentIds));
   const capacityIssues = conflictsData.warnings.filter(w => w.type === 'capacity').length;
+  // Real completion rate (scheduled/total), not a fabricated trend — only rendered once there's
+  // at least one exam to divide by.
+  const scheduledPct = exams.length > 0 ? Math.round((scheduled / exams.length) * 100) : null;
 
   let list = exams;
   if (tabFilter === 'week') list = exams.filter(e => withinNextDays(e.date, 7));
@@ -88,76 +92,36 @@ export default function ExamsPage() {
             <option value="Evening">{t('academics:examsPage.session.evening')}</option>
           </select>
           {isAdmin && <button className="btn-primary" onClick={() => openModal('exam')}><i className="ti ti-plus"></i> {t('academics:examsPage.scheduleExam')}</button>}
-          {isAdmin && (
-            <button className="btn-gold" onClick={() => openModal('auto-generate-exam-type', null, { onComplete: setAutoGenResult })}>
-              <i className="ti ti-wand"></i> {t('academics:examsPage.autoGenerate')}
-            </button>
-          )}
         </div>
       </div>
       <div id="content">
         <div className="stat-grid">
-          <div className="stat-card stat-accent-green">
-            <div className="s-icon s-green"><i className="ti ti-check"></i></div>
-            <div className="stat-label">{t('academics:examsPage.stats.scheduled.label')}</div>
-            <div className="stat-value">{scheduled}</div>
-            <div className="stat-sub ok">{t('academics:examsPage.stats.scheduled.sub', { count: exams.length })}</div>
-          </div>
-          <div className="stat-card stat-accent-gold">
-            <div className="s-icon s-gold"><i className="ti ti-clock"></i></div>
-            <div className="stat-label">{t('academics:examsPage.stats.unscheduled.label')}</div>
-            <div className="stat-value">{unscheduled}</div>
-            <div className="stat-sub warn">{t('academics:examsPage.stats.unscheduled.sub')}</div>
-          </div>
-          <div className="stat-card stat-accent-red">
-            <div className="s-icon s-red"><i className="ti ti-user-exclamation"></i></div>
-            <div className="stat-label">{t('academics:examsPage.stats.studentClashes.label')}</div>
-            <div className="stat-value">{clashStudentIds.size}</div>
-            <div className="stat-sub bad">{t('academics:examsPage.stats.studentClashes.sub', { count: conflictsData.warnings.filter(w => w.type === 'exam-clash').length })}</div>
-          </div>
-          <div className="stat-card stat-accent-red">
-            <div className="s-icon s-red"><i className="ti ti-building"></i></div>
-            <div className="stat-label">{t('academics:examsPage.stats.capacityIssues.label')}</div>
-            <div className="stat-value">{capacityIssues}</div>
-            <div className="stat-sub bad">{t('academics:examsPage.stats.capacityIssues.sub')}</div>
-          </div>
+          <StatCard
+            icon="ti-check" hue="teal"
+            label={t('academics:examsPage.stats.scheduled.label')}
+            value={scheduled}
+            sub={t('academics:examsPage.stats.scheduled.sub', { count: exams.length })}
+            delta={scheduledPct !== null ? { label: `${scheduledPct}%`, tone: scheduledPct === 100 ? 'positive' : 'neutral' } : undefined}
+          />
+          <StatCard
+            icon="ti-clock" hue="amber"
+            label={t('academics:examsPage.stats.unscheduled.label')}
+            value={unscheduled}
+            sub={t('academics:examsPage.stats.unscheduled.sub')}
+          />
+          <StatCard
+            icon="ti-user-exclamation" hue="red"
+            label={t('academics:examsPage.stats.studentClashes.label')}
+            value={clashStudentIds.size}
+            sub={t('academics:examsPage.stats.studentClashes.sub', { count: conflictsData.warnings.filter(w => w.type === 'exam-clash').length })}
+          />
+          <StatCard
+            icon="ti-building" hue="red"
+            label={t('academics:examsPage.stats.capacityIssues.label')}
+            value={capacityIssues}
+            sub={t('academics:examsPage.stats.capacityIssues.sub')}
+          />
         </div>
-        {autoGenResult && (
-          <div className="panel" style={{ marginBottom: 14 }}>
-            <div className="panel-header">
-              <div className="panel-title">{t('academics:examsPage.autoGenResult.title')}</div>
-              <button className="btn-sm" onClick={() => setAutoGenResult(null)}>{t('academics:examsPage.autoGenResult.dismiss')}</button>
-            </div>
-            <div className="field-hint" style={{ padding: '0 14px 12px' }}>
-              {t('academics:examsPage.autoGenResult.summary', {
-                created: autoGenResult.created, scheduled: autoGenResult.scheduled,
-                type: autoGenResult.examType ? t(`academics:examForm.types.${autoGenResult.examType}`) : '',
-              })}
-            </div>
-            {(autoGenResult.unresolved?.length > 0 || autoGenResult.needsInvigilator?.length > 0) && (
-              <div className="alert-list">
-                {autoGenResult.unresolved.map(u => (
-                  <div key={'u' + u.examId} className="alert-item alert-warn">
-                    <i className="ti ti-alert-triangle" style={{ fontSize: 18 }}></i>
-                    <div style={{ flex: 1 }}>
-                      <div className="alert-title">{u.courseName || u.courseCode || `#${u.courseId}`}</div>
-                      <div className="alert-desc">{u.reason}</div>
-                    </div>
-                  </div>
-                ))}
-                {autoGenResult.needsInvigilator?.map(u => (
-                  <div key={'i' + u.examId} className="alert-item alert-warn">
-                    <i className="ti ti-user-exclamation" style={{ fontSize: 18 }}></i>
-                    <div style={{ flex: 1 }}>
-                      <div className="alert-title">{u.courseName || u.courseCode || `#${u.courseId}`}</div>
-                      <div className="alert-desc">{t('academics:examsPage.autoGenResult.needsInvigilator')}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
         <div className="panel">
           <div className="panel-header">
             <div className="panel-title">{t('academics:examsPage.table.heading')}</div>
@@ -196,7 +160,9 @@ export default function ExamsPage() {
                         const programSemester = courseProgramSemester(slots, e.courseId);
                         const session = courseSession(slots, e.courseId);
                         return (
-                          <div
+                          <Card
+                            as="div"
+                            clickable
                             key={e.id}
                             className={`slot slot-course-${courseColor(e.courseId)}`}
                             onClick={() => openModal('exam', e.id)}
@@ -222,7 +188,7 @@ export default function ExamsPage() {
                               <div className="slot-meta-row"><i className="ti ti-users" aria-hidden="true"></i>{t('academics:examsPage.card.students', { count: enrolledCount(courseRosters, e.courseId) })}</div>
                             </div>
                             <span className={'pill ' + status.cls}>{t(`common:status.${status.key}`)}</span>
-                          </div>
+                          </Card>
                         );
                       })}
                     </div>

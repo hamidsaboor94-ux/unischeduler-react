@@ -123,9 +123,6 @@
   },
   "rosterModal": {
     "gradeSaved": "نمره خوندي شوه.",
-    "pickStudentFirst": "لومړی یو زده کوونکی وټاکئ.",
-    "courseFullWaitlisted": "کورس ډک دی — د تمې لیست ته اضافه شو.",
-    "studentEnrolled": "زده کوونکی نومول شو.",
     "removeConfirm": "{{name}} له دې کورس څخه لرې شي؟",
     "removeAriaLabel": "{{name}} له دې کورس څخه لرې کول",
     "removed": "لرې شو",
@@ -139,11 +136,27 @@
     },
     "noStudents": "تر اوسه هیڅ زده کوونکی نومول شوی نه دی.",
     "gradeNone": "— نمره —",
-    "enrollExisting": "یو موجود زده کوونکی نوملیکل",
-    "selectStudent": "— یو زده کوونکی وټاکئ —",
-    "addToCourse": "کورس ته اضافه کول",
+    "enrollStudents": "زده کوونکي نوملیکل",
     "exportCsv": "CSV صادرول",
     "waitlistPill": "د تمې لیست"
+  },
+  "enrollStudentsModal": {
+    "seatsHint": "{{enrolled}} / {{max}} څوکۍ ډکې شوې",
+    "semesterFilter": "د سمستر له مخې فلټر",
+    "allSemesters": "ټول سمسترونه",
+    "semesterOption": "سمستر {{semester}}",
+    "selectAllShown": "ټول ښودل شوي وټاکئ ({{count}})",
+    "selectAllInSemester": "د سمستر {{semester}} ټول وټاکئ ({{count}})",
+    "noEligibleStudents": "د دې کورس دیپارتمنت لپاره هیڅ وړ زده کوونکی ونه موندل شو.",
+    "alreadyEnrolledPill": "نومول شوی",
+    "pickAtLeastOne": "لومړی لږ تر لږه یو زده کوونکی وټاکئ.",
+    "enrollSelected": "نوملیکل ({{count}})",
+    "toastEnrolled": "{{count}} زده کوونکي نومول شول.",
+    "toastEnrolledWithSkipped": "{{enrolled}} زده کوونکي نومول شول. {{skipped}} پرېښودل شول: {{reasons}}.",
+    "warningPrereq": "ناقص مخکینی شرط: {{codes}}",
+    "warningClash": "د یوه موجود کورس سره د مهال ویش ټکر",
+    "confirmOverride": "{{count}} زده کوونکي نيمګړي مسایل لري — {{list}}. بیا هم نوملیکنه وشي؟",
+    "enrollAnywayButton": "بیا هم نوملیکنه وکړئ"
   },
   "studentListModal": {
     "studentFallback": "زده کوونکی #{{id}}"
@@ -218,7 +231,9 @@
     "gradeInProgress": "روان دی",
     "withdrawAriaLabel": "له {{code}} څخه ایستل",
     "withdrawn": "ایستل شو",
-    "emptyState": "تاسو تر اوسه په هیڅ کورس کې نومول شوي نه یاست — د نوملیکنې لپاره کتالوګ ته لاړ شئ."
+    "emptyState": "تاسو تر اوسه په هیڅ کورس کې نومول شوي نه یاست — د نوملیکنې لپاره کتالوګ ته لاړ شئ.",
+    "unseenCountTitle_one": "{{count}} نوی توکی",
+    "unseenCountTitle_other": "{{count}} نوي توکي"
   },
   "assignmentsPanel": {
     "hint": "د دې کورس هر یو نومول شوی زده کوونکي ته د لیدو وړ دی.",
@@ -261,7 +276,10 @@
     "posted": "مواد خپور شول.",
     "titleRequired": "سرلیک اړین دی.",
     "fileRequired": "د اپلوډ لپاره یو فایل غوره کړئ.",
-    "empty": "تر اوسه هیڅ مواد نه دي خپاره شوي."
+    "empty": "تر اوسه هیڅ مواد نه دي خپاره شوي.",
+    "deleteConfirm": "ایا مواد \"{{title}}\" ړنګ شي؟ نومول شوي زده کوونکي به نور یې ډاونلوډ نشي کولی.",
+    "deleteAriaLabel": "{{title}} ړنګول",
+    "deleted": "مواد ړنګ شول."
   },
   "announcementsPanel": {
     "hint": "یو لنډ متن اعلان چې د دې کورس هر نومول شوي زده کوونکي ته لیدلی کیږي.",
@@ -284,14 +302,51 @@
       "dept": "څانګه",
       "credits": "کریډیټونه",
       "instructor": "ښوونکی",
-      "capacity": "ظرفیت"
+      "capacity": "ظرفیت",
+      "sections": "برخې"
     },
     "enrolled": "نوم لیکل شوی",
     "waitlisted": "د تمې لیست کې",
     "register": "نوم لیکل",
+    "viewDetails": "توضیحات وګورئ",
     "toasts": {
       "waitlisted": "کورس ډک دی — د تمې لیست ته اضافه شو.",
       "registered": "نوم لیکل شو."
+    },
+    "sections": {
+      "eligible": "د نوم لیکنې وړ",
+      "currentlyEnrolled": "اوس مهال نوم لیکل شوی",
+      "completed": "بشپړ شوی",
+      "notYetEligible": "لا تر اوسه وړ نه دی",
+      "notOffered": "پدې سمسټر کې نه وړاندې کیږي"
+    },
+    "emptySection": "دلته هیڅ شی نشته.",
+    "locked": "بند دی",
+    "prerequisitesLabel": "مخکینۍ اړتیاوې",
+    "grade": "نمره"
+  },
+  "courseDetailModal": {
+    "noDescription": "توضیحات شتون نلري.",
+    "notInYourDepartment": "دا کورس ستاسو په څانګه کې نه دی وړاندې کیدلی.",
+    "sectionsTitle": "شته برخې",
+    "noScheduleYet": "مهالویش لا نه دی ټاکل شوی",
+    "openSeats": "خلاص",
+    "full": "ډک",
+    "seatsRemaining_one": "{{count}} څوکۍ پاتې ده",
+    "seatsRemaining_other": "{{count}} څوکۍ پاتې دي",
+    "joinWaitlist": "د تمې لیست ته ورشئ",
+    "reasons": {
+      "enrolledElsewhere": "تاسو دمخه د دې کورس په بله برخه کې نوم لیکلی یاست",
+      "notInDepartment": "ستاسو په پروګرام کې نه دی",
+      "missingPrerequisite": "مخکینی شرط اړین دی: {{code}}",
+      "overCreditLimit": "ستاسو د کریډیټ حد به ډېر شي"
     }
+  },
+  "courseQuickLook": {
+    "credits_one": "{{count}} کریډیټ",
+    "credits_other": "{{count}} کریډیټونه",
+    "prerequisites": "مخکینی شرطونه",
+    "noPrerequisites": "هیڅ",
+    "noDescription": "تشریح شتون نلري."
   }
 }

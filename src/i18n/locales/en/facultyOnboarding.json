@@ -1,0 +1,40 @@
+{
+  "title": "Faculty Onboarding",
+  "noPermission": "You do not have permission to onboard faculty.",
+  "steps": {
+    "personal": "Personal",
+    "employment": "Employment",
+    "education": "Education",
+    "teaching": "Teaching",
+    "documents": "Documents",
+    "account": "Account"
+  },
+  "emergencyContact": "Emergency Contact",
+  "employeeIdPending": "Assigned after Step 1",
+  "profilePhoto": "Profile Photo",
+  "previous": "Previous",
+  "next": "Next",
+  "finish": "Finish",
+  "startNew": "Start a Different Faculty Member",
+  "startNewConfirm": "Discard this draft and start onboarding a different faculty member? The current draft record is left in place (visible on the Teachers list as incomplete) and can be finished or removed from there later.",
+  "cancelConfirmDraft": "Cancel onboarding? Everything entered so far is kept as a draft — it shows up as \"Incomplete\" on the Teachers list, and clicking Add Teacher again will offer to resume it.",
+  "cancelConfirmEmpty": "Cancel faculty onboarding?",
+  "validation": {
+    "nameRequired": "Enter the faculty member's full name.",
+    "departmentRequired": "Choose a department.",
+    "emailRequired": "Enter an email address, or turn off \"Create a login account now\"."
+  },
+  "draftBanner": {
+    "message": "You have an unfinished faculty onboarding draft. Resume it, or discard it and start a new one.",
+    "resume": "Resume Draft",
+    "discard": "Discard & Start New"
+  },
+  "account": {
+    "createLoginLabel": "Create a login account now",
+    "tempPasswordHint": "A temporary password will be generated and shown once — the faculty member must change it on first login.",
+    "skippedHint": "No login account will be created. This faculty member can still be given one later from Users → Create Account."
+  },
+  "toasts": {
+    "completed": "Faculty onboarding complete."
+  }
+}

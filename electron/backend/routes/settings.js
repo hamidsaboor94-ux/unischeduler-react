@@ -7,6 +7,7 @@ const { requireAuth } = require('../middleware/auth');
 const { requirePermission } = require('../middleware/permission');
 const asyncHandler = require('../middleware/asyncHandler');
 const { getGradingScale, validateScale, recomputeFinalGradesForCourse } = require('../gradingScale');
+const { getMaxFailedCoursesPolicy, DEFAULT_MAX_FAILED_FOR_PROGRESSION } = require('../academicProgression');
 
 const router = express.Router();
 
@@ -152,6 +153,27 @@ router.put('/graduation-requirement', requireAuth, requirePermission('gradingSca
   const s = await getAllSettings();
   const n2 = Number(s.requiredCreditsForGraduation);
   res.json({ requiredCredits: s.requiredCreditsForGraduation && !Number.isNaN(n2) ? n2 : null });
+}));
+
+// --- Semester progression policy — how many failed courses in an otherwise-complete semester
+// still allow automatic advancement before the whole semester is blocked as Failed. Same gate as
+// the grading scale / graduation requirement above (both are academic-policy settings). ---
+
+router.get('/semester-progression-policy', requireAuth, requirePermission('gradingScale', 'read'), asyncHandler(async (req, res) => {
+  const s = await getAllSettings();
+  res.json({
+    maxFailedCoursesForProgression: s.maxFailedCoursesForProgression != null && s.maxFailedCoursesForProgression !== ''
+      ? await getMaxFailedCoursesPolicy() : DEFAULT_MAX_FAILED_FOR_PROGRESSION,
+  });
+}));
+
+router.put('/semester-progression-policy', requireAuth, requirePermission('gradingScale', 'write'), asyncHandler(async (req, res) => {
+  const { maxFailedCoursesForProgression } = req.body;
+  const n = Number(maxFailedCoursesForProgression);
+  if (!Number.isInteger(n) || n < 0) return res.status(400).json({ error: 'maxFailedCoursesForProgression must be a non-negative whole number' });
+  await setSetting('maxFailedCoursesForProgression', String(n));
+  await logAudit(req.user, 'update', 'settings', null, { maxFailedCoursesForProgression: n });
+  res.json({ maxFailedCoursesForProgression: n });
 }));
 
 module.exports = router;

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppData } from '../context/AppDataContext.jsx';
+import { useNavigation } from '../context/NavigationContext.jsx';
 
 /** The bell: persisted, per-user server notices only (see GET /notifications, scoped to
     req.user.sub) — meaningful domain events (class cancellations, assignments/announcements
@@ -11,6 +12,7 @@ import { useAppData } from '../context/AppDataContext.jsx';
 export default function NotificationBell() {
   const { t } = useTranslation('shell');
   const { notifications, dismissAllNotifications } = useAppData();
+  const { showSection } = useNavigation();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
 
@@ -30,6 +32,16 @@ export default function NotificationBell() {
     setOpen(o => !o);
   }
 
+  /** A university-wide announcement notice jumps straight to its full detail (see §18: "Clicking
+      the notification opens the full announcement") — every other notification type has no
+      dedicated detail page yet, so it just closes the panel where it already reads the message. */
+  function handleItemClick(n) {
+    if (n.type === 'notice_published' && n.entityId) {
+      showSection('announcements', { noticeId: n.entityId });
+    }
+    setOpen(false);
+  }
+
   return (
     <div className="notif-wrap" ref={wrapRef}>
       <button className="icon-btn" title={t('notifications.title')} aria-label={t('notifications.title')} onClick={handleToggle}>
@@ -42,7 +54,13 @@ export default function NotificationBell() {
           <div className="notif-panel-list">
             {sorted.length
               ? sorted.map(n => (
-                <div className="notif-item alert" key={n.id}>
+                <div
+                  className={'notif-item alert' + (n.type === 'notice_published' ? ' notif-item-clickable' : '')}
+                  key={n.id}
+                  onClick={n.type === 'notice_published' ? () => handleItemClick(n) : undefined}
+                  role={n.type === 'notice_published' ? 'button' : undefined}
+                  tabIndex={n.type === 'notice_published' ? 0 : undefined}
+                >
                   <div>{n.message}</div>
                   <div className="notif-item-time">{new Date(n.createdAt + 'Z').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                 </div>

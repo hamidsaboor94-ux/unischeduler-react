@@ -5,6 +5,7 @@ import { useModal } from '../../context/ModalContext.jsx';
 import { useModalSave } from '../../hooks/useModalSave.js';
 import { saveExam, deleteExam } from '../../api.js';
 import { DURATION_OPTIONS, EXAM_TYPES } from '../../utils.js';
+import { can } from '../../permissions.js';
 
 // Maps utils.js's DURATION_OPTIONS values to translation keys under academics:examForm.durations —
 // the English labels live there rather than in utils.js so every language can phrase them naturally.
@@ -15,6 +16,10 @@ export default function ExamForm({ editId }) {
   const { exams, courses, rooms, teachers, activeTermId, currentUser, afterMutate } = useAppData();
   const { closeModal, confirmAction } = useModal();
   const { save, loading } = useModalSave();
+
+  // Editing exam metadata is registrar/exam-officer/admin-level, not a faculty ownership right —
+  // mirrors the server's requirePermission('exams', 'write') on PUT /:id.
+  const canWrite = can(currentUser.role, 'exams', 'write');
 
   const existing = editId ? exams.find(x => x.id === editId) : null;
   const seed = existing || { courseId: courses[0]?.id, date: '', time: '09:00', durationMinutes: 120, roomId: rooms[0]?.id, invigilatorId: null, type: 'final' };
@@ -50,41 +55,41 @@ export default function ExamForm({ editId }) {
       <div id="modal-body">
         <div className="form-row">
           <div className="form-label">{t('common:fields.course')}</div>
-          <select value={courseId} onChange={e => setCourseId(e.target.value)}>
+          <select value={courseId} disabled={!canWrite} onChange={e => setCourseId(e.target.value)}>
             {courses.map(c => <option key={c.id} value={c.id}>{c.code}</option>)}
           </select>
         </div>
         <div className="form-row-2">
           <div className="form-row">
             <div className="form-label">{t('common:fields.date')}</div>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} />
+            <input type="date" disabled={!canWrite} value={date} onChange={e => setDate(e.target.value)} />
           </div>
           <div className="form-row">
             <div className="form-label">{t('academics:examForm.startTime')}</div>
-            <input type="time" value={time} onChange={e => setTime(e.target.value)} />
+            <input type="time" disabled={!canWrite} value={time} onChange={e => setTime(e.target.value)} />
           </div>
         </div>
         <div className="form-row">
           <div className="form-label">{t('academics:examForm.type')}</div>
-          <select value={type} onChange={e => setType(e.target.value)}>
+          <select value={type} disabled={!canWrite} onChange={e => setType(e.target.value)}>
             {EXAM_TYPES.map(v => <option key={v} value={v}>{t(`academics:examForm.types.${v}`)}</option>)}
           </select>
         </div>
         <div className="form-row">
           <div className="form-label">{t('academics:examForm.duration')}</div>
-          <select value={durationMinutes} onChange={e => setDurationMinutes(e.target.value)}>
+          <select value={durationMinutes} disabled={!canWrite} onChange={e => setDurationMinutes(e.target.value)}>
             {DURATION_OPTIONS.map(o => <option key={o.v} value={o.v}>{t(`academics:examForm.durations.${DURATION_KEYS[o.v]}`)}</option>)}
           </select>
         </div>
         <div className="form-row">
           <div className="form-label">{t('common:fields.room')}</div>
-          <select value={roomId} onChange={e => setRoomId(e.target.value)}>
+          <select value={roomId} disabled={!canWrite} onChange={e => setRoomId(e.target.value)}>
             {rooms.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </div>
         <div className="form-row">
           <div className="form-label">{t('academics:examForm.invigilator')}</div>
-          <select value={invigilatorId} onChange={e => setInvigilatorId(e.target.value)}>
+          <select value={invigilatorId} disabled={!canWrite} onChange={e => setInvigilatorId(e.target.value)}>
             <option value="">{t('academics:examForm.noneOption')}</option>
             {teachers.map(teacher => <option key={teacher.id} value={teacher.id}>{teacher.name}</option>)}
           </select>
@@ -92,10 +97,12 @@ export default function ExamForm({ editId }) {
       </div>
       <div id="modal-footer" className="modal-footer">
         {editId && currentUser.role === 'admin' && <button className="modal-danger-btn" onClick={handleDelete}>{t('common:actions.delete')}</button>}
-        <button className="btn-sm" onClick={closeModal}>{t('common:actions.cancel')}</button>
-        <button className={'btn-primary' + (loading ? ' btn-loading' : '')} disabled={loading} onClick={handleSave}>
-          {loading ? <span className="spinner"></span> : <><i className="ti ti-check"></i> {t('common:actions.save')}</>}
-        </button>
+        <button className="btn-sm" onClick={closeModal}>{canWrite ? t('common:actions.cancel') : t('common:actions.close')}</button>
+        {canWrite && (
+          <button className={'btn-primary' + (loading ? ' btn-loading' : '')} disabled={loading} onClick={handleSave}>
+            {loading ? <span className="spinner"></span> : <><i className="ti ti-check"></i> {t('common:actions.save')}</>}
+          </button>
+        )}
       </div>
     </>
   );

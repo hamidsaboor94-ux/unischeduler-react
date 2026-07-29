@@ -5,9 +5,14 @@ const multer = require('multer');
 const { all, get, run, logAudit, DB_PATH } = require('../db');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
-const { getGradingScale } = require('../gradingScale');
 const { runOrFriendlyError } = require('./crudRouter');
 const { teacherIdForUser } = require('../ownership');
+const { computeAcademicSummary } = require('../academicSummary');
+const { ensureOpenRecord } = require('../academicProgression');
+const { can } = require('../permissions');
+const { isScopedRequest, departmentInScope } = require('../scope');
+const studentStorage = require('../studentStorage');
+const photoUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 const router = express.Router();
 
@@ -19,13 +24,18 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 
 
 const ADMISSION_STATUSES = new Set(['Approved', 'Pending', 'Rejected']);
 const ENROLLMENT_STATUSES = new Set(['Regular', 'Part-time', 'Probation', 'Withdrawn']);
-const NUMERIC_FIELDS = new Set(['entryTestMarks', 'advisorTeacherId', 'departmentId', 'programSemester', 'previousGraduationYear']);
+const STUDENT_STATUSES = new Set(['Active', 'Graduated', 'Suspended', 'Withdrawn', 'On Leave']);
+const NUMERIC_FIELDS = new Set(['entryTestMarks', 'advisorTeacherId', 'departmentId', 'programId', 'studentTypeId', 'previousGraduationYear']);
 // Every column on student_profiles other than the primary key/timestamp — the admin edit whitelist.
+// Deliberately excludes programSemester/semesterStatus — those are driven by the automatic
+// progression engine (academicProgression.js) and its audited manual-override endpoint
+// (routes/progression.js), not a free-text field edit, per the semester-progression feature's
+// "every manual override must be recorded with a reason" requirement.
 const ADMIN_FIELDS = [
   'fatherName', 'grandfatherName', 'gender', 'dateOfBirth', 'nationality', 'nationalId', 'passportNumber',
   'presentAddress', 'permanentAddress', 'mobileNumber', 'emergencyContact',
-  'entryTestMarks', 'sponsor', 'specialization', 'advisorTeacherId', 'departmentId',
-  'programSemester', 'section', 'admissionStatus', 'enrollmentStatus',
+  'entryTestMarks', 'sponsor', 'specialization', 'advisorTeacherId', 'departmentId', 'programId', 'studentTypeId',
+  'section', 'batch', 'admissionStatus', 'enrollmentStatus', 'studentStatus',
   'previousSchoolName', 'previousGraduationYear',
 ];
 // What a student may edit about themselves — everything else on the profile is admin-only.
@@ -36,8 +46,28 @@ function canAccess(req, studentId) {
   return req.user.role === 'admin' || Number(req.user.sub) === Number(studentId);
 }
 
-/** Full access check, including a Student Advisor for their own advisees
-    (student_profiles.advisorTeacherId → the teacher record linked to this user). */
+// Roles whose job is direct academic-record management and so need the full profile, including
+// identity/location/emergency-contact fields. Everyone else who reaches this endpoint via the
+// broader `students:read` grant (admissions_officer, bursar, viewer) gets the rest of the profile
+// (name, program, enrollment status, academic summary) but not this sensitive PII.
+const FULL_DETAIL_ROLES = new Set(['registrar', 'records_officer', 'dean', 'dept_head']);
+const SENSITIVE_PII_FIELDS = ['nationalId', 'passportNumber', 'dateOfBirth', 'presentAddress', 'permanentAddress', 'emergencyContact'];
+
+function redactSensitiveProfile(profile, req, studentId) {
+  if (canAccess(req, studentId) || req.user.role === 'advisor' || FULL_DETAIL_ROLES.has(req.user.role)) return profile;
+  const redacted = { ...profile };
+  for (const f of SENSITIVE_PII_FIELDS) redacted[f] = null;
+  return redacted;
+}
+
+/** Full access check: admin/self (canAccess), a Student Advisor for their own advisees
+    (student_profiles.advisorTeacherId → the teacher record linked to this user), or any role
+    the central `students` module policy grants read access to (registrar, records_officer,
+    admissions_officer, dean, dept_head, bursar, viewer — see permissions.js POLICY.students) —
+    the same policy students.js's GET /:id/overview already enforces, so this profile endpoint
+    and that overview endpoint never disagree about who may view a given student. Department/
+    college-scoped roles (dean/dept_head) are further confined to their own scope, same as
+    students.js. */
 async function canAccessAsync(req, studentId) {
   if (canAccess(req, studentId)) return true;
   if (req.user.role === 'advisor') {
@@ -46,37 +76,16 @@ async function canAccessAsync(req, studentId) {
     const profile = await get('SELECT advisorTeacherId FROM student_profiles WHERE studentId = ?', [studentId]);
     return !!profile && Number(profile.advisorTeacherId) === Number(teacherId);
   }
+  if (can(req.user.role, 'students', 'read')) {
+    if (!isScopedRequest(req)) return true;
+    const profile = await get('SELECT departmentId FROM student_profiles WHERE studentId = ?', [studentId]);
+    return departmentInScope(req, profile?.departmentId);
+  }
   return false;
 }
 
 async function ensureProfileRow(studentId) {
   await run('INSERT OR IGNORE INTO student_profiles (studentId) VALUES (?)', [studentId]);
-}
-
-/** Credit-weighted cumulative GPA + total credits completed, resolved live against whichever
-    grading scale is current right now — same "never stale" approach already used for letter
-    grades (see gradingScale.js's recomputeFinalGrade). Only counts currently-enrolled rows with
-    a completed (non-null) letter grade. */
-async function computeAcademicSummary(studentId) {
-  const rows = await all(
-    `SELECT e.grade, c.credits FROM enrollments e JOIN courses c ON c.id = e.courseId WHERE e.studentId = ? AND e.status = 'enrolled'`,
-    [studentId]
-  );
-  const scale = await getGradingScale();
-  let qualityPoints = 0, gpaCredits = 0, completedCredits = 0;
-  for (const r of rows) {
-    const credits = r.credits || 0;
-    if (r.grade) {
-      completedCredits += credits;
-      const band = scale.find(b => b.label === r.grade);
-      qualityPoints += (band?.point ?? 0) * credits;
-      gpaCredits += credits;
-    }
-  }
-  return {
-    gpa: gpaCredits > 0 ? Math.round((qualityPoints / gpaCredits) * 100) / 100 : null,
-    completedCredits,
-  };
 }
 
 function validateAdminFields(body) {
@@ -85,6 +94,9 @@ function validateAdminFields(body) {
   }
   if (body.enrollmentStatus !== undefined && body.enrollmentStatus !== null && !ENROLLMENT_STATUSES.has(body.enrollmentStatus)) {
     return `enrollmentStatus must be one of: ${[...ENROLLMENT_STATUSES].join(', ')}`;
+  }
+  if (body.studentStatus !== undefined && body.studentStatus !== null && !STUDENT_STATUSES.has(body.studentStatus)) {
+    return `studentStatus must be one of: ${[...STUDENT_STATUSES].join(', ')}`;
   }
   for (const f of NUMERIC_FIELDS) {
     if (body[f] !== undefined && body[f] !== null && (typeof body[f] !== 'number' || Number.isNaN(body[f]))) {
@@ -117,12 +129,20 @@ router.get('/advisees', requireAuth, asyncHandler(async (req, res) => {
 router.get('/:studentId', requireAuth, asyncHandler(async (req, res) => {
   const studentId = Number(req.params.studentId);
   if (!(await canAccessAsync(req, studentId))) return res.status(403).json({ error: 'Forbidden' });
-  const student = await get(`SELECT id, name, email, idNumber, createdAt FROM users WHERE id = ? AND role = 'student'`, [studentId]);
+  // No role filter — lets a role_mismatch row from the Students discovery scan (an account
+  // whose role changed away from student) still load its historical profile read-only.
+  const student = await get(`SELECT id, name, email, idNumber, role, createdAt FROM users WHERE id = ?`, [studentId]);
   if (!student) return res.status(404).json({ error: 'Student not found' });
 
-  await ensureProfileRow(studentId);
+  // Guarantees a semester_records row (and its programSemester/semesterStatus mirror onto
+  // student_profiles) exists before reading the profile — "a new student starts in Semester 1"
+  // must be true the first time anyone looks, not only after the first progression evaluation.
+  // Only for role='student' — a role_mismatch row (see comment above) never gets one.
+  if (student.role === 'student') await ensureOpenRecord(studentId);
   const profile = await get('SELECT * FROM student_profiles WHERE studentId = ?', [studentId]);
   const department = profile.departmentId ? await get('SELECT id, name FROM departments WHERE id = ?', [profile.departmentId]) : null;
+  const program = profile.programId ? await get('SELECT id, name FROM programs WHERE id = ?', [profile.programId]) : null;
+  const studentType = profile.studentTypeId ? await get('SELECT id, name FROM student_types WHERE id = ?', [profile.studentTypeId]) : null;
   const advisor = profile.advisorTeacherId ? await get('SELECT id, name FROM teachers WHERE id = ?', [profile.advisorTeacherId]) : null;
   const activeTerm = await get('SELECT id, name FROM terms WHERE isActive = 1');
   const summary = await computeAcademicSummary(studentId);
@@ -132,8 +152,9 @@ router.get('/:studentId', requireAuth, asyncHandler(async (req, res) => {
     'SELECT id, documentType, title, fileName, mimeType, createdAt FROM student_documents WHERE studentId = ? ORDER BY createdAt DESC',
     [studentId]
   );
+  const responseProfile = redactSensitiveProfile(profile, req, studentId);
 
-  res.json({ student, profile, department, advisor, activeTerm, ...summary, requiredCredits, documents });
+  res.json({ student, profile: responseProfile, department, program, studentType, advisor, activeTerm, ...summary, requiredCredits, documents });
 }));
 
 router.put('/me', requireAuth, requireRole('student'), asyncHandler(async (req, res) => {
@@ -208,6 +229,30 @@ router.delete('/documents/:id', requireAuth, requireRole('admin'), asyncHandler(
   if (STUDENT_DOCS_DIR) { try { fs.unlinkSync(docFile(doc.id)); } catch { /* already gone */ } }
   await logAudit(req.user, 'delete-document', 'student_documents', req.params.id, { studentId: doc.studentId, title: doc.title });
   res.status(204).end();
+}));
+
+router.post('/:studentId/photo', requireAuth, requireRole('admin'), photoUpload.single('photo'), asyncHandler(async (req, res) => {
+  const studentId = Number(req.params.studentId);
+  const student = await get(`SELECT id FROM users WHERE id = ? AND role = 'student'`, [studentId]);
+  if (!student) return res.status(404).json({ error: 'Student not found' });
+  if (!req.file) return res.status(400).json({ error: 'A photo file is required' });
+  if (req.file.mimetype !== 'image/png' && req.file.mimetype !== 'image/jpeg') {
+    return res.status(400).json({ error: 'Photo must be a PNG or JPEG image.' });
+  }
+  if (!studentStorage.STUDENT_ROOT) return res.status(400).json({ error: 'Cannot store a file for an in-memory database' });
+  await ensureProfileRow(studentId);
+  const relPath = studentStorage.saveFile(studentId, 'photo', studentId, req.file.mimetype, req.file.buffer);
+  await run('UPDATE student_profiles SET photoPath = ?, updatedAt = CURRENT_TIMESTAMP WHERE studentId = ?', [relPath, studentId]);
+  await logAudit(req.user, 'upload-photo', 'student_profiles', studentId, null);
+  res.json(await get('SELECT * FROM student_profiles WHERE studentId = ?', [studentId]));
+}));
+
+router.get('/:studentId/photo', requireAuth, asyncHandler(async (req, res) => {
+  const studentId = Number(req.params.studentId);
+  if (!(await canAccessAsync(req, studentId))) return res.status(403).json({ error: 'Forbidden' });
+  const profile = await get('SELECT photoPath FROM student_profiles WHERE studentId = ?', [studentId]);
+  if (!profile?.photoPath || !studentStorage.fileExists(profile.photoPath)) return res.status(404).json({ error: 'No photo on file' });
+  res.sendFile(studentStorage.absolutePath(profile.photoPath));
 }));
 
 module.exports = router;

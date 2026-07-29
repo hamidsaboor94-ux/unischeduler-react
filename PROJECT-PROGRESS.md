@@ -7,7 +7,7 @@
 >
 > **Status legend:** ✅ Done · 🔶 Partially done · ⬜ Not started · ❓ Needs a decision (see §6)
 >
-> Last updated: 2026-07-19
+> Last updated: 2026-07-27
 
 ---
 
@@ -66,6 +66,10 @@ re-run after any change under `uni scheduling/api/src`.
 - ✅ Departments (CRUD)
 - ✅ Terms/semesters: CRUD, single active term, **term rollover** (copy structure into a new term)
 - ✅ Teachers (CRUD), Rooms (CRUD, type + capacity)
+- ✅ Faculty full profile: personal/employment details, repeatable education history, photo +
+  document uploads (disk-backed via a swappable storage module), kept in separate
+  `teacher_profiles`/`teacher_education`/`teacher_documents` tables (additive — `teachers` itself
+  untouched); gated by the `teachers.Create`/`.Update`/`.Delete` permission
 - ✅ Courses: CRUD, bulk import, department/term/teacher binding, capacity (`maxStudents`)
 - ✅ Course prerequisites (manage + enforced at enrollment)
 - ✅ Grading scale (configurable letter-grade bands) + GPA grade points
@@ -83,7 +87,19 @@ re-run after any change under `uni scheduling/api/src`.
 ### 2.5 Enrollment
 - ✅ Student self-enrollment from catalog with: capacity check, **waitlist**, prerequisite check,
   time-conflict prevention, duplicate prevention
-- ✅ Drop course; admin enrollment management; per-student enrollment list
+- ✅ Drop course; admin/registrar enrollment management (individual or bulk-by-semester, capacity-
+  aware, audit-logged); per-student enrollment list
+- ✅ Prerequisite eligibility engine (`api/src/eligibility.js`, single source of truth for both the
+  catalog and enroll enforcement): AND/OR prerequisite groups + corequisite (concurrent-enrollment)
+  type, section/term-aware "one logical course" completion history, admin cycle rejection +
+  audit log, program/department/term/financial-hold/credit-cap gates, atomic capacity check.
+  Student Catalog page shows Eligible / Currently Enrolled / Completed / Not Yet Eligible / Not
+  Offered with per-prerequisite ✓/✗ and a locked-course reason. `GET /students/me/eligible-courses`.
+  Verified end-to-end live (browser): prereq lock → complete prereq → live unlock → enroll.
+  Fixed a pre-existing bug found along the way: `AppDataContext`'s unconditional
+  `fetchTeacherProfileSummaries()` call 403'd for student/faculty (no `teachers:View`), silently
+  aborting the whole data load — courses/rooms/slots/exams/notifications stayed empty for every
+  student session with no visible error. Now gated the same way as the other role-scoped fetches.
 
 ### 2.6 Admissions (public applications)
 - ✅ Public application form (no login) with document upload
@@ -99,10 +115,63 @@ re-run after any change under `uni scheduling/api/src`.
   student "My Grades" with GPA
 - ✅ Two unread mechanisms: notification bell + per-course activity dots
 - ✅ Course quick-actions for faculty (assignments/announcements/roster/attendance/gradebook)
+- ✅ Faculty landing Dashboard *(2026-07-28)* — replaces the generic scheduling stat cards with
+  My Courses/My Students/My Exams (scheduled + unscheduled) stat cards, today's sections only
+  (own courses, real times/rooms), and a "Needs your attention" panel of the teacher's own
+  unscheduled exams. No new backend surface — reuses the existing server-side course/exam
+  ownership scoping. The cancelled-class reschedule action (narrowly scoped, not the broad
+  timetable-write permission) was already shared across roles via DashboardPage's notice banner.
 
 ### 2.8 Student records
 - ✅ Student profile (admin-managed fields vs self-editable fields split)
 - ✅ Student document uploads; profile print stylesheet
+- ✅ Student landing Dashboard *(2026-07-26)* — replaces My Schedule as the post-login page;
+  summarizes GPA, fee balance/hold status, attendance rate, and enrolled-course count as stat
+  cards, plus today's classes, recent announcements, and quick links to the full pages. Purely a
+  read-only aggregation of existing `/finance/me`, `/grades/me` (via `/student-profile/:id`'s GPA),
+  `/attendance/me`, and `/notices/me/list` endpoints — no new backend surface.
+- ✅ Student Management upgrade *(2026-07-27)* — the Students page is now a full management
+  surface, built on top of the same day's Academic Progression work (`studentStatus`,
+  `semesterStatus`/`semester_records`) rather than duplicating it:
+  - `GET /students` gained real server-side pagination (`page`/`pageSize`, first such pattern in
+    the API) and new filters — College, Program, Student Type, Batch, Student Status, enrolled
+    Course, admission date range — alongside the existing department/enrollment-status/semester/
+    search (search now also matches phone). `GET /students/export` mirrors the same filters
+    unpaginated (capped) for CSV export; `PUT /students/bulk` does scoped, audit-logged bulk
+    edits (student status / department / program) for permitted roles.
+  - New `student_profiles.batch` (free-text cohort label — deliberately not a full batches table,
+    since the real Programs/Curriculum entity model is still §3.1 future work) and `.photoPath`
+    (mirrors `teacher_profiles.photoPath`) columns; a new `studentStorage.js` + photo upload/fetch
+    routes on `routes/studentProfile.js`, same pattern as `facultyStorage.js`.
+  - Frontend: table/card view toggle, filter panel, checkbox-based bulk selection + toolbar
+    (status update, dept/program reassignment, CSV export of filtered or selected rows, "Send
+    Announcement" which pre-seeds the existing Notices "Specific Users" targeting — no new
+    targeting logic needed), per-row quick actions (profile/edit/academic record/finance) wired
+    into the existing StudentProfilePage/StudentDetailPage/FinancePage via `sectionFocus`. Student
+    photo now shows as an avatar across Students/StudentDetail/StudentProfile (falls back to
+    initials).
+  - Not done this pass: a dedicated per-student add/drop enrollment UI ("Manage Enrollment" reuses
+    the existing read-only StudentDetailPage enrollment list by design — enrollment editing stays
+    course-centric via `EnrollStudentsModal`), and virtualized rendering (pagination caps page size
+    instead, sufficient at the tested scale).
+- ✅ Automatic semester progression *(2026-07-27)* — new `semester_records` table: one append-only
+  row per student per semester attempt (status, credits attempted/earned, term GPA, CGPA snapshot,
+  failed courses, completion date), never overwritten (a repeat/failed semester opens a new row).
+  `academicProgression.js` evaluates a student's currently-open semester against real final grades
+  only (never calendar dates): all-graded + 0 failures → Passed + auto-advance; failures within an
+  admin-configurable `maxFailedCoursesForProgression` policy (`/settings/semester-progression-policy`,
+  default 1) still advance (flagged Probation, failed courses tracked as repeats — one failed course
+  never fails the whole semester by default); over the threshold → Failed, blocked pending a manual
+  decision; not yet fully graded → Awaiting Results. Reaching a program's `totalCredits` (or its new
+  `numberOfSemesters` cap) after a pass marks the student Graduation Eligible instead of opening a
+  new semester. `students.Progress` permission (registrar/records_officer/admin) gates
+  evaluate/override/bulk-evaluate-term endpoints (`/api/progression/*`); every manual override
+  requires a reason and is audit-logged with before/after state. Student Profile page gained an
+  "Academic Progression" panel (current semester, academic year, batch/admission year, semester
+  status, GPA/credits/failed-course stats, full semester history table, Evaluate/Override actions)
+  and a lightweight `studentStatus` field (Active/Graduated/Suspended/Withdrawn/On Leave) — a
+  partial, display-focused implementation of the fuller "Student status lifecycle" item in §3.1,
+  not a replacement for it (no status-change history/effects like blocked enrollment yet).
 
 ### 2.9 Administration & operations
 - ✅ Reports (admin): room utilization, course popularity, teacher workload, enrollment trends (charts)
@@ -119,8 +188,44 @@ re-run after any change under `uni scheduling/api/src`.
 
 ### 2.11 Quality
 - ✅ Backend test suite (`node --test`): auth, accounts, CRUD, enrollment, scheduling,
-  timetable import, role scoping, rate limiting, audit log (12 test files)
+  timetable import, role scoping, rate limiting, audit log, notices (13 test files)
 - ✅ Linting (oxlint) on the frontend
+
+### 2.12 University-wide announcements & targeted notifications *(2026-07-26)*
+- ✅ New `notices`/`notice_target_groups`/`notice_recipients`/`notice_attachments` tables
+  (`api/src/db.js`) — additive, entirely separate from the pre-existing per-course
+  `announcements` table (courseId → students, no title/scheduling), which is untouched and still
+  used by course quick-actions.
+- ✅ Server-side targeting engine (`api/src/noticeTargeting.js`): audience = Students / Faculty /
+  Staff / Roles / Specific Users, each with a whitelisted filter set resolved against real data
+  (department/college/program/semester/section/enrollment status/course for students; department/
+  college/designation/employment type/status/course for faculty; role + department/college for
+  staff). Multiple target groups per announcement, deduplicated to one notification per person.
+  Department Head/Dean targeting is confined to their own scope server-side (reuses `scope.js`),
+  never merely hidden in the UI.
+- ✅ Recipient snapshot at publish time (`api/src/noticePublish.js`) — a scheduled/published
+  announcement's audience is frozen, not re-evaluated live; delivers via the existing
+  `notifications` table/bell (`notice_published` type) plus its own richer per-recipient
+  delivered/read/acknowledged tracking.
+- ✅ Full lifecycle: draft → schedule/publish → expire/archive/cancel, duplicate (always restarts
+  as an unpinned draft), edit-after-publish with an explicit opt-in "notify recipients about this
+  update" (never implicit resend). Reliable scheduling/expiry via an in-process interval sweep
+  (`api/src/noticeScheduler.js`), not dependent on a browser being open.
+- ✅ Optional attachments (disk-backed, same pattern as `course_materials`), optional
+  acknowledgment requirement with aggregate + per-recipient analytics, optional in-app action
+  button (destination is a real `NavigationContext` section, never a raw URL).
+- ✅ New `announcements` permission module (`Announcement.View/Create/Update/Delete/Publish/
+  Schedule/Archive/ManageRecipients/ViewAnalytics`) — Registrar/Dean/Dept Head get write (scope-
+  limited for the latter two), Viewer read-only; every role, regardless of this policy, can
+  always read/acknowledge notices addressed to them via self-scoped `/notices/me/*` endpoints
+  (same pattern as `/finance/me`).
+- ✅ Frontend: `Announcements` page (sidebar item for every role) with a Manage view (tabs,
+  search, compact create/edit card with a live recipient-count preview) for permitted roles, and
+  a personal "My Announcements" feed for everyone; bell-notification click jumps straight to the
+  specific announcement.
+- Deferred: Email/SMS/push delivery channels (architecture supports adding them; only in-app is
+  implemented per the "prioritize in-app first" decision), a rich WYSIWYG editor (message support
+  is a small XSS-safe markdown-like subset — bold/italic/lists/links — not a toolbar).
 
 ---
 
@@ -134,8 +239,11 @@ Priorities: **P1** = core gap for a real university deployment · **P2** = stron
   GPA per term + cumulative), printable/PDF, with branding.
 - ⬜ **P1 — Academic calendar**: term dates, holidays, registration window, add/drop deadline,
   exam period; enrollment endpoints should enforce the registration window.
-- ⬜ **P1 — Student status lifecycle**: active / on-leave / suspended / graduated / withdrawn,
-  with status history and effects (e.g. blocked enrollment).
+- 🔶 **P1 — Student status lifecycle**: active / on-leave / suspended / graduated / withdrawn,
+  with status history and effects (e.g. blocked enrollment). *(2026-07-27: the status values and
+  a display field exist — `student_profiles.studentStatus`, editable, shown on Student Profile —
+  as a byproduct of automatic semester progression (§2.8). Still missing: change history, and any
+  actual effects like blocking enrollment/finance actions for a Suspended/Withdrawn student.)*
 - ⬜ **P1 — Programs / majors & curriculum** *(decided 2026-07-19: full model)*: named degree
   programs per department with a semester-by-semester curriculum plan; degree-audit view
   (taken vs required vs remaining).
@@ -193,8 +301,10 @@ Priorities: **P1** = core gap for a real university deployment · **P2** = stron
   as a Windows service on the "server PC" (currently implicit), plus JWT secret handling.
 - ⬜ **P2 — Frontend test coverage**: at least smoke tests for critical flows (login, enroll,
   grade entry); CI to run API + frontend tests.
-- ⬜ **P2 — Pagination/virtualization** for large tables (users, enrollments) — matters at
-  real-university scale (thousands of students).
+- 🔶 **P2 — Pagination/virtualization** for large tables (users, enrollments) — matters at
+  real-university scale (thousands of students). *(2026-07-27: the Students page now does real
+  server-side pagination — see §2.8 — the first table in the app to get it. Users/enrollments and
+  everything else still load unpaginated.)*
 - ⬜ **P1 — Web (browser) deployment** *(decided 2026-07-19: cloud/web is the target)*: host the
   API + serve the React build over HTTPS so students/faculty log in from any browser. Implies:
   production CORS allowlist, real JWT secret management, uploaded-file storage strategy,
@@ -202,7 +312,33 @@ Priorities: **P1** = core gap for a real university deployment · **P2** = stron
   multi-tenant SaaS (open question §6.1b).
 - ⬜ **P3 — Session refresh**: silent token renewal so an 8h JWT doesn't log users out mid-work.
 
-### 3.8 Polish / debt
+### 3.8 Centralized authorization *(2026-07-22)*
+Fixed three reported symptoms of scattered role checks (faculty reaching admin course-edit,
+raw 403s in toasts, and a Registrar-enrollment claim that turned out to already work — verified
+live before assuming it needed a fix):
+- ✅ **Central `requirePermission('Module.Action')`** (`api/src/authz.js`) — granular permissions
+  tables (`permissions`, `role_permissions`, `user_roles`, `user_scopes`), additive and seeded
+  from the existing module-level POLICY so day-one access is unchanged. Coexists with the legacy
+  `can()`/`requireModuleAccess` — routes migrate one at a time, starting with `courses.js`'s
+  write routes (Create/Update/Delete), including server-side department scope validation.
+- ✅ **Richer audit log**: `audit_log` gained `role`/`oldValue`/`newValue` columns; `logAudit()`
+  takes optional before/after state (wired into the migrated courses.js routes). Still immutable
+  — no update/delete route exists.
+- ✅ **Soft-delete for enrollments**: `DELETE /enrollments/:id` now marks `status='dropped'` +
+  `deletedAt` instead of removing the row. Scoped narrowly to this one route — NOT the
+  course-deletion cascade, which still needs a real delete to avoid an FK violation.
+- ✅ **Frontend UI-gap fix**: every page stays mounted with no role check in the nav layer
+  (`?section=` URL param trusts the client) — `RoomForm`/`DepartmentForm`/`TermForm`/
+  `CreateAccountForm` now disable inputs and hide Save for a role without write access,
+  matching the pattern `CourseForm.jsx` already had. `api.js` gives a clear message instead of
+  a bare "Forbidden" when a 403 does surface.
+- ⬜ Not done this pass: migrating the other ~15 `requireRole`/inline-role-check routes to the
+  new system, full `Module.Action` verbs beyond CRUD (e.g. `Grades.Approve` — no workflow state
+  exists yet to back it), and fixing the underlying URL-param navigation trust issue itself
+  (still relies on server-side checks + now-consistent client-side disabling, not a real fix to
+  `NavigationContext`'s lack of role gating).
+
+### 3.9 Polish / debt
 - ⬜ Native-speaker review pass for Pashto/Dari strings (carry-over from 2.2)
 - ⬜ Replace boilerplate `README.md` in `UniScheduler-react` with a real project README
 - ⬜ Error/empty/loading states audit across all pages

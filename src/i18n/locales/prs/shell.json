@@ -17,6 +17,7 @@
       "rooms": "اتاق‌ها",
       "courses": "کورس‌ها",
       "teachers": "استادان",
+      "students": "محصلین",
       "departments": "دیپارتمنت‌ها",
       "semesters": "سمستر‌ها",
       "examSchedule": "جدول امتحانات",
@@ -38,7 +39,8 @@
       "myProfile": "پروفایل من",
       "admissions": "درخواست‌ها",
       "finance": "امور مالی",
-      "myFees": "فیس‌های من"
+      "myFees": "فیس‌های من",
+      "announcements": "اعلانات"
     },
     "noTermsYet": "هنوز سمستری وجود ندارد"
   },
@@ -75,6 +77,8 @@
     "addTeacher": "افزودن استاد",
     "editDepartment": "ویرایش دیپارتمنت",
     "addDepartment": "افزودن دیپارتمنت",
+    "editProgram": "ویرایش پروگرام",
+    "addProgram": "افزودن پروگرام",
     "editSemester": "ویرایش سمستر",
     "addSemester": "افزودن سمستر",
     "copyCoursesInto": "کاپی کردن کورس‌ها به {{term}}",
@@ -86,6 +90,7 @@
     "scheduleExam": "برنامه‌ریزی امتحان",
     "autoGenerateExamType": "تولید خودکار امتحانات",
     "roster": "فهرست {{code}}",
+    "enrollStudents": "ثبت‌نام محصلین — {{code}}",
     "affectedStudents": "محصلان متأثر ({{count}})",
     "createAccount": "ایجاد حساب",
     "accountCreated": "حساب ایجاد شد",
@@ -94,6 +99,7 @@
     "myProfile": "پروفایل من",
     "conflictDetail": "جزئیات تداخل",
     "moveSlot": "انتقال — {{code}}",
+    "rescheduleCancelledSession": "دوباره‌برنامه‌ریزی صنف لغوشده — {{code}}",
     "applicationStatusChange": "به‌روزرسانی وضعیت — {{name}}",
     "applicationApprove": "منظور کردن — {{name}}",
     "closeDialog": "بستن دیالوگ"
@@ -104,6 +110,11 @@
     "emailPlaceholder": "you@university.edu",
     "passwordPlaceholder": "••••••••",
     "signIn": "ورود",
+    "rememberMe": "مرا به یاد داشته باش",
+    "forgotPassword": "رمز عبور را فراموش کرده‌اید؟",
+    "forgotPasswordTitle": "بازیابی رمز عبور",
+    "forgotPasswordNoEmailHint": "این نصب برای ارسال ایمیل‌های بازیابی رمز عبور تنظیم نشده است. برای بازیابی رمز عبور خود با ادمین خویش تماس بگیرید — آن‌ها می‌توانند از بخش کاربران یک رمز عبور موقت جدید برای شما صادر کنند.",
+    "forgotPasswordClose": "متوجه شدم",
     "noSelfRegistration": "ثبت‌نام خودکار وجود ندارد — یک ادمین حساب شما را ایجاد کرده و یک رمز عبور موقت به شما می‌دهد.",
     "applyPrompt": "هنوز محصل نیستید؟",
     "applyLink": "درخواست پذیرش"

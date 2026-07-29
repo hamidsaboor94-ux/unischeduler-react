@@ -123,9 +123,6 @@
   },
   "rosterModal": {
     "gradeSaved": "نمره ذخیره شد.",
-    "pickStudentFirst": "لطفاً اول یک محصل را انتخاب کنید.",
-    "courseFullWaitlisted": "کورس پُر است — به لیست انتظار اضافه شد.",
-    "studentEnrolled": "محصل ثبت‌نام شد.",
     "removeConfirm": "{{name}} از این کورس حذف شود؟",
     "removeAriaLabel": "حذف {{name}} از این کورس",
     "removed": "حذف شد",
@@ -139,11 +136,27 @@
     },
     "noStudents": "تا حال هیچ محصلی ثبت‌نام نشده.",
     "gradeNone": "— نمره —",
-    "enrollExisting": "ثبت‌نام یک محصل موجود",
-    "selectStudent": "— یک محصل را انتخاب کنید —",
-    "addToCourse": "افزودن به کورس",
+    "enrollStudents": "ثبت‌نام محصلین",
     "exportCsv": "صادرات CSV",
     "waitlistPill": "لیست انتظار"
+  },
+  "enrollStudentsModal": {
+    "seatsHint": "{{enrolled}} / {{max}} چوکی پُر شده",
+    "semesterFilter": "فلتر بر اساس سمستر",
+    "allSemesters": "همه سمسترها",
+    "semesterOption": "سمستر {{semester}}",
+    "selectAllShown": "انتخاب همه نمایش داده‌شده‌ها ({{count}})",
+    "selectAllInSemester": "انتخاب همه در سمستر {{semester}} ({{count}})",
+    "noEligibleStudents": "هیچ محصل واجد شرایطی برای دیپارتمنت این کورس یافت نشد.",
+    "alreadyEnrolledPill": "ثبت‌نام شده",
+    "pickAtLeastOne": "لطفاً اول حداقل یک محصل را انتخاب کنید.",
+    "enrollSelected": "ثبت‌نام ({{count}})",
+    "toastEnrolled": "{{count}} محصل ثبت‌نام شد.",
+    "toastEnrolledWithSkipped": "{{enrolled}} محصل ثبت‌نام شد. {{skipped}} نادیده گرفته شد: {{reasons}}.",
+    "warningPrereq": "شرط قبلی تکمیل نشده: {{codes}}",
+    "warningClash": "تداخل مهال‌ویش با یک کورس موجود",
+    "confirmOverride": "{{count}} محصل مشکلات حل‌نشده دارند — {{list}}. با آن هم ثبت‌نام شوند؟",
+    "enrollAnywayButton": "بازهم ثبت‌نام شود"
   },
   "studentListModal": {
     "studentFallback": "محصل #{{id}}"
@@ -218,7 +231,9 @@
     "gradeInProgress": "در حال جریان",
     "withdrawAriaLabel": "انصراف از {{code}}",
     "withdrawn": "انصراف داده شد",
-    "emptyState": "شما تا حال در هیچ کورسی ثبت‌نام نکرده‌اید — برای ثبت‌نام به کتالوگ مراجعه کنید."
+    "emptyState": "شما تا حال در هیچ کورسی ثبت‌نام نکرده‌اید — برای ثبت‌نام به کتالوگ مراجعه کنید.",
+    "unseenCountTitle_one": "{{count}} آیتم جدید",
+    "unseenCountTitle_other": "{{count}} آیتم جدید"
   },
   "assignmentsPanel": {
     "hint": "برای هر دانشجوی ثبت‌نام شده در این کورس قابل دید است.",
@@ -261,7 +276,10 @@
     "posted": "ماده نشر شد.",
     "titleRequired": "عنوان الزامی است.",
     "fileRequired": "یک فایل برای آپلود انتخاب کنید.",
-    "empty": "تا حال موادی نشر نشده است."
+    "empty": "تا حال موادی نشر نشده است.",
+    "deleteConfirm": "ماده \"{{title}}\" حذف شود؟ دانشجویان ثبت‌نام شده دیگر نمی‌توانند آن را دانلود کنند.",
+    "deleteAriaLabel": "حذف {{title}}",
+    "deleted": "ماده حذف شد."
   },
   "announcementsPanel": {
     "hint": "یک اعلان کوتاه متنی که برای هر دانشجوی ثبت‌نام شده در این کورس قابل دید است.",
@@ -284,14 +302,51 @@
       "dept": "دیپارتمنت",
       "credits": "کریدیت‌ها",
       "instructor": "استاد",
-      "capacity": "ظرفیت"
+      "capacity": "ظرفیت",
+      "sections": "بخش‌ها"
     },
     "enrolled": "ثبت‌نام شده",
     "waitlisted": "در لیست انتظار",
     "register": "ثبت‌نام",
+    "viewDetails": "دیدن جزئیات",
     "toasts": {
       "waitlisted": "کورس پُر است — به لیست انتظار اضافه شد.",
       "registered": "ثبت‌نام شد."
+    },
+    "sections": {
+      "eligible": "واجد شرایط ثبت‌نام",
+      "currentlyEnrolled": "فعلاً ثبت‌نام شده",
+      "completed": "تکمیل شده",
+      "notYetEligible": "هنوز واجد شرایط نیست",
+      "notOffered": "این سمستر ارائه نمی‌شود"
+    },
+    "emptySection": "چیزی اینجا نیست.",
+    "locked": "قفل است",
+    "prerequisitesLabel": "پیش‌نیازها",
+    "grade": "نمره"
+  },
+  "courseDetailModal": {
+    "noDescription": "توضیحاتی موجود نیست.",
+    "notInYourDepartment": "این کورس در دیپارتمنت شما ارائه نمی‌شود.",
+    "sectionsTitle": "بخش‌های موجود",
+    "noScheduleYet": "جدول اوقات هنوز تعیین نشده",
+    "openSeats": "باز",
+    "full": "پُر",
+    "seatsRemaining_one": "{{count}} چوکی باقی مانده",
+    "seatsRemaining_other": "{{count}} چوکی باقی مانده",
+    "joinWaitlist": "پیوستن به لیست انتظار",
+    "reasons": {
+      "enrolledElsewhere": "شما قبلاً در بخش دیگری از این کورس ثبت‌نام کرده‌اید",
+      "notInDepartment": "در برنامه شما نیست",
+      "missingPrerequisite": "پیش‌نیاز لازم است: {{code}}",
+      "overCreditLimit": "از حد کریدیت شما تجاوز می‌کند"
     }
+  },
+  "courseQuickLook": {
+    "credits_one": "{{count}} کریدیت",
+    "credits_other": "{{count}} کریدیت",
+    "prerequisites": "پیش‌نیازها",
+    "noPrerequisites": "هیچ",
+    "noDescription": "توضیحاتی موجود نیست."
   }
 }

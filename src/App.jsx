@@ -3,7 +3,7 @@ import { ThemeProvider } from './context/ThemeContext.jsx';
 import { ToastProvider } from './context/ToastContext.jsx';
 import { AppDataProvider, useAppData } from './context/AppDataContext.jsx';
 import { ModalProvider } from './context/ModalContext.jsx';
-import { NavigationProvider, useNavigation } from './context/NavigationContext.jsx';
+import { NavigationProvider, useNavigation, getSectionFromUrl } from './context/NavigationContext.jsx';
 import PublicEntryScreen from './components/PublicEntryScreen.jsx';
 import SetPasswordScreen from './components/SetPasswordScreen.jsx';
 import BrandingSetupScreen from './components/BrandingSetupScreen.jsx';
@@ -12,13 +12,16 @@ import ToastContainer from './components/ToastContainer.jsx';
 
 function Gate() {
   const { authPhase, currentUser } = useAppData();
-  const { setActiveSection } = useNavigation();
+  const { replaceSection } = useNavigation();
 
-  // Students land on My Schedule (their most useful view day-to-day) rather than the Catalog —
-  // Catalog is still one click away in the sidebar for when they actually want to register.
+  // Students land on their own Dashboard (announcements/fees/GPA/today's classes at a glance)
+  // rather than the Catalog — Catalog is still one click away in the sidebar for when they
+  // actually want to register. Only applies on a genuinely fresh login (no section in the URL
+  // yet) — a page refresh mid-session already has ?section=... from a prior in-app navigation,
+  // and should land back there instead of being bounced to the role default every time.
   useEffect(() => {
-    if (authPhase === 'ready' && currentUser) {
-      setActiveSection(currentUser.role === 'student' ? 'myschedule' : currentUser.role === 'advisor' ? 'advisees' : 'dashboard');
+    if (authPhase === 'ready' && currentUser && !getSectionFromUrl()) {
+      replaceSection(currentUser.role === 'advisor' ? 'advisees' : 'dashboard');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authPhase]);
