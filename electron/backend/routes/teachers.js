@@ -4,6 +4,8 @@ const { get } = require('../db');
 module.exports = crudRouter({
   table: 'teachers',
   fields: ['name', 'departmentId', 'userId'],
+  // Department Heads only see/manage teachers in their own department.
+  scopeColumn: 'departmentId',
   guardDelete: async (id) => {
     const teaching = await get('SELECT id FROM courses WHERE teacherId = ? LIMIT 1', [id]);
     if (teaching) return 'Cannot remove — this teacher is still assigned to a course.';

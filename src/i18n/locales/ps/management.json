@@ -126,10 +126,21 @@
     "confirmDelete": "څانګه {{name}} ړنګه شي؟",
     "toastRemoved": "څانګه لرې شوه"
   },
+  "collegesPanel": {
+    "title": "پوهنځۍ",
+    "hint": "څانګې په پوهنځیو کې ډلبندي کړئ — د پوهنځي رئیس یو پوهنځي پورې محدود وي.",
+    "add": "زیاتول",
+    "addPlaceholder": "د نوي پوهنځي نوم…",
+    "deleteAria": "پوهنځی {{name}} ړنګ کړئ",
+    "confirmDelete": "پوهنځی {{name}} ړنګ شي؟",
+    "toastAdded": "پوهنځی زیات شو",
+    "toastRemoved": "پوهنځی لرې شو"
+  },
   "departmentForm": {
     "nameLabel": "د څانګې نوم",
     "namePlaceholder": "لکه کیمیا",
     "validateName": "مهرباني وکړئ د څانګې نوم ولیکئ.",
+    "noCollege": "— بې پوهنځي —",
     "confirmDelete": "څانګه {{name}} ړنګه شي؟",
     "toastRemoved": "څانګه لرې شوه"
   },

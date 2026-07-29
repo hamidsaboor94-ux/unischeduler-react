@@ -58,6 +58,23 @@ export default function TimetablePage() {
     return weekDatesFrom(monday);
   }, [weekOffset]);
 
+  // #content re-renders in place on a week change (no remount), unlike an ordinary sidebar
+  // switch — so unlike .section's built-in animation restart, this has to be re-triggered by
+  // hand: clear both directional classes, force a reflow so the browser commits that removal,
+  // then add the one matching the arrow pressed. Cleans itself up on animationend so a stale
+  // class never lingers to override the plain "slide from right" used when re-entering this
+  // page from the sidebar (see .section.active > #content in style.css).
+  const contentRef = useRef(null);
+  function triggerWeekSlide(direction) {
+    const el = contentRef.current;
+    if (!el) return;
+    const cls = direction === 'next' ? 'week-slide-right' : 'week-slide-left';
+    el.classList.remove('week-slide-right', 'week-slide-left');
+    void el.offsetWidth; // force reflow — commits the removal before the class is re-added
+    el.classList.add(cls);
+    el.addEventListener('animationend', () => el.classList.remove(cls), { once: true });
+  }
+
   const semesterOptions = useMemo(() => {
     const semesterValues = [...new Set(slots.map(s => s.programSemester))];
     const numericSemesters = semesterValues.filter(v => v != null).sort((a, b) => a - b).map(String);
@@ -162,14 +179,14 @@ export default function TimetablePage() {
         <i className="ti ti-calendar-week" style={{ color: 'var(--text-muted)', fontSize: 16 }} aria-hidden="true"></i>
         <h2 className="topbar-title">{t('timetable:timetablePage.title')}</h2>
         <div className="week-nav">
-          <button className="icon-btn" aria-label={t('timetable:timetablePage.prevWeek')} onClick={() => setWeekOffset(o => o - 1)}>
+          <button className="icon-btn" aria-label={t('timetable:timetablePage.prevWeek')} onClick={() => { setWeekOffset(o => o - 1); triggerWeekSlide('prev'); }}>
             <i className="ti ti-chevron-left" aria-hidden="true"></i>
           </button>
           <span className="week-nav-label">
             {fmtDate(weekDates.Mon)} – {fmtDate(weekDates.Sun)}
             {weekOffset === 0 && <span className="pill pill-blue" style={{ marginInlineStart: 6 }}>{t('timetable:timetablePage.thisWeek')}</span>}
           </span>
-          <button className="icon-btn" aria-label={t('timetable:timetablePage.nextWeek')} onClick={() => setWeekOffset(o => o + 1)}>
+          <button className="icon-btn" aria-label={t('timetable:timetablePage.nextWeek')} onClick={() => { setWeekOffset(o => o + 1); triggerWeekSlide('next'); }}>
             <i className="ti ti-chevron-right" aria-hidden="true"></i>
           </button>
           {weekOffset !== 0 && <button className="btn-sm" onClick={() => setWeekOffset(0)}>{t('timetable:timetablePage.today')}</button>}
@@ -253,7 +270,7 @@ export default function TimetablePage() {
           </div>
         )}
       </div>
-      <div id="content">
+      <div id="content" ref={contentRef}>
         <WeeklyCalendar
           slotsToShow={filtered}
           conflictSlotIds={conflictSlotIds}

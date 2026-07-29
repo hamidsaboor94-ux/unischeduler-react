@@ -1,6 +1,6 @@
 const express = require('express');
 const { all, get, run } = require('../db');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { overlapsMinutes } = require('../scheduling');
 const { canManageCourse } = require('../ownership');

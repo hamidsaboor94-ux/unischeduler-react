@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Section from '../components/Section.jsx';
 import ConflictItem from '../components/ConflictItem.jsx';
@@ -5,13 +6,16 @@ import { useAppData } from '../context/AppDataContext.jsx';
 import { useNavigation } from '../context/NavigationContext.jsx';
 import { useModal } from '../context/ModalContext.jsx';
 import { useAutoSchedule } from '../hooks/useSchedulingActions.js';
+import { fetchApplications } from '../api.js';
 import {
   COLOR_HEX, courseColor, courseById, roomName, teacherName,
   timeToMinutes, addMinutes, fmt12Hour, fmtDate, examStatus, enrolledCount, isoDateLocal,
 } from '../utils.js';
 
+const PENDING_APPLICATION_STATUSES = new Set(['Submitted', 'Under Review', 'Entry Test Scheduled', 'Waitlisted']);
+
 export default function DashboardPage() {
-  const { t } = useTranslation(['dashboard', 'common']);
+  const { t } = useTranslation(['dashboard', 'admissions', 'common']);
   const {
     currentUser, courses, slots, slotExceptions, exams, rooms, teachers, terms, activeTermId,
     conflictsData, courseRosters, notifications, dismissNotification,
@@ -22,6 +26,17 @@ export default function DashboardPage() {
 
   const isAdmin = currentUser.role === 'admin';
   const unreadNotifications = notifications.filter(n => !n.isRead);
+
+  // Applications aren't part of the global app-data store (only admin ever touches them), so
+  // this is its own small fetch — guarded to admin-only, same reasoning as every other
+  // admin-only fetch in this app (see StudentProfilePage.jsx, ReportsPage.jsx).
+  const [pendingApplicationsCount, setPendingApplicationsCount] = useState(0);
+  useEffect(() => {
+    if (!isAdmin) return;
+    fetchApplications().then(list => {
+      setPendingApplicationsCount(list.filter(a => PENDING_APPLICATION_STATUSES.has(a.status)).length);
+    }).catch(() => {});
+  }, [isAdmin]);
 
   const uniqueEnrolled = new Set([...courseRosters.values()].flat().filter(r => r.status === 'enrolled').map(r => r.studentId));
 
@@ -83,7 +98,8 @@ export default function DashboardPage() {
     ...conflictsData.warnings.map(w => ({ issue: w, severity: 'warning' })),
   ];
   const needsAttentionCount = conflictIssues.length + overLimitStudents.length
-    + (unscheduledExamsCount > 0 ? 1 : 0) + (coursesNoTeacher.length > 0 ? 1 : 0);
+    + (unscheduledExamsCount > 0 ? 1 : 0) + (coursesNoTeacher.length > 0 ? 1 : 0)
+    + (pendingApplicationsCount > 0 ? 1 : 0);
 
   return (
     <Section name="dashboard">
@@ -151,6 +167,14 @@ export default function DashboardPage() {
               <div className="stat-sub bad"><i className="ti ti-alert-circle" style={{ fontSize: 10 }}></i> {t('dashboard.statCards.needsReview')}</div>
             </div>
           )}
+          {isAdmin && (
+            <div className="stat-card stat-accent-gold" style={{ cursor: 'pointer' }} onClick={() => showSection('applications')}>
+              <div className="s-icon s-gold"><i className="ti ti-clipboard-list"></i></div>
+              <div className="stat-label">{t('admissions:dashboard.pendingApplications')}</div>
+              <div className="stat-value">{pendingApplicationsCount}</div>
+              <div className="stat-sub warn"><i className="ti ti-clock" style={{ fontSize: 10 }}></i> {t('admissions:dashboard.awaitingReview')}</div>
+            </div>
+          )}
         </div>
 
         {isAdmin ? (
@@ -199,6 +223,16 @@ export default function DashboardPage() {
                     <div style={{ flex: 1 }}>
                       <div className="alert-title">{t('dashboard.needsAttention.unscheduledExamsTitle', { count: unscheduledExamsCount })}</div>
                       <div className="alert-desc">{t('dashboard.needsAttention.unscheduledExamsDesc')}</div>
+                    </div>
+                    <span className="pill pill-blue">{t('dashboard.needsAttention.actionPill')}</span>
+                  </div>
+                )}
+                {pendingApplicationsCount > 0 && (
+                  <div className="alert-item alert-info" onClick={() => showSection('applications')}>
+                    <i className="ti ti-clipboard-list" style={{ fontSize: 18 }}></i>
+                    <div style={{ flex: 1 }}>
+                      <div className="alert-title">{t('admissions:dashboard.needsAttentionTitle', { count: pendingApplicationsCount })}</div>
+                      <div className="alert-desc">{t('admissions:dashboard.needsAttentionDesc')}</div>
                     </div>
                     <span className="pill pill-blue">{t('dashboard.needsAttention.actionPill')}</span>
                   </div>

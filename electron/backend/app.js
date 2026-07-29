@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const { findUserByEmail, get, run, logAudit } = require('./db');
 const { requireAuth, JWT_SECRET } = require('./middleware/auth');
+const { requireModuleAccess } = require('./middleware/permission');
+const { departmentScopeForUser } = require('./scope');
 const asyncHandler = require('./middleware/asyncHandler');
 const { isValidPassword, isValidEmail } = require('./validate');
 
@@ -55,12 +57,13 @@ app.post('/api/auth/login', authLimiter, asyncHandler(async (req, res) => {
   // right shouldn't still be creeping toward a lockout caused by their own successful logins.
   authLimiter.resetKey(ipKeyGenerator(req.ip));
   const mustChangePassword = !!user.mustChangePassword;
-  const token = jwt.sign({ sub: user.id, role: user.role, email: user.email, mustChangePassword }, JWT_SECRET, { expiresIn: '8h' });
-  res.json({ token, user: { id: user.id, email: user.email, role: user.role, name: user.name, mustChangePassword, idNumber: user.idNumber, language: user.language || 'en' } });
+  const departmentIds = await departmentScopeForUser(user);
+  const token = jwt.sign({ sub: user.id, role: user.role, departmentId: user.departmentId ?? null, collegeId: user.collegeId ?? null, departmentIds, email: user.email, mustChangePassword }, JWT_SECRET, { expiresIn: '8h' });
+  res.json({ token, user: { id: user.id, email: user.email, role: user.role, departmentId: user.departmentId ?? null, collegeId: user.collegeId ?? null, name: user.name, mustChangePassword, idNumber: user.idNumber, language: user.language || 'en' } });
 }));
 
 app.get('/api/auth/me', requireAuth, asyncHandler(async (req, res) => {
-  const user = await get('SELECT id, name, email, role, createdAt, mustChangePassword, idNumber, language FROM users WHERE id = ?', [req.user.sub]);
+  const user = await get('SELECT id, name, email, role, departmentId, collegeId, createdAt, mustChangePassword, idNumber, language FROM users WHERE id = ?', [req.user.sub]);
   if (!user) return res.status(404).json({ error: 'Not found' });
   res.json(user);
 }));
@@ -70,8 +73,9 @@ app.put('/api/auth/set-password', requireAuth, authLimiter, asyncHandler(async (
   if (!isValidPassword(newPassword)) return res.status(400).json({ error: 'Password must be at least 8 characters' });
   const passwordHash = bcrypt.hashSync(newPassword, 8);
   await run('UPDATE users SET passwordHash = ?, mustChangePassword = 0 WHERE id = ?', [passwordHash, req.user.sub]);
-  const user = await get('SELECT id, name, email, role, idNumber, language FROM users WHERE id = ?', [req.user.sub]);
-  const token = jwt.sign({ sub: user.id, role: user.role, email: user.email, mustChangePassword: false }, JWT_SECRET, { expiresIn: '8h' });
+  const user = await get('SELECT id, name, email, role, departmentId, collegeId, idNumber, language FROM users WHERE id = ?', [req.user.sub]);
+  const departmentIds = await departmentScopeForUser(user);
+  const token = jwt.sign({ sub: user.id, role: user.role, departmentId: user.departmentId ?? null, collegeId: user.collegeId ?? null, departmentIds, email: user.email, mustChangePassword: false }, JWT_SECRET, { expiresIn: '8h' });
   res.json({ token, user: { ...user, mustChangePassword: false } });
 }));
 
@@ -125,31 +129,39 @@ app.put('/api/auth/change-password', requireAuth, authLimiter, asyncHandler(asyn
   res.json({ ok: true });
 }));
 
-app.use('/api/users', require('./routes/users'));
-app.use('/api/audit-log', require('./routes/auditLog'));
-app.use('/api/departments', require('./routes/departments'));
-app.use('/api/terms', require('./routes/terms'));
-app.use('/api/teachers', require('./routes/teachers'));
-app.use('/api/rooms', require('./routes/rooms'));
-app.use('/api/courses', require('./routes/courses'));
-app.use('/api/slots', require('./routes/slots'));
-app.use('/api/slot-exceptions', require('./routes/slotExceptions'));
+// Mount-level permission guards: requireModuleAccess enforces the central
+// policy (permissions.js) — read access to reach a module at all, write access
+// for mutating methods (faculty/student excepted, since their routes do
+// per-object ownership checks). Routers with public or multi-module endpoints
+// (settings, applications, student-profile, notifications, and the course-content
+// routers) enforce permissions internally instead, so they're mounted bare.
+app.use('/api/users', requireAuth, requireModuleAccess('users'), require('./routes/users'));
+app.use('/api/audit-log', requireAuth, requireModuleAccess('audit'), require('./routes/auditLog'));
+app.use('/api/colleges', requireAuth, requireModuleAccess('departments', { openRead: true }), require('./routes/colleges'));
+app.use('/api/departments', requireAuth, requireModuleAccess('departments', { openRead: true }), require('./routes/departments'));
+app.use('/api/terms', requireAuth, requireModuleAccess('terms'), require('./routes/terms'));
+app.use('/api/teachers', requireAuth, requireModuleAccess('teachers', { openRead: true }), require('./routes/teachers'));
+app.use('/api/rooms', requireAuth, requireModuleAccess('rooms', { openRead: true }), require('./routes/rooms'));
+app.use('/api/courses', requireAuth, requireModuleAccess('courses', { allowOwnerWrite: true }), require('./routes/courses'));
+app.use('/api/slots', requireAuth, requireModuleAccess('timetable'), require('./routes/slots'));
+app.use('/api/slot-exceptions', requireAuth, requireModuleAccess('timetable'), require('./routes/slotExceptions'));
 app.use('/api/notifications', require('./routes/notifications'));
-app.use('/api/attendance', require('./routes/attendance'));
-app.use('/api/exams', require('./routes/exams'));
-app.use('/api/conflicts', require('./routes/conflicts'));
-app.use('/api/reports', require('./routes/reports'));
+app.use('/api/attendance', requireAuth, requireModuleAccess('attendance'), require('./routes/attendance'));
+app.use('/api/exams', requireAuth, requireModuleAccess('exams', { allowOwnerWrite: true }), require('./routes/exams'));
+app.use('/api/conflicts', requireAuth, requireModuleAccess('conflicts'), require('./routes/conflicts'));
+app.use('/api/reports', requireAuth, requireModuleAccess('reports'), require('./routes/reports'));
 app.use('/api/settings', require('./routes/settings'));
-app.use('/api/enrollments', require('./routes/enrollments'));
-app.use('/api/grades', require('./routes/grades'));
+app.use('/api/enrollments', requireAuth, requireModuleAccess('enrollment', { allowOwnerWrite: true }), require('./routes/enrollments'));
+app.use('/api/grades', requireAuth, requireModuleAccess('grades'), require('./routes/grades'));
 app.use('/api/assignments', require('./routes/assignments'));
 app.use('/api/announcements', require('./routes/announcements'));
 app.use('/api/course-activity', require('./routes/courseActivity'));
 app.use('/api/materials', require('./routes/materials'));
 app.use('/api/student-profile', require('./routes/studentProfile'));
+app.use('/api/finance', require('./routes/finance'));
 app.use('/api/applications', require('./routes/applications'));
-app.use('/api/timetable-import', require('./routes/timetableImport'));
-app.use('/api/backup', require('./routes/backup'));
+app.use('/api/timetable-import', requireAuth, requireModuleAccess('timetable'), require('./routes/timetableImport'));
+app.use('/api/backup', requireAuth, requireModuleAccess('backup'), require('./routes/backup'));
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });

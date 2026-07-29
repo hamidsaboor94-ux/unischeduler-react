@@ -126,10 +126,21 @@
     "confirmDelete": "Delete department {{name}}?",
     "toastRemoved": "Department removed"
   },
+  "collegesPanel": {
+    "title": "Colleges",
+    "hint": "Group departments into colleges — a Dean is scoped to one college.",
+    "add": "Add",
+    "addPlaceholder": "New college name…",
+    "deleteAria": "Delete college {{name}}",
+    "confirmDelete": "Delete college {{name}}?",
+    "toastAdded": "College added",
+    "toastRemoved": "College removed"
+  },
   "departmentForm": {
     "nameLabel": "Department name",
     "namePlaceholder": "e.g. Chemistry",
     "validateName": "Please enter a department name.",
+    "noCollege": "— No college —",
     "confirmDelete": "Delete department {{name}}?",
     "toastRemoved": "Department removed"
   },

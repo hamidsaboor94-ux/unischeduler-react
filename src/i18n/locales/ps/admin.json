@@ -76,12 +76,18 @@
     "cannotChangeOwnRole": "د خپل رول بدلولو لپاره د بل اډمین حساب وکاروئ",
     "confirmDelete": "کاروونکی {{name}} ړنګ شي؟ دا بېرته نه راګرځي.",
     "deleteAriaLabel": "کاروونکی {{name}} ړنګ کړئ",
+    "selectDepartment": "څانګه وټاکئ…",
+    "departmentScopeTitle": "دا رول یوازې د همدې څانګې معلومات ویني او اداره کوي",
+    "selectCollege": "پوهنځی وټاکئ…",
+    "collegeScopeTitle": "دا رول د دې پوهنځي ټولې څانګې ویني او اداره کوي",
     "table": {
       "idNumber": "د پیژندنې شمېره",
       "joined": "د ګډون نېټه"
     },
     "toast": {
       "roleUpdated": "رول تازه شو.",
+      "needDepartmentFirst": "لومړی یوه څانګه جوړه کړئ — دا رول باید یوې څانګې پورې محدود وي.",
+      "needCollegeFirst": "لومړی یو پوهنځی جوړ کړئ — دا رول باید یو پوهنځي پورې محدود وي.",
       "userRemoved": "کاروونکی لرې شو",
       "unsupportedFileType": "مهرباني وکړئ .csv یا .xlsx فایل اپلوډ کړئ.",
       "fileReadError": "دا فایل نه شو لوستل کیدی.",
@@ -96,7 +102,8 @@
     "submit": "حساب جوړول",
     "toast": {
       "nameEmailRequired": "نوم او بریښنالیک اړین دي.",
-      "pickDepartment": "د ښوونکي حساب لپاره یوه څانګه وټاکئ."
+      "pickDepartment": "د ښوونکي حساب لپاره یوه څانګه وټاکئ.",
+      "pickCollege": "د پوهنځي رئیس حساب لپاره یو پوهنځی وټاکئ."
     }
   },
   "resetPasswordForm": {

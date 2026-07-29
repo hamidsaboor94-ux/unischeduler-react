@@ -35,7 +35,7 @@ function ChartPanel({ title, subtitle, children, empty }) {
     the currently selected term, same as every other admin page), and enrollment trends across
     every term (deliberately term-independent — that's the whole point of a trend). */
 export default function ReportsPage() {
-  const { t } = useTranslation(['dashboard', 'common']);
+  const { t } = useTranslation(['dashboard', 'admissions', 'common']);
   const { activeTermId, terms, currentUser } = useAppData();
   const { activeSection } = useNavigation();
   const { toast } = useToast();
@@ -67,6 +67,7 @@ export default function ReportsPage() {
   const courses = data?.coursePopularity || [];
   const teachers = (data?.teacherWorkload || []).filter(tw => tw.sections > 0);
   const trends = (data?.enrollmentTrends || []).map(term => ({ ...term, termName: term.termName || t('reports.termFallback', { id: term.termId }) }));
+  const applicationStats = data?.applicationStats || { total: 0, accepted: 0, rejected: 0, pending: 0, acceptanceRate: null };
 
   const mostPopular = courses.slice().sort((a, b) => b.enrolledCount - a.enrolledCount).slice(0, 8);
   const leastPopular = courses.slice().sort((a, b) => a.enrolledCount - b.enrolledCount).slice(0, 8);
@@ -87,6 +88,42 @@ export default function ReportsPage() {
                 values={{ term: activeTerm?.name || t('reports.currentTermFallback') }}
                 components={{ strong: <strong /> }}
               />
+            </div>
+
+            <div className="panel" style={{ marginBottom: 14 }}>
+              <div className="panel-header">
+                <div>
+                  <div className="panel-title">{t('admissions:reports.panelTitle')}</div>
+                  <div className="panel-subtitle">{t('admissions:reports.panelSubtitle')}</div>
+                </div>
+              </div>
+              <div className="stat-grid" style={{ marginBottom: 0 }}>
+                <div className="stat-card stat-accent-blue">
+                  <div className="s-icon s-blue"><i className="ti ti-clipboard-list"></i></div>
+                  <div className="stat-label">{t('admissions:reports.total')}</div>
+                  <div className="stat-value">{applicationStats.total}</div>
+                </div>
+                <div className="stat-card stat-accent-green">
+                  <div className="s-icon s-green"><i className="ti ti-check"></i></div>
+                  <div className="stat-label">{t('admissions:reports.accepted')}</div>
+                  <div className="stat-value">{applicationStats.accepted}</div>
+                </div>
+                <div className="stat-card stat-accent-red">
+                  <div className="s-icon s-red"><i className="ti ti-x"></i></div>
+                  <div className="stat-label">{t('admissions:reports.rejected')}</div>
+                  <div className="stat-value">{applicationStats.rejected}</div>
+                </div>
+                <div className="stat-card stat-accent-gold">
+                  <div className="s-icon s-gold"><i className="ti ti-clock"></i></div>
+                  <div className="stat-label">{t('admissions:reports.pending')}</div>
+                  <div className="stat-value">{applicationStats.pending}</div>
+                </div>
+                <div className="stat-card stat-accent-purple">
+                  <div className="s-icon s-purple"><i className="ti ti-percentage"></i></div>
+                  <div className="stat-label">{t('admissions:reports.acceptanceRate')}</div>
+                  <div className="stat-value">{applicationStats.acceptanceRate != null ? `${applicationStats.acceptanceRate}%` : t('admissions:reports.notAvailable')}</div>
+                </div>
+              </div>
             </div>
 
             <ChartPanel

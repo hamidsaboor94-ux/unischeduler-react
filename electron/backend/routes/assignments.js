@@ -91,7 +91,7 @@ router.post('/', requireAuth, requireRole('admin', 'faculty'), asyncHandler(asyn
   await logAudit(req.user, 'create-assignment', 'assignments', result.id, { courseId: course.id, title: title.trim() });
 
   const message = `New assignment posted in ${course.code} — ${course.name}: "${title.trim()}"${dueDate ? ` (due ${dueDate})` : ''}`;
-  await notifyCourseStudents(course.id, message, { type: 'assignment', entityType: 'assignment', entityId: result.id });
+  await notifyCourseStudents(course.id, message, { type: 'assignment_posted', entityType: 'assignment', entityId: result.id });
 
   res.status(201).json(await get('SELECT * FROM assignments WHERE id = ?', [result.id]));
 }));

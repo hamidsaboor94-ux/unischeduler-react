@@ -284,7 +284,7 @@ export default function ApplicationsPage() {
                       </button>
                     )}
                     {canConvert && (
-                      <button className="btn-gold" onClick={() => openModal('application-approve', null, {
+                      <button className="btn-primary" onClick={() => openModal('application-approve', null, {
                         applicationId: detail.id, desiredDepartmentId: detail.desiredDepartmentId, fullName: detail.fullName, onApproved: refreshDetail,
                       })}>
                         <i className="ti ti-check"></i> {t('admissions:detail.approve')}

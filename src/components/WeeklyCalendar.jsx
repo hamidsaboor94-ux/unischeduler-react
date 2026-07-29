@@ -37,8 +37,8 @@ function QuickAction({ icon, label, onClick, dot = false, dotDanger = false, dis
     exception gets an "Undo" action instead (admin only). Without `weekDates` it renders the plain
     recurring week exactly as before, with no quick actions. */
 export default function WeeklyCalendar({
-  slotsToShow, conflictSlotIds, editable = false, addable = false,
-  showLecturer = true, showSemesterBadge = false, addPrefill = {}, dayFilter = '',
+  slotsToShow, conflictSlotIds, editable = false,
+  showLecturer = true, showSemesterBadge = false, dayFilter = '',
   weekDates = null, exceptions = [], onCardClick = null, unviewedCourseIds = null,
   conflictIssueBySlotId = null, finalGradesByCourseId = null,
 }) {
@@ -151,8 +151,9 @@ export default function WeeklyCalendar({
             }
             entries.sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
 
+            const isTodayCol = dateFor === today;
             return (
-              <div key={d} className="cal-day-col" style={{ display: !dayFilter || dayFilter === d ? '' : 'none' }}>
+              <div key={d} className={'cal-day-col' + (isTodayCol ? ' cal-col-today' : '')} style={{ display: !dayFilter || dayFilter === d ? '' : 'none' }}>
                 {entries.length === 0 && (
                   <div className="cal-day-empty">
                     <i className="ti ti-calendar-off" aria-hidden="true"></i>
@@ -238,11 +239,6 @@ export default function WeeklyCalendar({
                     </div>
                   );
                 })}
-                {addable && (
-                  <div className="cal-add-card" onClick={() => openModal('slot', null, { day: d, ...addPrefill, fromDayCell: true })} title={t('timetable:weeklyCalendar.addTitle')}>
-                    <i className="ti ti-plus"></i> {t('common:actions.add')}
-                  </div>
-                )}
               </div>
             );
           })}

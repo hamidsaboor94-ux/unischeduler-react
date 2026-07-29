@@ -4,11 +4,14 @@ const path = require('path');
 const multer = require('multer');
 const { rateLimit } = require('express-rate-limit');
 const { all, get, run, logAudit, findUserByEmail, nextIdNumberForRole, DB_PATH } = require('../db');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/permission');
+const { departmentScopeClause, isScopedRequest, departmentInScope } = require('../scope');
 const asyncHandler = require('../middleware/asyncHandler');
 const { isValidEmail } = require('../validate');
 const { createAccountWithTempPassword } = require('../accounts');
 const { sendMail } = require('../mailer');
+const { createNotification } = require('../notificationTypes');
 
 const router = express.Router();
 
@@ -100,10 +103,7 @@ async function insertApplication(body, { source, createdBy }) {
 async function notifyAdmins(message, applicationId) {
   const admins = await all(`SELECT id FROM users WHERE role = 'admin'`);
   for (const a of admins) {
-    await run(
-      'INSERT INTO notifications (userId, message, type, entityType, entityId) VALUES (?, ?, ?, ?, ?)',
-      [a.id, message, 'info', 'application', applicationId]
-    );
+    await createNotification(a.id, message, 'application_submitted', { entityType: 'application', entityId: applicationId });
   }
 }
 
@@ -148,7 +148,7 @@ router.post('/', applicationLimiter, upload.array('documents', 10), asyncHandler
 
 // --- Admin-only from here down ---
 
-router.post('/admin', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.post('/admin', requireAuth, requirePermission('admissions', 'write'), asyncHandler(async (req, res) => {
   const error = validateIntakeBody(req.body);
   if (error) return res.status(400).json({ error });
   let applicationId;
@@ -162,11 +162,15 @@ router.post('/admin', requireAuth, requireRole('admin'), asyncHandler(async (req
   res.status(201).json(await get('SELECT * FROM applications WHERE id = ?', [applicationId]));
 }));
 
-router.get('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.get('/', requireAuth, requirePermission('admissions', 'read'), asyncHandler(async (req, res) => {
   const clauses = [];
   const params = [];
   if (req.query.status) { clauses.push('a.status = ?'); params.push(req.query.status); }
   if (req.query.departmentId) { clauses.push('a.desiredDepartmentId = ?'); params.push(req.query.departmentId); }
+  // A department-restricted reader (Department Head / Dean) only sees
+  // applications to their own department(s), whatever filter they pass.
+  const scope = departmentScopeClause(req, 'a.desiredDepartmentId');
+  if (scope) { clauses.push(scope.clause); params.push(...scope.params); }
   const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
   const rows = await all(
     `SELECT a.*, d.name as desiredDepartmentName
@@ -177,13 +181,16 @@ router.get('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res)
   res.json(rows);
 }));
 
-router.get('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.get('/:id', requireAuth, requirePermission('admissions', 'read'), asyncHandler(async (req, res) => {
   const application = await get(
     `SELECT a.*, d.name as desiredDepartmentName
      FROM applications a LEFT JOIN departments d ON d.id = a.desiredDepartmentId WHERE a.id = ?`,
     [req.params.id]
   );
   if (!application) return res.status(404).json({ error: 'Application not found' });
+  if (isScopedRequest(req) && !departmentInScope(req, application.desiredDepartmentId)) {
+    return res.status(404).json({ error: 'Application not found' });
+  }
   const documents = await all(
     'SELECT id, documentType, title, fileName, mimeType, createdAt FROM application_documents WHERE applicationId = ? ORDER BY createdAt DESC',
     [req.params.id]
@@ -191,7 +198,7 @@ router.get('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, r
   res.json({ ...application, documents });
 }));
 
-router.put('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.put('/:id', requireAuth, requirePermission('admissions', 'write'), asyncHandler(async (req, res) => {
   const application = await get('SELECT * FROM applications WHERE id = ?', [req.params.id]);
   if (!application) return res.status(404).json({ error: 'Application not found' });
   const cols = ADMIN_FIELDS.filter(f => req.body[f] !== undefined);
@@ -213,7 +220,7 @@ router.put('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, r
   res.json(await get('SELECT * FROM applications WHERE id = ?', [req.params.id]));
 }));
 
-router.put('/:id/status', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.put('/:id/status', requireAuth, requirePermission('admissions', 'write'), asyncHandler(async (req, res) => {
   const { status, decisionNote } = req.body;
   if (!STATUSES_VIA_ROUTE.includes(status)) {
     return res.status(400).json({ error: `status must be one of: ${STATUSES_VIA_ROUTE.join(', ')}` });
@@ -244,7 +251,7 @@ router.put('/:id/status', requireAuth, requireRole('admin'), asyncHandler(async 
   res.json({ ...(await get('SELECT * FROM applications WHERE id = ?', [req.params.id])), emailSent: emailResult.sent, emailError: emailResult.sent ? null : emailResult.reason });
 }));
 
-router.post('/:id/approve', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.post('/:id/approve', requireAuth, requirePermission('admissions', 'write'), asyncHandler(async (req, res) => {
   const application = await get('SELECT * FROM applications WHERE id = ?', [req.params.id]);
   if (!application) return res.status(404).json({ error: 'Application not found' });
   if (application.status === 'Accepted') return res.status(409).json({ error: 'This application has already been accepted.' });
@@ -319,7 +326,7 @@ router.post('/:id/approve', requireAuth, requireRole('admin'), asyncHandler(asyn
   });
 }));
 
-router.post('/:id/documents', requireAuth, requireRole('admin'), upload.single('file'), asyncHandler(async (req, res) => {
+router.post('/:id/documents', requireAuth, requirePermission('admissions', 'write'), upload.single('file'), asyncHandler(async (req, res) => {
   const application = await get('SELECT id FROM applications WHERE id = ?', [req.params.id]);
   if (!application) return res.status(404).json({ error: 'Application not found' });
   const { documentType, title } = req.body;
@@ -341,14 +348,14 @@ router.post('/:id/documents', requireAuth, requireRole('admin'), upload.single('
   res.status(201).json(await get('SELECT id, documentType, title, fileName, mimeType, createdAt FROM application_documents WHERE id = ?', [result.id]));
 }));
 
-router.get('/:id/documents/:docId/file', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.get('/:id/documents/:docId/file', requireAuth, requirePermission('admissions', 'read'), asyncHandler(async (req, res) => {
   const doc = await get('SELECT * FROM application_documents WHERE id = ? AND applicationId = ?', [req.params.docId, req.params.id]);
   if (!doc) return res.status(404).json({ error: 'Document not found' });
   if (!APPLICATION_DOCS_DIR || !fs.existsSync(appDocFile(doc.id))) return res.status(404).json({ error: 'File not found' });
   res.download(appDocFile(doc.id), doc.fileName);
 }));
 
-router.delete('/:id/documents/:docId', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.delete('/:id/documents/:docId', requireAuth, requirePermission('admissions', 'write'), asyncHandler(async (req, res) => {
   const doc = await get('SELECT * FROM application_documents WHERE id = ? AND applicationId = ?', [req.params.docId, req.params.id]);
   if (!doc) return res.status(404).json({ error: 'Document not found' });
   await run('DELETE FROM application_documents WHERE id = ?', [req.params.docId]);

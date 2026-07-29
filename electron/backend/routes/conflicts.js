@@ -1,6 +1,6 @@
 const express = require('express');
 const { get, run } = require('../db');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { loadTermData } = require('../loaders');
 const { computeConflicts, autoResolveAll, effectiveSessionsOn, overlapsMinutes, SLOT_TIMES } = require('../scheduling');
@@ -8,7 +8,7 @@ const { candidateDates } = require('../dateUtils');
 
 const router = express.Router();
 
-router.get('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.get('/', requireAuth, asyncHandler(async (req, res) => {
   const data = await loadTermData(req.query.termId);
   res.json(computeConflicts(data));
 }));
@@ -17,7 +17,7 @@ router.get('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res)
     "Reschedule to another room" dropdown, so it only ever offers rooms that won't just
     recreate the same clash somewhere else. `excludeSlotId`/`excludeExceptionId` leave out the
     very session being moved (otherwise it would always "clash" with its own current booking). */
-router.get('/available-rooms', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.get('/available-rooms', requireAuth, asyncHandler(async (req, res) => {
   const { termId, day, date, time, durationMinutes, excludeSlotId, excludeExceptionId } = req.query;
   if (!time || !durationMinutes) return res.status(400).json({ error: 'time and durationMinutes are required' });
   const data = await loadTermData(termId);
@@ -35,7 +35,7 @@ router.get('/available-rooms', requireAuth, requireRole('admin'), asyncHandler(a
     free for that teacher) at an exact day/date — the "Change time" alternative. Unlike the
     room dropdown above, this checks BOTH the room and the instructor at each candidate time,
     since changing the time is meant to clear either kind of clash without opening a new one. */
-router.get('/available-times', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.get('/available-times', requireAuth, asyncHandler(async (req, res) => {
   const { termId, day, date, roomId, teacherId, durationMinutes, excludeSlotId, excludeExceptionId } = req.query;
   if (!roomId || !durationMinutes) return res.status(400).json({ error: 'roomId and durationMinutes are required' });
   const data = await loadTermData(termId);
@@ -52,7 +52,7 @@ router.get('/available-times', requireAuth, requireRole('admin'), asyncHandler(a
   res.json(free);
 }));
 
-router.post('/auto-resolve', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.post('/auto-resolve', requireAuth, asyncHandler(async (req, res) => {
   const termId = req.body.termId || req.query.termId;
   const data = await loadTermData(termId);
   const conflicts = computeConflicts(data);

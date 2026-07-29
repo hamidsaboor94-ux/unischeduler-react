@@ -53,6 +53,11 @@ async function init() {
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS colleges (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT UNIQUE NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS departments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT UNIQUE NOT NULL
@@ -371,6 +376,22 @@ async function init() {
       uploadedBy INTEGER REFERENCES users(id),
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    -- Finance: fees are charged per credit (rate lives in settings as
+    -- 'perCreditFee'); a student's total charge is derived live from their
+    -- enrolled courses' credits. Payments are recorded here as installments,
+    -- each its own receipt. Balance = total charged - sum(payments.amount).
+    CREATE TABLE IF NOT EXISTS payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      studentId INTEGER NOT NULL REFERENCES users(id),
+      amount REAL NOT NULL,
+      method TEXT,
+      reference TEXT,
+      note TEXT,
+      receiptNo TEXT,
+      paidAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      createdBy INTEGER REFERENCES users(id)
+    );
   `);
 
   ensureColumn('timetable_slots', 'durationMinutes', 'INTEGER DEFAULT 60');
@@ -384,6 +405,19 @@ async function init() {
   // not a single app-wide setting, so an admin and a student can each read the app in
   // whichever language they prefer.
   ensureColumn('users', 'language', "TEXT DEFAULT 'en'");
+  // Department a department-scoped staff role (e.g. Department Head) is confined
+  // to — enforced on the backend via scope.js. NULL for unscoped roles (Super
+  // Admin, Registrar, Admissions Officer, students; faculty carry their
+  // department on the teachers row instead, though it's mirrored here too).
+  ensureColumn('users', 'departmentId', 'INTEGER');
+  // College a college-scoped role (Dean) is confined to. A Dean's scope resolves
+  // to every department whose collegeId matches — the multi-department analogue
+  // of a Department Head's single departmentId above. NULL for everyone else.
+  ensureColumn('users', 'collegeId', 'INTEGER');
+  // Which college a department belongs to (Deans are scoped by this). NULL until
+  // an admin groups the department under a college — colleges are an optional
+  // organizational layer, so departments work fine ungrouped.
+  ensureColumn('departments', 'collegeId', 'INTEGER');
   ensureColumn('timetable_slots', 'programSemester', 'INTEGER');
   ensureColumn('timetable_slots', 'section', 'TEXT');
   ensureColumn('terms', 'offDays', "TEXT DEFAULT '[]'");

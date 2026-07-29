@@ -1,6 +1,6 @@
 const express = require('express');
 const { all, get, run, logAudit } = require('../db');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { isPositiveInt } = require('../validate');
 
@@ -69,7 +69,7 @@ router.get('/:id', requireAuth, asyncHandler(async (req, res) => {
   res.json(row);
 }));
 
-router.post('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.post('/', requireAuth, asyncHandler(async (req, res) => {
   const cols = FIELDS.filter(f => req.body[f] !== undefined);
   if (!cols.length) return res.status(400).json({ error: 'No fields provided' });
   if (!req.body.name || !req.body.name.trim()) return res.status(400).json({ error: 'Semester name is required' });
@@ -87,7 +87,7 @@ router.post('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res
   res.status(201).json(await get('SELECT * FROM terms WHERE id = ?', [result.id]));
 }));
 
-router.put('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.put('/:id', requireAuth, asyncHandler(async (req, res) => {
   const cols = FIELDS.filter(f => req.body[f] !== undefined);
   if (!cols.length) return res.status(400).json({ error: 'No fields to update' });
   if (req.body.name !== undefined) {
@@ -109,7 +109,7 @@ router.put('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, r
   res.json(row);
 }));
 
-router.post('/:id/rollover', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.post('/:id/rollover', requireAuth, asyncHandler(async (req, res) => {
   const targetTermId = req.params.id;
   const { sourceTermId } = req.body;
   if (!sourceTermId) return res.status(400).json({ error: 'sourceTermId is required' });
@@ -139,7 +139,7 @@ router.post('/:id/rollover', requireAuth, requireRole('admin'), asyncHandler(asy
   res.status(200).json({ created, errors });
 }));
 
-router.delete('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
   const inUse = await get('SELECT id FROM courses WHERE termId = ? LIMIT 1', [req.params.id]);
   if (inUse) return res.status(409).json({ error: 'Cannot remove — this term still has courses scheduled in it.' });
   await run('DELETE FROM terms WHERE id = ?', [req.params.id]);

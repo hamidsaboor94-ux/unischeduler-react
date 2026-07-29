@@ -68,9 +68,13 @@ export default function StudentProfilePage() {
   const na = t('common:notApplicable');
   const isAdmin = currentUser.role === 'admin';
   const isStudentSelf = currentUser.role === 'student';
+  // A student sees their own profile; any staff member who navigated here with a
+  // specific student (admin from Users, advisor from My Advisees) sees that one.
+  // The backend decides who's actually allowed — an advisor only loads their own
+  // advisees, others 403 — so widening this beyond admin never leaks data.
   const viewingStudentId = isStudentSelf
     ? currentUser.id
-    : (isAdmin && sectionFocus?.section === 'student-profile' && sectionFocus.studentId != null)
+    : (sectionFocus?.section === 'student-profile' && sectionFocus.studentId != null)
       ? Number(sectionFocus.studentId)
       : null;
 

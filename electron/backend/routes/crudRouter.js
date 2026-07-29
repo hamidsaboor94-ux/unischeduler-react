@@ -1,6 +1,7 @@
 const express = require('express');
 const { all, get, run, logAudit } = require('../db');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
+const { departmentScopeClause, departmentInScope, resolveScopedDepartment, isScopedRequest } = require('../scope');
 const asyncHandler = require('../middleware/asyncHandler');
 
 /** Translates common SQLite constraint failures into friendly 4xx messages. */
@@ -29,27 +30,46 @@ async function runOrFriendlyError(res, table, fn) {
 
 /**
  * Builds a standard list/get/create/update/delete router for a reference-data
- * table. Reads are open to any authenticated user; writes are admin-only.
+ * table. Read/write access to the module is enforced upstream by the mount's
+ * requireModuleAccess guard (see app.js) against the central policy — so this
+ * router no longer hardcodes an admin-only write rule.
+ *
  * `guardDelete(id)` may return an error message string to block a delete
  * (e.g. "still in use"), or null/undefined to allow it.
  * `validate(body)` may return an error message string to reject a create/update
  * (e.g. bad field values), or null/undefined to allow it.
+ * `scopeColumn` (e.g. 'departmentId') confines department-scoped roles to their
+ * own department: they only list/read/write/delete rows whose `scopeColumn`
+ * matches their department, and creates are forced into it.
  */
-function crudRouter({ table, fields, guardDelete, validate }) {
+function crudRouter({ table, fields, guardDelete, validate, scopeColumn }) {
   const router = express.Router();
 
   router.get('/', requireAuth, asyncHandler(async (req, res) => {
-    const rows = await all(`SELECT * FROM ${table}`);
+    const scope = scopeColumn ? departmentScopeClause(req, scopeColumn) : null;
+    const rows = scope
+      ? await all(`SELECT * FROM ${table} WHERE ${scope.clause}`, scope.params)
+      : await all(`SELECT * FROM ${table}`);
     res.json(rows);
   }));
 
   router.get('/:id', requireAuth, asyncHandler(async (req, res) => {
     const row = await get(`SELECT * FROM ${table} WHERE id = ?`, [req.params.id]);
     if (!row) return res.status(404).json({ error: 'Not found' });
+    if (scopeColumn && isScopedRequest(req) && !departmentInScope(req, row[scopeColumn])) {
+      return res.status(404).json({ error: 'Not found' });
+    }
     res.json(row);
   }));
 
-  router.post('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+  router.post('/', requireAuth, asyncHandler(async (req, res) => {
+    // A department-restricted creator can only create within their own
+    // department(s); resolve/validate the target column against their scope.
+    if (scopeColumn && isScopedRequest(req)) {
+      const r = resolveScopedDepartment(req, req.body[scopeColumn]);
+      if (r.error) return res.status(403).json({ error: r.error });
+      req.body[scopeColumn] = r.departmentId;
+    }
     const cols = fields.filter(f => req.body[f] !== undefined);
     if (!cols.length) return res.status(400).json({ error: 'No fields provided' });
     if (validate) {
@@ -66,7 +86,18 @@ function crudRouter({ table, fields, guardDelete, validate }) {
     res.status(201).json(row);
   }));
 
-  router.put('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+  router.put('/:id', requireAuth, asyncHandler(async (req, res) => {
+    const existing = await get(`SELECT * FROM ${table} WHERE id = ?`, [req.params.id]);
+    if (!existing) return res.status(404).json({ error: 'Not found' });
+    if (scopeColumn && isScopedRequest(req)) {
+      // Can't touch a row outside your scope, nor move a row out of it.
+      if (!departmentInScope(req, existing[scopeColumn])) return res.status(404).json({ error: 'Not found' });
+      if (req.body[scopeColumn] !== undefined) {
+        const r = resolveScopedDepartment(req, req.body[scopeColumn]);
+        if (r.error) return res.status(403).json({ error: r.error });
+        req.body[scopeColumn] = r.departmentId;
+      }
+    }
     const cols = fields.filter(f => req.body[f] !== undefined);
     if (!cols.length) return res.status(400).json({ error: 'No fields to update' });
     if (validate) {
@@ -84,7 +115,13 @@ function crudRouter({ table, fields, guardDelete, validate }) {
     res.json(row);
   }));
 
-  router.delete('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+  router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
+    if (scopeColumn && isScopedRequest(req)) {
+      const existing = await get(`SELECT ${scopeColumn} FROM ${table} WHERE id = ?`, [req.params.id]);
+      if (!existing || !departmentInScope(req, existing[scopeColumn])) {
+        return res.status(404).json({ error: 'Not found' });
+      }
+    }
     if (guardDelete) {
       const msg = await guardDelete(req.params.id);
       if (msg) return res.status(409).json({ error: msg });

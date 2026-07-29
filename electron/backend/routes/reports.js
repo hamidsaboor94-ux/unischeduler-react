@@ -1,6 +1,6 @@
 const express = require('express');
 const { all, get } = require('../db');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 
 const router = express.Router();
@@ -11,7 +11,7 @@ const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     popularity, and teacher workload to a single term (defaults to the currently active
     one); enrollment trends are intentionally term-independent, covering every term so
     growth/decline is visible across semesters. */
-router.get('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.get('/', requireAuth, asyncHandler(async (req, res) => {
   let termId = req.query.termId ? Number(req.query.termId) : null;
   if (!termId) {
     const active = await get('SELECT id FROM terms WHERE isActive = 1 ORDER BY id DESC LIMIT 1');

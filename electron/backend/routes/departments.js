@@ -3,7 +3,9 @@ const { get } = require('../db');
 
 module.exports = crudRouter({
   table: 'departments',
-  fields: ['name'],
+  // collegeId groups a department under a college (optional) — this is what a
+  // Dean is scoped by. Editable by admins on the Departments page.
+  fields: ['name', 'collegeId'],
   guardDelete: async (id) => {
     const inUse = await get('SELECT id FROM courses WHERE departmentId = ? LIMIT 1', [id]);
     if (inUse) return 'Cannot remove — this department still has courses assigned to it.';

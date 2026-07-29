@@ -1,9 +1,10 @@
 const express = require('express');
 const { all, get, run, logAudit } = require('../db');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { runOrFriendlyError } = require('./crudRouter');
 const { courseScopeClause, enrolledCourseIds } = require('../ownership');
+const { courseInScope, isScopedRequest } = require('../scope');
 const { overlapsMinutes } = require('../scheduling');
 
 const router = express.Router();
@@ -11,19 +12,25 @@ const FIELDS = ['courseId', 'day', 'time', 'durationMinutes', 'roomId', 'termId'
 
 router.get('/', requireAuth, asyncHandler(async (req, res) => {
   const rows = await all('SELECT * FROM timetable_slots');
-  if (req.user.role === 'admin') return res.json(rows);
-  if (req.user.role === 'faculty') {
-    const scope = await courseScopeClause(req);
-    const ownedCourseIds = new Set((await all(`SELECT id FROM courses WHERE ${scope.clause}`, scope.params)).map(c => c.id));
-    return res.json(rows.filter(s => ownedCourseIds.has(s.courseId)));
+  if (req.user.role === 'student') {
+    const myCourseIds = new Set(await enrolledCourseIds(req.user.sub));
+    return res.json(rows.filter(s => myCourseIds.has(s.courseId)));
   }
-  const myCourseIds = new Set(await enrolledCourseIds(req.user.sub));
-  res.json(rows.filter(s => myCourseIds.has(s.courseId)));
+  // courseScopeClause restricts a Department Head to their department and a
+  // faculty user to their own courses; it's null (no restriction) for admin,
+  // registrar, exam officer and viewer, who see the whole timetable.
+  const scope = await courseScopeClause(req);
+  if (!scope) return res.json(rows);
+  const scopedCourseIds = new Set((await all(`SELECT id FROM courses WHERE ${scope.clause}`, scope.params)).map(c => c.id));
+  res.json(rows.filter(s => scopedCourseIds.has(s.courseId)));
 }));
 
 router.get('/:id', requireAuth, asyncHandler(async (req, res) => {
   const row = await get('SELECT * FROM timetable_slots WHERE id = ?', [req.params.id]);
   if (!row) return res.status(404).json({ error: 'Not found' });
+  if (isScopedRequest(req) && !(await courseInScope(req, row.courseId))) {
+    return res.status(404).json({ error: 'Not found' });
+  }
   res.json(row);
 }));
 
@@ -77,9 +84,13 @@ async function describeOverlaps(slot, excludeId) {
   return warnings;
 }
 
-router.post('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.post('/', requireAuth, asyncHandler(async (req, res) => {
   const cols = FIELDS.filter(f => req.body[f] !== undefined);
   if (!cols.length) return res.status(400).json({ error: 'No fields provided' });
+  // Department-scoped roles may only schedule their own department's courses.
+  if (isScopedRequest(req) && !(await courseInScope(req, req.body.courseId))) {
+    return res.status(403).json({ error: 'You can only schedule courses in your own department.' });
+  }
   if (await identicalSlotExists(req.body)) {
     return res.status(409).json({ error: 'An identical timetable slot already exists (same course, day, time, room, semester and section).' });
   }
@@ -94,11 +105,19 @@ router.post('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res
   res.status(201).json({ ...row, conflictWarnings });
 }));
 
-router.put('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.put('/:id', requireAuth, asyncHandler(async (req, res) => {
   const cols = FIELDS.filter(f => req.body[f] !== undefined);
   if (!cols.length) return res.status(400).json({ error: 'No fields to update' });
   const current = await get('SELECT * FROM timetable_slots WHERE id = ?', [req.params.id]);
   if (!current) return res.status(404).json({ error: 'Not found' });
+  // Scoped roles: the slot's current course AND any course it's being moved to
+  // must both belong to their department.
+  if (isScopedRequest(req)) {
+    if (!(await courseInScope(req, current.courseId))) return res.status(404).json({ error: 'Not found' });
+    if (req.body.courseId !== undefined && !(await courseInScope(req, req.body.courseId))) {
+      return res.status(403).json({ error: 'You can only schedule courses in your own department.' });
+    }
+  }
   const merged = { ...current, ...req.body };
   if (await identicalSlotExists(merged, req.params.id)) {
     return res.status(409).json({ error: 'An identical timetable slot already exists (same course, day, time, room, semester and section).' });
@@ -115,7 +134,13 @@ router.put('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, r
   res.json({ ...row, conflictWarnings });
 }));
 
-router.delete('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
+  if (isScopedRequest(req)) {
+    const current = await get('SELECT courseId FROM timetable_slots WHERE id = ?', [req.params.id]);
+    if (!current || !(await courseInScope(req, current.courseId))) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+  }
   await run('DELETE FROM timetable_slots WHERE id = ?', [req.params.id]);
   await logAudit(req.user, 'delete', 'timetable_slots', req.params.id, null);
   res.status(204).end();

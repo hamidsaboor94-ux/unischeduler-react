@@ -9,10 +9,12 @@ import { useAsyncAction } from '../hooks/useAsyncAction.js';
 import { useTableSort } from '../hooks/useTableSort.jsx';
 import { api, deleteUser } from '../api.js';
 import { parseCsv, csvArrayRowsToAccountObjects, excelObjectRowsToAccountObjects, parseExcelFile } from '../utils.js';
+import { ASSIGNABLE_ROLES, isDepartmentScoped, isCollegeScoped } from '../permissions.js';
+import { roleLabel } from '../roleNames.js';
 
 export default function UsersPage() {
   const { t } = useTranslation(['admin', 'common']);
-  const { allUsers, currentUser, reload, afterMutate } = useAppData();
+  const { allUsers, currentUser, reload, afterMutate, departments, colleges, branding } = useAppData();
   const { showSection } = useNavigation();
   const { openModal, confirmAction } = useModal();
   const { toast } = useToast();
@@ -34,8 +36,28 @@ export default function UsersPage() {
     idNumber: u => u.idNumber || '', name: u => u.name || '', email: u => u.email, role: u => u.role, joined: u => u.createdAt || '',
   });
 
-  async function changeUserRole(id, role) {
-    await afterMutate(api('PUT', `/users/${id}`, { role }), t('admin:usersPage.toast.roleUpdated'));
+  async function changeUserRole(u, role) {
+    const body = { role };
+    // A scoped role needs its scope set. Default to the account's existing value
+    // (or the first available) so the change goes through; the admin can then
+    // fine-tune it with the selector that appears.
+    if (isDepartmentScoped(role)) {
+      body.departmentId = u.departmentId || departments[0]?.id;
+      if (!body.departmentId) { toast(t('admin:usersPage.toast.needDepartmentFirst'), 'warning'); return; }
+    }
+    if (isCollegeScoped(role)) {
+      body.collegeId = u.collegeId || colleges[0]?.id;
+      if (!body.collegeId) { toast(t('admin:usersPage.toast.needCollegeFirst'), 'warning'); return; }
+    }
+    await afterMutate(api('PUT', `/users/${u.id}`, body), t('admin:usersPage.toast.roleUpdated'));
+  }
+
+  async function changeUserDepartment(id, departmentId) {
+    await afterMutate(api('PUT', `/users/${id}`, { departmentId: Number(departmentId) }), t('admin:usersPage.toast.roleUpdated'));
+  }
+
+  async function changeUserCollege(id, collegeId) {
+    await afterMutate(api('PUT', `/users/${id}`, { collegeId: Number(collegeId) }), t('admin:usersPage.toast.roleUpdated'));
   }
 
   async function importAccountsFile(file) {
@@ -80,9 +102,9 @@ export default function UsersPage() {
           />
           <select className="select-sm" value={roleFilter} onChange={e => setRoleFilter(e.target.value)}>
             <option value="">{t('admin:usersPage.allRoles')}</option>
-            <option value="admin">{t('common:roles.admin')}</option>
-            <option value="faculty">{t('common:roles.faculty')}</option>
-            <option value="student">{t('common:roles.student')}</option>
+            {ASSIGNABLE_ROLES.map(r => (
+              <option key={r} value={r}>{roleLabel(r, t, branding)}</option>
+            ))}
           </select>
           <input
             type="file" ref={importInputRef} accept=".csv,.xlsx,.xls" style={{ display: 'none' }}
@@ -112,16 +134,44 @@ export default function UsersPage() {
                   <td>{u.name || t('common:notApplicable')}</td>
                   <td>{u.email}</td>
                   <td>
-                    <select
-                      value={u.role}
-                      onChange={e => changeUserRole(u.id, e.target.value)}
-                      disabled={u.id === currentUser.id}
-                      title={u.id === currentUser.id ? t('admin:usersPage.cannotChangeOwnRole') : undefined}
-                    >
-                      <option value="admin">{t('common:roles.admin')}</option>
-                      <option value="faculty">{t('common:roles.faculty')}</option>
-                      <option value="student">{t('common:roles.student')}</option>
-                    </select>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <select
+                        value={u.role}
+                        onChange={e => changeUserRole(u, e.target.value)}
+                        disabled={u.id === currentUser.id}
+                        title={u.id === currentUser.id ? t('admin:usersPage.cannotChangeOwnRole') : undefined}
+                      >
+                        {ASSIGNABLE_ROLES.map(r => (
+                          <option key={r} value={r}>{roleLabel(r, t, branding)}</option>
+                        ))}
+                      </select>
+                      {isDepartmentScoped(u.role) && (
+                        <select
+                          className="select-sm"
+                          value={u.departmentId || ''}
+                          onChange={e => changeUserDepartment(u.id, e.target.value)}
+                          title={t('admin:usersPage.departmentScopeTitle')}
+                        >
+                          <option value="" disabled>{t('admin:usersPage.selectDepartment')}</option>
+                          {departments.map(d => (
+                            <option key={d.id} value={d.id}>{d.name}</option>
+                          ))}
+                        </select>
+                      )}
+                      {isCollegeScoped(u.role) && (
+                        <select
+                          className="select-sm"
+                          value={u.collegeId || ''}
+                          onChange={e => changeUserCollege(u.id, e.target.value)}
+                          title={t('admin:usersPage.collegeScopeTitle')}
+                        >
+                          <option value="" disabled>{t('admin:usersPage.selectCollege')}</option>
+                          {colleges.map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
                   </td>
                   <td>{(u.createdAt || '').split(' ')[0]}</td>
                   <td><div className="row-actions">

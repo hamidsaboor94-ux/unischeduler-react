@@ -23,7 +23,10 @@ router.get('/me', requireAuth, asyncHandler(async (req, res) => {
 
 // Full attendance history for one course — admin any course, faculty only their own.
 // Used both to render the history view and to prefill an in-progress session's form.
-router.get('/', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+router.get('/', requireAuth, asyncHandler(async (req, res) => {
+  // A student's own attendance is at /me; they can't read a whole course here.
+  // Viewer (auditor) and admin read any course; faculty only their own.
+  if (req.user.role === 'student') return res.status(403).json({ error: 'Forbidden' });
   const { courseId } = req.query;
   if (!courseId) return res.status(400).json({ error: 'courseId is required' });
   const course = await get('SELECT * FROM courses WHERE id = ?', [courseId]);

@@ -1,12 +1,15 @@
 const express = require('express');
 const { all, get, run, logAudit } = require('../db');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { loadTermData } = require('../loaders');
 const { autoScheduleAll } = require('../scheduling');
 const { candidateDates } = require('../dateUtils');
 const { runOrFriendlyError } = require('./crudRouter');
 const { canManageExam, isInvigilator, courseScopeClause, enrolledCourseIds, teacherIdForUser } = require('../ownership');
+const { courseInScope, isScopedRequest } = require('../scope');
+const { requirePermission } = require('../middleware/permission');
+const { hasFinancialHold } = require('../finance');
 
 const router = express.Router();
 const FIELDS = ['courseId', 'date', 'time', 'durationMinutes', 'roomId', 'invigilatorId', 'termId', 'type'];
@@ -27,26 +30,51 @@ router.get('/:id', requireAuth, asyncHandler(async (req, res) => {
   if (req.user.role === 'faculty' && !(await canManageExam(req, row)) && !(await isInvigilator(req, row))) {
     return res.status(403).json({ error: 'You do not have access to this exam.' });
   }
-  if (req.user.role === 'student' && !(await enrolledCourseIds(req.user.sub)).includes(row.courseId)) {
-    return res.status(403).json({ error: 'You do not have access to this exam.' });
+  if (req.user.role === 'student') {
+    if (!(await enrolledCourseIds(req.user.sub)).includes(row.courseId)) {
+      return res.status(403).json({ error: 'You do not have access to this exam.' });
+    }
+    // Financial hold: an unpaid balance blocks access to midterm & final exams.
+    if ((row.type === 'midterm' || row.type === 'final') && await hasFinancialHold(req.user.sub)) {
+      return res.status(403).json({ error: 'This exam is blocked by an outstanding fee balance. Please clear your balance to access it.', code: 'FINANCIAL_HOLD' });
+    }
+  }
+  // A department-scoped role can't read another department's exam.
+  if (isScopedRequest(req) && !(await courseInScope(req, row.courseId))) {
+    return res.status(404).json({ error: 'Not found' });
   }
   res.json(row);
 }));
 
-/** Faculty see exams for courses they teach, plus any they're invigilating. Students see exams for courses they're enrolled in. Admin sees everything. */
+/** Restricts an exam list to what the caller may see: students → enrolled
+ *  courses; faculty → own courses plus exams they invigilate; a Department Head
+ *  → their department; admin/registrar/exam officer/viewer → everything. */
 async function scopeExamsForUser(req, rows) {
-  if (req.user.role === 'admin') return rows;
-  if (req.user.role === 'faculty') {
-    const scope = await courseScopeClause(req);
-    const ownedCourseIds = new Set((await all(`SELECT id FROM courses WHERE ${scope.clause}`, scope.params)).map(c => c.id));
-    const teacherId = await teacherIdForUser(req.user.sub);
-    return rows.filter(e => ownedCourseIds.has(e.courseId) || (teacherId != null && e.invigilatorId === teacherId));
+  if (req.user.role === 'student') {
+    const myCourseIds = new Set(await enrolledCourseIds(req.user.sub));
+    const mine = rows.filter(e => myCourseIds.has(e.courseId));
+    // Financial hold: withhold midterm & final exam details and mark them
+    // blocked, so a student with an unpaid balance can't sit them.
+    if (!(await hasFinancialHold(req.user.sub))) return mine;
+    return mine.map(e => (e.type === 'midterm' || e.type === 'final')
+      ? { id: e.id, courseId: e.courseId, type: e.type, termId: e.termId, blocked: true }
+      : e);
   }
-  const myCourseIds = new Set(await enrolledCourseIds(req.user.sub));
-  return rows.filter(e => myCourseIds.has(e.courseId));
+  const scope = await courseScopeClause(req);
+  if (!scope) return rows; // admin, registrar, exam officer, viewer
+  const scopedCourseIds = new Set((await all(`SELECT id FROM courses WHERE ${scope.clause}`, scope.params)).map(c => c.id));
+  if (req.user.role === 'faculty') {
+    const teacherId = await teacherIdForUser(req.user.sub);
+    return rows.filter(e => scopedCourseIds.has(e.courseId) || (teacherId != null && e.invigilatorId === teacherId));
+  }
+  return rows.filter(e => scopedCourseIds.has(e.courseId));
 }
 
-router.post('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.post('/', requireAuth, requirePermission('exams', 'write'), asyncHandler(async (req, res) => {
+  // Department-scoped roles may only create exams for their own courses.
+  if (isScopedRequest(req) && !(await courseInScope(req, req.body.courseId))) {
+    return res.status(403).json({ error: 'You can only manage exams for courses in your own department.' });
+  }
   const cols = FIELDS.filter(f => req.body[f] !== undefined);
   const result = await runOrFriendlyError(res, 'exams', () => run(
     `INSERT INTO exams (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`,
@@ -58,7 +86,7 @@ router.post('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res
   res.status(201).json(row);
 }));
 
-router.put('/:id', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+router.put('/:id', requireAuth, asyncHandler(async (req, res) => {
   const existing = await get('SELECT * FROM exams WHERE id = ?', [req.params.id]);
   if (!existing) return res.status(404).json({ error: 'Not found' });
   if (!(await canManageExam(req, existing))) return res.status(403).json({ error: 'You do not have access to this exam.' });
@@ -75,13 +103,23 @@ router.put('/:id', requireAuth, requireRole('admin', 'faculty'), asyncHandler(as
   res.json(row);
 }));
 
-router.delete('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+// Deleting an exam is a staff action — faculty who can edit their own course's
+// exam still can't delete it (exams read-only for faculty at module level).
+router.delete('/:id', requireAuth, requirePermission('exams', 'write'), asyncHandler(async (req, res) => {
+  const existing = await get('SELECT * FROM exams WHERE id = ?', [req.params.id]);
+  if (!existing) return res.status(404).json({ error: 'Not found' });
+  if (!(await canManageExam(req, existing))) return res.status(403).json({ error: 'You do not have access to this exam.' });
   await run('DELETE FROM exams WHERE id = ?', [req.params.id]);
   await logAudit(req.user, 'delete', 'exams', req.params.id, null);
   res.status(204).end();
 }));
 
-router.post('/auto-schedule', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.post('/auto-schedule', requireAuth, requirePermission('exams', 'write'), asyncHandler(async (req, res) => {
+  // Auto-scheduling spans every course in the term across all departments, so
+  // it's not available to a department-scoped role.
+  if (isScopedRequest(req)) {
+    return res.status(403).json({ error: 'Auto-scheduling runs across all departments and is not available to a department-scoped role.' });
+  }
   const termId = req.body.termId || req.query.termId;
   if (!termId) return res.status(400).json({ error: 'termId is required — select a semester first.' });
   const term = await get('SELECT * FROM terms WHERE id = ?', [termId]);

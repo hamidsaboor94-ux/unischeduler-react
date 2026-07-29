@@ -7,7 +7,8 @@
       "system": "System",
       "myTeaching": "My teaching",
       "courses": "Courses",
-      "admissions": "Admissions"
+      "admissions": "Admissions",
+      "finance": "Finance"
     },
     "nav": {
       "dashboard": "Dashboard",
@@ -23,6 +24,7 @@
       "attendance": "Attendance",
       "gradebook": "Gradebook",
       "myGrades": "My Grades",
+      "advisees": "My Advisees",
       "conflicts": "Conflicts",
       "users": "Users",
       "auditLog": "Audit Log",
@@ -34,7 +36,9 @@
       "mySchedule": "My Schedule",
       "myAttendance": "My Attendance",
       "myProfile": "My Profile",
-      "admissions": "Applications"
+      "admissions": "Applications",
+      "finance": "Finance",
+      "myFees": "My Fees"
     },
     "noTermsYet": "No terms yet"
   },

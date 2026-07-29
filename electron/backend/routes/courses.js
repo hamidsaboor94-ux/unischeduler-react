@@ -1,10 +1,12 @@
 const express = require('express');
 const { all, get, run, logAudit } = require('../db');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { runOrFriendlyError } = require('./crudRouter');
 const { isPositiveInt } = require('../validate');
 const { canManageCourse, courseScopeClause } = require('../ownership');
+const { isScopedRequest, departmentInScope, resolveScopedDepartment, scopedDepartmentIds } = require('../scope');
+const { requirePermission } = require('../middleware/permission');
 
 const router = express.Router();
 const FIELDS = ['code', 'name', 'departmentId', 'credits', 'teacherId', 'roomId', 'maxStudents', 'termId'];
@@ -32,16 +34,27 @@ router.get('/', requireAuth, asyncHandler(async (req, res) => {
 router.get('/:id', requireAuth, asyncHandler(async (req, res) => {
   const row = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
   if (!row) return res.status(404).json({ error: 'Not found' });
+  // A department-restricted role can't read a course outside its scope.
+  if (isScopedRequest(req) && !departmentInScope(req, row.departmentId)) {
+    return res.status(404).json({ error: 'Not found' });
+  }
   if (req.user.role === 'faculty' && !(await canManageCourse(req, row))) {
     return res.status(403).json({ error: 'You do not have access to this course.' });
   }
   res.json(row);
 }));
 
-router.post('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.post('/', requireAuth, requirePermission('courses', 'write'), asyncHandler(async (req, res) => {
   if (!req.body.code || !req.body.name) return res.status(400).json({ error: 'Course code and name are required' });
   const validationErr = validateCourse(req.body);
   if (validationErr) return res.status(400).json({ error: validationErr });
+  // A department-restricted creator (Department Head / Dean) can only create
+  // courses within their own department(s) — resolve/validate against scope.
+  if (isScopedRequest(req)) {
+    const r = resolveScopedDepartment(req, req.body.departmentId);
+    if (r.error) return res.status(403).json({ error: r.error });
+    req.body.departmentId = r.departmentId;
+  }
   const existing = await get('SELECT id FROM courses WHERE code = ? AND termId IS ?', [req.body.code, req.body.termId ?? null]);
   if (existing) return res.status(409).json({ error: `Course code ${req.body.code} already exists in this term` });
   const cols = FIELDS.filter(f => req.body[f] !== undefined);
@@ -55,10 +68,13 @@ router.post('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res
   res.status(201).json(row);
 }));
 
-router.post('/bulk-import', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.post('/bulk-import', requireAuth, requirePermission('courses', 'write'), asyncHandler(async (req, res) => {
   const { rows, termId } = req.body;
   if (!Array.isArray(rows) || !rows.length) return res.status(400).json({ error: 'No rows provided' });
   if (!termId) return res.status(400).json({ error: 'termId is required' });
+  // Department-restricted importers may only create within their own
+  // department(s); each row's resolved department must fall inside that set.
+  const scopedIds = scopedDepartmentIds(req);
 
   const departments = await all('SELECT id, name FROM departments');
   const teachers = await all('SELECT id, name FROM teachers');
@@ -77,6 +93,7 @@ router.post('/bulk-import', requireAuth, requireRole('admin'), asyncHandler(asyn
     if (!r.department) { errors.push({ row: rowNum, error: 'Department is required' }); continue; }
     const departmentId = deptByName.get(String(r.department).trim().toLowerCase());
     if (!departmentId) { errors.push({ row: rowNum, error: `Unknown department "${r.department}"` }); continue; }
+    if (scopedIds !== null && !scopedIds.includes(Number(departmentId))) { errors.push({ row: rowNum, error: `Department "${r.department}" is outside your scope` }); continue; }
     const credits = Number(r.credits);
     if (!isPositiveInt(credits)) { errors.push({ row: rowNum, error: 'Credits must be a positive number' }); continue; }
     const teacherId = r.instructor ? teacherByName.get(String(r.instructor).trim().toLowerCase()) : undefined;
@@ -100,13 +117,15 @@ router.post('/bulk-import', requireAuth, requireRole('admin'), asyncHandler(asyn
   res.status(200).json({ created, errors });
 }));
 
-router.put('/:id', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+router.put('/:id', requireAuth, asyncHandler(async (req, res) => {
   const existing = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
   if (!existing) return res.status(404).json({ error: 'Not found' });
   if (!(await canManageCourse(req, existing))) return res.status(403).json({ error: 'You do not have access to this course.' });
   if (req.user.role === 'faculty' && req.body.teacherId !== undefined && Number(req.body.teacherId) !== existing.teacherId) {
     return res.status(403).json({ error: 'Faculty cannot reassign a course to a different instructor.' });
   }
+  // A department-restricted editor can't move a course into another department.
+  if (isScopedRequest(req)) req.body.departmentId = existing.departmentId;
   const cols = FIELDS.filter(f => req.body[f] !== undefined);
   if (!cols.length) return res.status(400).json({ error: 'No fields to update' });
   const validationErr = validateCourse(req.body);
@@ -128,8 +147,15 @@ router.put('/:id', requireAuth, requireRole('admin', 'faculty'), asyncHandler(as
   res.json(row);
 }));
 
-router.delete('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+// Deleting a course is a staff action (admin/registrar/dept head) — faculty who
+// can edit their own course still can't delete it. requirePermission('courses',
+// 'write') excludes faculty (course read only); the dept-scope check below then
+// confines a Department Head to their own department.
+router.delete('/:id', requireAuth, requirePermission('courses', 'write'), asyncHandler(async (req, res) => {
   const id = req.params.id;
+  const course = await get('SELECT * FROM courses WHERE id = ?', [id]);
+  if (!course) return res.status(404).json({ error: 'Not found' });
+  if (!(await canManageCourse(req, course))) return res.status(403).json({ error: 'You do not have access to this course.' });
   await run('DELETE FROM course_prerequisites WHERE courseId = ? OR prerequisiteCourseId = ?', [id, id]);
   await run('DELETE FROM timetable_slots WHERE courseId = ?', [id]);
   await run('DELETE FROM exams WHERE courseId = ?', [id]);
@@ -147,7 +173,7 @@ router.get('/:id/prerequisites', requireAuth, asyncHandler(async (req, res) => {
   res.json(rows);
 }));
 
-router.post('/:id/prerequisites', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+router.post('/:id/prerequisites', requireAuth, asyncHandler(async (req, res) => {
   const course = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
   if (!course) return res.status(404).json({ error: 'Not found' });
   if (!(await canManageCourse(req, course))) return res.status(403).json({ error: 'You do not have access to this course.' });
@@ -163,7 +189,7 @@ router.post('/:id/prerequisites', requireAuth, requireRole('admin', 'faculty'), 
   res.status(201).json({ courseId: Number(req.params.id), prerequisiteCourseId: Number(prerequisiteCourseId) });
 }));
 
-router.delete('/:id/prerequisites/:prereqId', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+router.delete('/:id/prerequisites/:prereqId', requireAuth, asyncHandler(async (req, res) => {
   const course = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
   if (!course) return res.status(404).json({ error: 'Not found' });
   if (!(await canManageCourse(req, course))) return res.status(403).json({ error: 'You do not have access to this course.' });
@@ -174,7 +200,7 @@ router.delete('/:id/prerequisites/:prereqId', requireAuth, requireRole('admin', 
   res.status(204).end();
 }));
 
-router.get('/:id/roster', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+router.get('/:id/roster', requireAuth, asyncHandler(async (req, res) => {
   const course = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
   if (!course) return res.status(404).json({ error: 'Not found' });
   if (!(await canManageCourse(req, course))) return res.status(403).json({ error: 'You do not have access to this course.' });

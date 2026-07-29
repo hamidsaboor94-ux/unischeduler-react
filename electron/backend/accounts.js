@@ -19,16 +19,19 @@ const { generateTempPassword } = require('./tempPassword');
  * Caller must already have validated name/email/role and checked no account
  * exists with that email.
  */
-async function createAccountWithTempPassword({ name, email, role, departmentId, teacherId }) {
+async function createAccountWithTempPassword({ name, email, role, departmentId, collegeId, teacherId }) {
   const tempPassword = generateTempPassword();
   const passwordHash = bcrypt.hashSync(tempPassword, 8);
   const idNumber = await nextIdNumberForRole(role);
   const result = await run(
-    'INSERT INTO users (name, email, passwordHash, role, mustChangePassword, idNumber) VALUES (?, ?, ?, ?, 1, ?)',
-    [name, email, passwordHash, role, idNumber]
+    'INSERT INTO users (name, email, passwordHash, role, mustChangePassword, idNumber, departmentId, collegeId) VALUES (?, ?, ?, ?, 1, ?, ?, ?)',
+    [name, email, passwordHash, role, idNumber, departmentId ?? null, collegeId ?? null]
   );
   let resolvedTeacherId = teacherId ?? null;
-  if (role === 'faculty') {
+  // Faculty and Student Advisors both get a linked teachers row: faculty so they
+  // can be assigned to courses, advisors so they can be set as a student's
+  // advisor (student_profiles.advisorTeacherId references teachers.id).
+  if (role === 'faculty' || role === 'advisor') {
     if (teacherId) {
       await run('UPDATE teachers SET userId = ? WHERE id = ?', [result.id, teacherId]);
     } else {

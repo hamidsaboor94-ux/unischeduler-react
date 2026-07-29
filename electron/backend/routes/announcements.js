@@ -42,7 +42,7 @@ router.post('/', requireAuth, requireRole('admin', 'faculty'), asyncHandler(asyn
   await logAudit(req.user, 'post-announcement', 'announcements', result.id, { courseId: course.id });
 
   const notice = `New announcement in ${course.code} — ${course.name}: "${message.trim()}"`;
-  await notifyCourseStudents(course.id, notice, { type: 'announcement', entityType: 'announcement', entityId: result.id });
+  await notifyCourseStudents(course.id, notice, { type: 'announcement_posted', entityType: 'announcement', entityId: result.id });
 
   res.status(201).json(await get('SELECT * FROM announcements WHERE id = ?', [result.id]));
 }));

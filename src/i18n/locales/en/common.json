@@ -34,6 +34,7 @@
     "email": "Email",
     "role": "Role",
     "department": "Department",
+    "college": "College",
     "password": "Password",
     "currentPassword": "Current password",
     "newPassword": "New password",
@@ -49,7 +50,16 @@
     "status": "Status"
   },
   "roles": {
-    "admin": "Admin",
+    "admin": "Super Admin",
+    "registrar": "Registrar",
+    "admissions_officer": "Admissions Officer",
+    "dean": "Dean",
+    "dept_head": "Department Head",
+    "exam_officer": "Exam Officer",
+    "records_officer": "Records Officer",
+    "bursar": "Bursar",
+    "viewer": "Viewer",
+    "advisor": "Student Advisor",
     "faculty": "Faculty",
     "student": "Student"
   },

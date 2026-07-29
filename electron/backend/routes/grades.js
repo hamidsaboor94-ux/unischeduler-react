@@ -1,8 +1,9 @@
 const express = require('express');
 const { all, get, run, logAudit } = require('../db');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { canManageCourse } = require('../ownership');
+const { can } = require('../permissions');
 const { recomputeFinalGrade, recomputeFinalGradesForCourse } = require('../gradingScale');
 
 const router = express.Router();
@@ -34,12 +35,15 @@ function sortItems(items) {
   return items.slice().sort((a, b) => (CATEGORY_ORDER[a.category] ?? 99) - (CATEGORY_ORDER[b.category] ?? 99) || a.id - b.id);
 }
 
-/** Loads `course` and 403s a faculty user who doesn't own it (admin always passes). Mirrors
-    the same access rule already used for attendance/roster/enrollment grading. */
-async function requireCourseAccess(req, courseId) {
+/** Loads `course` and enforces access for `action` ('read' | 'write'). A staff
+    grader (Records Officer for write, plus Viewer for read) reaches any course's
+    gradebook university-wide; faculty only their own course; admin always. */
+async function requireCourseAccess(req, courseId, action = 'write') {
   const course = await get('SELECT * FROM courses WHERE id = ?', [courseId]);
   if (!course) return { course: null, error: { status: 404, message: 'Course not found' } };
-  if (!(await canManageCourse(req, course))) {
+  const role = req.user.role;
+  const staffGrader = role !== 'faculty' && role !== 'student' && can(role, 'grades', action);
+  if (!staffGrader && !(await canManageCourse(req, course))) {
     return { course: null, error: { status: 403, message: 'You do not have access to this course.' } };
   }
   return { course, error: null };
@@ -90,16 +94,16 @@ async function buildCourseGradebook(courseId) {
 
 // --- Grade items (the gradebook's "columns") — admin any course, faculty only their own ---
 
-router.get('/items', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+router.get('/items', requireAuth, asyncHandler(async (req, res) => {
   const { courseId } = req.query;
   if (!courseId) return res.status(400).json({ error: 'courseId is required' });
-  const { error } = await requireCourseAccess(req, courseId);
+  const { error } = await requireCourseAccess(req, courseId, 'read');
   if (error) return res.status(error.status).json({ error: error.message });
   await ensureDefaultGradeItems(courseId);
   res.json(sortItems(await all('SELECT * FROM grade_items WHERE courseId = ?', [courseId])));
 }));
 
-router.post('/items', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+router.post('/items', requireAuth, asyncHandler(async (req, res) => {
   const { courseId, name, category, maxScore } = req.body;
   if (!courseId || !String(name || '').trim()) return res.status(400).json({ error: 'courseId and name are required' });
   if (category && !CATEGORIES.includes(category)) return res.status(400).json({ error: `Category must be one of ${CATEGORIES.join(', ')}` });
@@ -121,7 +125,7 @@ router.post('/items', requireAuth, requireRole('admin', 'faculty'), asyncHandler
   res.status(201).json(await get('SELECT * FROM grade_items WHERE id = ?', [result.id]));
 }));
 
-router.put('/items/:id', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+router.put('/items/:id', requireAuth, asyncHandler(async (req, res) => {
   const item = await get('SELECT * FROM grade_items WHERE id = ?', [req.params.id]);
   if (!item) return res.status(404).json({ error: 'Not found' });
   const { error } = await requireCourseAccess(req, item.courseId);
@@ -141,7 +145,7 @@ router.put('/items/:id', requireAuth, requireRole('admin', 'faculty'), asyncHand
   res.json(await get('SELECT * FROM grade_items WHERE id = ?', [item.id]));
 }));
 
-router.delete('/items/:id', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+router.delete('/items/:id', requireAuth, asyncHandler(async (req, res) => {
   const item = await get('SELECT * FROM grade_items WHERE id = ?', [req.params.id]);
   if (!item) return res.status(404).json({ error: 'Not found' });
   const { error } = await requireCourseAccess(req, item.courseId);
@@ -156,7 +160,7 @@ router.delete('/items/:id', requireAuth, requireRole('admin', 'faculty'), asyncH
 
 // --- One student's score on one item — upserted (admin any course, faculty their own) ---
 
-router.put('/score', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+router.put('/score', requireAuth, asyncHandler(async (req, res) => {
   const { gradeItemId, studentId, score } = req.body;
   if (!gradeItemId || !studentId) return res.status(400).json({ error: 'gradeItemId and studentId are required' });
 
@@ -189,17 +193,22 @@ router.put('/score', requireAuth, requireRole('admin', 'faculty'), asyncHandler(
 
 // --- Full single-course gradebook grid — admin any course, faculty only their own ---
 
-router.get('/', requireAuth, requireRole('admin', 'faculty'), asyncHandler(async (req, res) => {
+router.get('/', requireAuth, asyncHandler(async (req, res) => {
   const { courseId } = req.query;
   if (!courseId) return res.status(400).json({ error: 'courseId is required' });
-  const { error } = await requireCourseAccess(req, courseId);
+  const { error } = await requireCourseAccess(req, courseId, 'read');
   if (error) return res.status(error.status).json({ error: error.message });
   res.json(await buildCourseGradebook(Number(courseId)));
 }));
 
 // --- Department-wide (or all-courses) rollup — admin only ---
 
-router.get('/department-summary', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.get('/department-summary', requireAuth, asyncHandler(async (req, res) => {
+  // A cross-course rollup — university-wide grade readers only (admin, Records
+  // Officer, Viewer). Faculty/students never see other courses in aggregate.
+  if (req.user.role === 'faculty' || req.user.role === 'student') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
   const { departmentId } = req.query;
   const courses = departmentId
     ? await all('SELECT * FROM courses WHERE departmentId = ? ORDER BY code', [departmentId])

@@ -93,6 +93,8 @@ export const saveTerm = (data, id) => (id ? api('PUT', `/terms/${id}`, data) : a
 export const deleteTerm = (id) => api('DELETE', `/terms/${id}`);
 export const saveDepartment = (data, id) => (id ? api('PUT', `/departments/${id}`, data) : api('POST', '/departments', data));
 export const deleteDepartment = (id) => api('DELETE', `/departments/${id}`);
+export const saveCollege = (data, id) => (id ? api('PUT', `/colleges/${id}`, data) : api('POST', '/colleges', data));
+export const deleteCollege = (id) => api('DELETE', `/colleges/${id}`);
 export const deleteUser = (id) => api('DELETE', `/users/${id}`);
 export const fetchBranding = () => api('GET', '/settings/branding');
 export const saveBranding = (data) => api('PUT', '/settings/branding', data);
@@ -149,6 +151,17 @@ export const saveMaterial = ({ courseId, title, file }) => apiUploadForm('/mater
 export const downloadMaterialFile = (materialId, fileName) => apiDownload(`/materials/${materialId}/file`, fileName);
 
 export const fetchStudentProfile = (studentId) => api('GET', `/student-profile/${studentId}`);
+/** The advisee roster for the logged-in Student Advisor (scoped server-side). */
+export const fetchAdvisees = () => api('GET', '/student-profile/advisees');
+
+// --- Finance ---
+export const fetchFinanceSettings = () => api('GET', '/finance/settings');
+export const saveFinanceSettings = (data) => api('PUT', '/finance/settings', data);
+export const fetchFinanceStudents = () => api('GET', '/finance/students');
+export const fetchStudentStatement = (studentId) => api('GET', `/finance/students/${studentId}`);
+export const recordPayment = (studentId, data) => api('POST', `/finance/students/${studentId}/payments`, data);
+export const voidPayment = (paymentId) => api('DELETE', `/finance/payments/${paymentId}`);
+export const fetchMyFinance = () => api('GET', '/finance/me');
 export const updateMyStudentProfile = (data) => api('PUT', '/student-profile/me', data);
 export const updateStudentProfile = (studentId, data) => api('PUT', `/student-profile/${studentId}`, data);
 export const uploadStudentDocument = (studentId, { documentType, title, file }) =>

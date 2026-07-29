@@ -34,6 +34,7 @@
     "email": "ایمیل",
     "role": "نقش",
     "department": "دیپارتمنت",
+    "college": "پوهنځی",
     "password": "رمز عبور",
     "currentPassword": "رمز عبور فعلی",
     "newPassword": "رمز عبور جدید",
@@ -49,7 +50,16 @@
     "status": "وضعیت"
   },
   "roles": {
-    "admin": "ادمین",
+    "admin": "ادمین کل",
+    "registrar": "مسئول راجستر",
+    "admissions_officer": "مسئول پذیرش",
+    "dean": "رئیس پوهنځی",
+    "dept_head": "رئیس دیپارتمنت",
+    "exam_officer": "مسئول امتحانات",
+    "records_officer": "مسئول اسناد",
+    "bursar": "مسئول مالی",
+    "viewer": "بیننده",
+    "advisor": "مشاور محصلان",
     "faculty": "استاد",
     "student": "محصل"
   },

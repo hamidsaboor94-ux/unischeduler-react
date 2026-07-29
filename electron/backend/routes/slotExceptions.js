@@ -1,8 +1,10 @@
 const express = require('express');
 const { all, get, run, logAudit } = require('../db');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { DAYS } = require('../scheduling');
+const { courseInScope, isScopedRequest } = require('../scope');
+const { createNotification } = require('../notificationTypes');
 
 const router = express.Router();
 
@@ -32,7 +34,7 @@ async function notifyTeacherOfCancellation(slot, date) {
   const teacher = await get('SELECT userId FROM teachers WHERE id = ?', [course.teacherId]);
   if (!teacher || !teacher.userId) return;
   const message = `Your ${course.code} — ${course.name} class on ${date} at ${fmt12Hour(slot.time)} was cancelled and should be rescheduled.`;
-  await run('INSERT INTO notifications (userId, message) VALUES (?, ?)', [teacher.userId, message]);
+  await createNotification(teacher.userId, message, 'class_cancelled', { courseId: course.id });
 }
 
 // Everyone can read exceptions — students and faculty need to see cancelled/
@@ -41,10 +43,14 @@ router.get('/', requireAuth, asyncHandler(async (req, res) => {
   res.json(await all('SELECT * FROM slot_exceptions'));
 }));
 
-router.post('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.post('/', requireAuth, asyncHandler(async (req, res) => {
   const { slotId, date, kind, note } = req.body;
   const slot = await get('SELECT * FROM timetable_slots WHERE id = ?', [slotId]);
   if (!slot) return res.status(404).json({ error: 'Timetable slot not found' });
+  // Department-scoped roles may only alter sessions of their own courses.
+  if (isScopedRequest(req) && !(await courseInScope(req, slot.courseId))) {
+    return res.status(403).json({ error: 'You can only manage sessions for courses in your own department.' });
+  }
 
   if (!ISO_DATE_RE.test(date || '')) return res.status(400).json({ error: 'A date (YYYY-MM-DD) is required' });
   if (weekdayOf(date) !== slot.day) {
@@ -88,8 +94,14 @@ router.post('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res
   res.status(201).json(row);
 }));
 
-router.delete('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
   const row = await get('SELECT * FROM slot_exceptions WHERE id = ?', [req.params.id]);
+  if (isScopedRequest(req)) {
+    const slot = row ? await get('SELECT courseId FROM timetable_slots WHERE id = ?', [row.slotId]) : null;
+    if (!slot || !(await courseInScope(req, slot.courseId))) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+  }
   await run('DELETE FROM slot_exceptions WHERE id = ?', [req.params.id]);
   await logAudit(req.user, 'delete', 'slot_exceptions', req.params.id, row ? { slotId: row.slotId, date: row.date, kind: row.kind } : null);
   res.status(204).end();

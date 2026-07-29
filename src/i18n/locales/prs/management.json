@@ -126,10 +126,21 @@
     "confirmDelete": "دیپارتمنت {{name}} حذف شود؟",
     "toastRemoved": "دیپارتمنت حذف شد"
   },
+  "collegesPanel": {
+    "title": "پوهنځی‌ها",
+    "hint": "دیپارتمنت‌ها را در پوهنځی‌ها گروه‌بندی کنید — رئیس پوهنځی به یک پوهنځی محدود است.",
+    "add": "افزودن",
+    "addPlaceholder": "نام پوهنځی جدید…",
+    "deleteAria": "حذف پوهنځی {{name}}",
+    "confirmDelete": "پوهنځی {{name}} حذف شود؟",
+    "toastAdded": "پوهنځی افزوده شد",
+    "toastRemoved": "پوهنځی حذف شد"
+  },
   "departmentForm": {
     "nameLabel": "نام دیپارتمنت",
     "namePlaceholder": "مثلاً کیمیا",
     "validateName": "لطفاً نام دیپارتمنت را وارد کنید.",
+    "noCollege": "— بدون پوهنځی —",
     "confirmDelete": "دیپارتمنت {{name}} حذف شود؟",
     "toastRemoved": "دیپارتمنت حذف شد"
   },

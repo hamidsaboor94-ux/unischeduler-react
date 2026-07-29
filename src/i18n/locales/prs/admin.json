@@ -76,12 +76,18 @@
     "cannotChangeOwnRole": "برای تغییر نقش خودتان از یک حساب ادمین دیگر استفاده کنید",
     "confirmDelete": "کاربر {{name}} حذف شود؟ این عمل قابل بازگشت نیست.",
     "deleteAriaLabel": "حذف کاربر {{name}}",
+    "selectDepartment": "دیپارتمنت را انتخاب کنید…",
+    "departmentScopeTitle": "این نقش فقط معلومات همین دیپارتمنت را می‌بیند و مدیریت می‌کند",
+    "selectCollege": "پوهنځی را انتخاب کنید…",
+    "collegeScopeTitle": "این نقش تمام دیپارتمنت‌های این پوهنځی را می‌بیند و مدیریت می‌کند",
     "table": {
       "idNumber": "شماره هویت",
       "joined": "تاریخ عضویت"
     },
     "toast": {
       "roleUpdated": "نقش به‌روزرسانی شد.",
+      "needDepartmentFirst": "ابتدا یک دیپارتمنت بسازید — این نقش باید به یک دیپارتمنت محدود شود.",
+      "needCollegeFirst": "ابتدا یک پوهنځی بسازید — این نقش باید به یک پوهنځی محدود شود.",
       "userRemoved": "کاربر حذف شد",
       "unsupportedFileType": "لطفاً یک فایل .csv یا .xlsx بارگذاری کنید.",
       "fileReadError": "این فایل خوانده نشد.",
@@ -96,7 +102,8 @@
     "submit": "ایجاد حساب",
     "toast": {
       "nameEmailRequired": "نام و ایمیل الزامی است.",
-      "pickDepartment": "برای حساب استاد یک دیپارتمنت انتخاب کنید."
+      "pickDepartment": "برای حساب استاد یک دیپارتمنت انتخاب کنید.",
+      "pickCollege": "برای حساب رئیس پوهنځی یک پوهنځی انتخاب کنید."
     }
   },
   "resetPasswordForm": {

@@ -34,6 +34,7 @@
     "email": "بریښنالیک",
     "role": "رول",
     "department": "څانګه",
+    "college": "پوهنځی",
     "password": "پټنوم",
     "currentPassword": "اوسنی پټنوم",
     "newPassword": "نوی پټنوم",
@@ -49,7 +50,16 @@
     "status": "حالت"
   },
   "roles": {
-    "admin": "اډمین",
+    "admin": "لوی اډمین",
+    "registrar": "د راجستر مسؤل",
+    "admissions_officer": "د شمولیت مسؤل",
+    "dean": "پوهنځی رئیس",
+    "dept_head": "د څانګې رئیس",
+    "exam_officer": "د ازموینې مسؤل",
+    "records_officer": "د اسنادو مسؤل",
+    "bursar": "د مالي چارو مسؤل",
+    "viewer": "کتونکی",
+    "advisor": "د زده کوونکو مشاور",
     "faculty": "استاد",
     "student": "زده کوونکی"
   },

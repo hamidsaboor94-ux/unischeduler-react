@@ -18,7 +18,7 @@ function Gate() {
   // Catalog is still one click away in the sidebar for when they actually want to register.
   useEffect(() => {
     if (authPhase === 'ready' && currentUser) {
-      setActiveSection(currentUser.role === 'student' ? 'myschedule' : 'dashboard');
+      setActiveSection(currentUser.role === 'student' ? 'myschedule' : currentUser.role === 'advisor' ? 'advisees' : 'dashboard');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authPhase]);

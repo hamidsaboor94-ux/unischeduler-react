@@ -7,7 +7,8 @@
       "system": "سیستم",
       "myTeaching": "تدریس من",
       "courses": "کورس‌ها",
-      "admissions": "پذیرش"
+      "admissions": "پذیرش",
+      "finance": "امور مالی"
     },
     "nav": {
       "dashboard": "داشبورد",
@@ -23,6 +24,7 @@
       "attendance": "حاضری",
       "gradebook": "نمرات",
       "myGrades": "نمرات من",
+      "advisees": "محصلان تحت مشوره",
       "conflicts": "تداخل‌ها",
       "users": "کاربران",
       "auditLog": "ثبت وقایع",
@@ -34,7 +36,9 @@
       "mySchedule": "برنامه من",
       "myAttendance": "حاضری من",
       "myProfile": "پروفایل من",
-      "admissions": "درخواست‌ها"
+      "admissions": "درخواست‌ها",
+      "finance": "امور مالی",
+      "myFees": "فیس‌های من"
     },
     "noTermsYet": "هنوز سمستری وجود ندارد"
   },

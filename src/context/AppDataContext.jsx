@@ -4,6 +4,7 @@ import { API_BASE } from '../api.js';
 import { useToast } from './ToastContext.jsx';
 import { lightenHex, hexToRgba } from '../utils.js';
 import { applyLanguage, DEFAULT_LANGUAGE } from '../i18n/index.js';
+import { can } from '../permissions.js';
 
 const AppDataContext = createContext(null);
 
@@ -36,6 +37,7 @@ export function AppDataProvider({ children }) {
   const [language, setLanguageState] = useState(DEFAULT_LANGUAGE);
 
   const [departments, setDepartments] = useState([]);
+  const [colleges, setColleges] = useState([]);
   const [terms, setTerms] = useState([]);
   const [activeTermId, setActiveTermIdState] = useState(null);
   const [teachers, setTeachers] = useState([]);
@@ -69,10 +71,18 @@ export function AppDataProvider({ children }) {
   async function performLoad(user, termIdParam) {
     setIsLoading(true);
     try {
-      const isStaff = user.role === 'admin' || user.role === 'faculty';
+      const role = user.role;
+      // Every fetch below is gated by the same central policy the backend
+      // enforces, so each role only loads what it may see — a role with no
+      // timetable access never requests slots, etc. Reference data
+      // (departments/teachers/rooms) is readable by anyone for display.
+      const wantCourses = can(role, 'courses', 'read');
+      const wantTimetable = can(role, 'timetable', 'read');
+      const wantExams = can(role, 'exams', 'read');
 
-      const [depts, trms] = await Promise.all([api('GET', '/departments'), api('GET', '/terms')]);
+      const [depts, clgs, trms] = await Promise.all([api('GET', '/departments'), api('GET', '/colleges'), api('GET', '/terms')]);
       setDepartments(depts);
+      setColleges(clgs);
       setTerms(trms);
 
       let effectiveTermId = termIdParam;
@@ -86,10 +96,10 @@ export function AppDataProvider({ children }) {
       const [tchrs, rms, crs, slts, exms, excs, notifs] = await Promise.all([
         api('GET', '/teachers'),
         api('GET', '/rooms'),
-        api('GET', `/courses${termQuery}`),
-        api('GET', '/slots').then(rows => effectiveTermId ? rows.filter(s => s.termId === effectiveTermId) : rows),
-        api('GET', `/exams${termQuery}`),
-        api('GET', '/slot-exceptions'),
+        wantCourses ? api('GET', `/courses${termQuery}`) : Promise.resolve([]),
+        wantTimetable ? api('GET', '/slots').then(rows => effectiveTermId ? rows.filter(s => s.termId === effectiveTermId) : rows) : Promise.resolve([]),
+        wantExams ? api('GET', `/exams${termQuery}`) : Promise.resolve([]),
+        wantTimetable ? api('GET', '/slot-exceptions') : Promise.resolve([]),
         api('GET', '/notifications'),
       ]);
       setTeachers(tchrs);
@@ -100,25 +110,33 @@ export function AppDataProvider({ children }) {
       setSlotExceptions(excs);
       setNotifications(notifs);
 
-      if (isStaff) {
+      // Rosters are reachable only by roles that can manage a course (admin,
+      // registrar, department head, and faculty for their own) — the course
+      // list is already scoped, so every roster fetched here is permitted.
+      if (role === 'faculty' || can(role, 'courses', 'write')) {
         const rosterMap = new Map();
         await Promise.all(crs.map(async c => {
           rosterMap.set(c.id, await api('GET', `/courses/${c.id}/roster`));
         }));
         setCourseRosters(rosterMap);
-        if (user.role === 'admin') {
-          setConflictsData(effectiveTermId ? await api('GET', `/conflicts?termId=${effectiveTermId}`) : emptyConflicts);
-          setAllUsers(await api('GET', '/users'));
-          setAuditLog(await api('GET', '/audit-log'));
-        }
-      } else {
+      }
+      if (can(role, 'conflicts', 'read')) {
+        setConflictsData(effectiveTermId ? await api('GET', `/conflicts?termId=${effectiveTermId}`) : emptyConflicts);
+      }
+      if (role === 'admin') {
+        setAllUsers(await api('GET', '/users'));
+      }
+      if (can(role, 'audit', 'read')) {
+        setAuditLog(await api('GET', '/audit-log'));
+      }
+      if (role === 'student') {
         setMyEnrollments(await api('GET', '/enrollments/me'));
-        if (user.role === 'student') {
-          const { courseIds } = await fetchActivityStatus();
-          setUnviewedActivityCourseIds(new Set(courseIds));
-          const grades = await fetchMyGrades();
-          setMyFinalGrades(new Map(grades.map(g => [g.course.id, { letterGrade: g.letterGrade, hasAnyScore: g.hasAnyScore, average: g.average }])));
-        }
+        const { courseIds } = await fetchActivityStatus();
+        setUnviewedActivityCourseIds(new Set(courseIds));
+        const grades = await fetchMyGrades();
+        setMyFinalGrades(new Map(grades.map(g => [g.course.id, { letterGrade: g.letterGrade, hasAnyScore: g.hasAnyScore, average: g.average }])));
+      } else if (role === 'faculty') {
+        setMyEnrollments(await api('GET', '/enrollments/me'));
       }
     } finally {
       setIsLoading(false);
@@ -229,6 +247,10 @@ export function AppDataProvider({ children }) {
     setAuthPhase('login');
     applyLanguage(DEFAULT_LANGUAGE);
     setLanguageState(DEFAULT_LANGUAGE);
+    // Persisted, per-user notifications must never carry across accounts — the next boot()
+    // (this login or the next one, same browser tab) always re-fetches its own scoped set,
+    // but nothing from this account's feed should be visible even for the instant in between.
+    setNotifications([]);
   }
 
   /** Self-service language switch — applied immediately (i18next + document dir/lang) so the
@@ -287,7 +309,7 @@ export function AppDataProvider({ children }) {
 
   const value = useMemo(() => ({
     authPhase, currentUser, branding, logoUrl, language,
-    departments, terms, activeTermId, teachers, rooms, courses, slots, slotExceptions, exams,
+    departments, colleges, terms, activeTermId, teachers, rooms, courses, slots, slotExceptions, exams,
     myEnrollments, conflictsData, courseRosters, allUsers, auditLog, isLoading, notifications,
     unviewedActivityCourseIds, myFinalGrades,
     sortState, toggleSort,
@@ -297,7 +319,7 @@ export function AppDataProvider({ children }) {
     setActiveTermIdOptimistic: setActiveTermIdState,
   }), [
     authPhase, currentUser, branding, logoUrl, language,
-    departments, terms, activeTermId, teachers, rooms, courses, slots, slotExceptions, exams,
+    departments, colleges, terms, activeTermId, teachers, rooms, courses, slots, slotExceptions, exams,
     myEnrollments, conflictsData, courseRosters, allUsers, auditLog, isLoading, notifications,
     unviewedActivityCourseIds, myFinalGrades,
     sortState,

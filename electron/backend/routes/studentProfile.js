@@ -7,6 +7,7 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { getGradingScale } = require('../gradingScale');
 const { runOrFriendlyError } = require('./crudRouter');
+const { teacherIdForUser } = require('../ownership');
 
 const router = express.Router();
 
@@ -30,8 +31,22 @@ const ADMIN_FIELDS = [
 // What a student may edit about themselves — everything else on the profile is admin-only.
 const SELF_FIELDS = ['mobileNumber', 'emergencyContact'];
 
+/** Synchronous access for admin (any student) and a student themselves. */
 function canAccess(req, studentId) {
   return req.user.role === 'admin' || Number(req.user.sub) === Number(studentId);
+}
+
+/** Full access check, including a Student Advisor for their own advisees
+    (student_profiles.advisorTeacherId → the teacher record linked to this user). */
+async function canAccessAsync(req, studentId) {
+  if (canAccess(req, studentId)) return true;
+  if (req.user.role === 'advisor') {
+    const teacherId = await teacherIdForUser(req.user.sub);
+    if (teacherId == null) return false;
+    const profile = await get('SELECT advisorTeacherId FROM student_profiles WHERE studentId = ?', [studentId]);
+    return !!profile && Number(profile.advisorTeacherId) === Number(teacherId);
+  }
+  return false;
 }
 
 async function ensureProfileRow(studentId) {
@@ -79,9 +94,29 @@ function validateAdminFields(body) {
   return null;
 }
 
+/** The students a Student Advisor advises — their advisee roster. Advisor-only;
+    scoped entirely by the advisor's own linked teacher id, so it can never
+    return a student they don't advise. */
+router.get('/advisees', requireAuth, asyncHandler(async (req, res) => {
+  if (req.user.role !== 'advisor') return res.status(403).json({ error: 'Forbidden' });
+  const teacherId = await teacherIdForUser(req.user.sub);
+  if (teacherId == null) return res.json([]);
+  const rows = await all(
+    `SELECT u.id as studentId, u.name, u.email, u.idNumber,
+            sp.programSemester, sp.section, sp.enrollmentStatus,
+            d.name as departmentName
+     FROM student_profiles sp
+     JOIN users u ON u.id = sp.studentId AND u.role = 'student'
+     LEFT JOIN departments d ON d.id = sp.departmentId
+     WHERE sp.advisorTeacherId = ? ORDER BY u.name`,
+    [teacherId]
+  );
+  res.json(rows);
+}));
+
 router.get('/:studentId', requireAuth, asyncHandler(async (req, res) => {
   const studentId = Number(req.params.studentId);
-  if (!canAccess(req, studentId)) return res.status(403).json({ error: 'Forbidden' });
+  if (!(await canAccessAsync(req, studentId))) return res.status(403).json({ error: 'Forbidden' });
   const student = await get(`SELECT id, name, email, idNumber, createdAt FROM users WHERE id = ? AND role = 'student'`, [studentId]);
   if (!student) return res.status(404).json({ error: 'Student not found' });
 

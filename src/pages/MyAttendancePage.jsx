@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Section from '../components/Section.jsx';
+import { useAppData } from '../context/AppDataContext.jsx';
 import { useNavigation } from '../context/NavigationContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { fetchMyAttendance } from '../api.js';
@@ -10,6 +11,7 @@ const STATUS_PILL = { present: 'pill-green', absent: 'pill-red', late: 'pill-amb
 
 export default function MyAttendancePage() {
   const { t } = useTranslation(['academics', 'common']);
+  const { currentUser } = useAppData();
   const { sectionFocus } = useNavigation();
   const { toast } = useToast();
   const [rows, setRows] = useState([]);
@@ -17,6 +19,12 @@ export default function MyAttendancePage() {
   const panelRefs = useRef(new Map());
 
   useEffect(() => {
+    // Every page in this app stays mounted at all times regardless of role (see AppShell.jsx) —
+    // this page is student-only (it's "my" attendance), so skip the fetch entirely for anyone
+    // else. Without this, every non-student login would silently 403 against the module-level
+    // guard on /attendance/me (only faculty/viewer/student have attendance access), and the
+    // resulting error toast would show up in their notification bell.
+    if (currentUser.role !== 'student') { setLoading(false); return; }
     let cancelled = false;
     (async () => {
       try {
@@ -30,7 +38,7 @@ export default function MyAttendancePage() {
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentUser.role]);
 
   const byCourse = new Map();
   rows.forEach(r => {

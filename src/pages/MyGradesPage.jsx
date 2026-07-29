@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Section from '../components/Section.jsx';
+import { useAppData } from '../context/AppDataContext.jsx';
 import { useNavigation } from '../context/NavigationContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { fetchMyGrades } from '../api.js';
@@ -11,6 +12,7 @@ import { fetchMyGrades } from '../api.js';
     course/student picker here — a student can never even ask to see anyone else's. */
 export default function MyGradesPage() {
   const { t } = useTranslation(['gradebook', 'common']);
+  const { currentUser } = useAppData();
   const { sectionFocus } = useNavigation();
   const { toast } = useToast();
   const [courses, setCourses] = useState([]);
@@ -18,6 +20,12 @@ export default function MyGradesPage() {
   const panelRefs = useRef(new Map());
 
   useEffect(() => {
+    // Every page in this app stays mounted at all times regardless of role (see AppShell.jsx) —
+    // this page is student-only (it's "my" grades), so skip the fetch entirely for anyone else.
+    // Without this, every non-student login would silently 403 against the module-level guard
+    // on /grades/me (only records_officer/faculty/viewer/student have grades access), and the
+    // resulting error toast would show up in their notification bell.
+    if (currentUser.role !== 'student') { setLoading(false); return; }
     (async () => {
       try {
         setCourses(await fetchMyGrades());
@@ -28,7 +36,7 @@ export default function MyGradesPage() {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentUser.role]);
 
   // A course quick action ("Grades") lands here wanting to jump straight to its panel.
   useEffect(() => {

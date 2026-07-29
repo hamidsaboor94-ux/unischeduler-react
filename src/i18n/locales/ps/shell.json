@@ -7,7 +7,8 @@
       "system": "سیسټم",
       "myTeaching": "زما تدریس",
       "courses": "کورسونه",
-      "admissions": "منل"
+      "admissions": "منل",
+      "finance": "مالي چارې"
     },
     "nav": {
       "dashboard": "ډشبورډ",
@@ -23,6 +24,7 @@
       "attendance": "حاضري",
       "gradebook": "نمرې",
       "myGrades": "زما نمرې",
+      "advisees": "زما مشوره‌ورکړل‌شوي",
       "conflicts": "ټکرونه",
       "users": "کاروونکي",
       "auditLog": "د پلټنې ثبت",
@@ -34,7 +36,9 @@
       "mySchedule": "زما مهالویش",
       "myAttendance": "زما حاضري",
       "myProfile": "زما پروفایل",
-      "admissions": "غوښتنلیکونه"
+      "admissions": "غوښتنلیکونه",
+      "finance": "مالي چارې",
+      "myFees": "زما فیسونه"
     },
     "noTermsYet": "تر اوسه هیڅ سمستر نشته"
   },

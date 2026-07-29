@@ -5,13 +5,24 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { isValidPassword, isValidEmail } = require('../validate');
 const { createAccountWithTempPassword } = require('../accounts');
+const { ASSIGNABLE_ROLES, isDepartmentScoped, isCollegeScoped } = require('../permissions');
 
 const router = express.Router();
-const ROLES = ['admin', 'faculty', 'student'];
-const SAFE_COLUMNS = 'id, name, email, role, createdAt, mustChangePassword, idNumber';
-// Roles an admin can hand out through account creation (single or bulk).
-// Admin accounts are never created here — only seeded, or promoted via PUT /:id.
-const CREATABLE_ROLES = ['faculty', 'student'];
+const SAFE_COLUMNS = 'id, name, email, role, departmentId, collegeId, createdAt, mustChangePassword, idNumber';
+// Every role a Super Admin may assign (via role change on an existing account).
+const ROLES = ASSIGNABLE_ROLES;
+// Roles that can be handed out through account creation (single or bulk). Admin
+// accounts are never created here — only seeded, or promoted via PUT /:id.
+const CREATABLE_ROLES = ASSIGNABLE_ROLES.filter(r => r !== 'admin');
+// Roles that require a department to be chosen: faculty (linked teacher record
+// carries it) and any single-department-scoped role (e.g. Department Head).
+function roleNeedsDepartment(role) {
+  return role === 'faculty' || isDepartmentScoped(role);
+}
+// Roles that require a college (Dean).
+function roleNeedsCollege(role) {
+  return isCollegeScoped(role);
+}
 
 /** Finds an existing teacher record with no login yet whose name matches (case-insensitive) —
     so creating a faculty account for someone already listed as a bare teacher (e.g. one the
@@ -37,15 +48,17 @@ router.post('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res
   const email = (req.body.email || '').trim().toLowerCase();
   const role = req.body.role;
   const departmentId = req.body.departmentId;
+  const collegeId = req.body.collegeId;
   if (!name || !email) return res.status(400).json({ error: 'Name and email are required' });
   if (!isValidEmail(email)) return res.status(400).json({ error: 'Enter a valid email address' });
-  if (!CREATABLE_ROLES.includes(role)) return res.status(400).json({ error: 'Role must be faculty or student' });
-  if (role === 'faculty' && !departmentId) return res.status(400).json({ error: 'Department is required for a faculty account' });
+  if (!CREATABLE_ROLES.includes(role)) return res.status(400).json({ error: 'Invalid role for account creation' });
+  if (roleNeedsDepartment(role) && !departmentId) return res.status(400).json({ error: 'A department is required for this role' });
+  if (roleNeedsCollege(role) && !collegeId) return res.status(400).json({ error: 'A college is required for this role' });
   const existing = await findUserByEmail(email);
   if (existing) return res.status(409).json({ error: 'An account with that email already exists' });
 
   const bareTeacher = role === 'faculty' ? await findBareTeacherByName(name) : null;
-  const account = await createAccountWithTempPassword({ name, email, role, departmentId, teacherId: bareTeacher?.id });
+  const account = await createAccountWithTempPassword({ name, email, role, departmentId, collegeId, teacherId: bareTeacher?.id });
   const user = await get(`SELECT ${SAFE_COLUMNS} FROM users WHERE id = ?`, [account.id]);
   await logAudit(req.user, 'create', 'users', account.id, { name, email, role });
   res.status(201).json({ user, tempPassword: account.tempPassword });
@@ -104,22 +117,37 @@ router.get('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, r
 
 router.put('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
   const { name, role } = req.body;
+  const departmentId = req.body.departmentId;
+  const collegeId = req.body.collegeId;
   if (role !== undefined && !ROLES.includes(role)) {
-    return res.status(400).json({ error: 'Role must be admin, faculty, or student' });
+    return res.status(400).json({ error: 'Invalid role' });
   }
   if (role !== undefined && Number(req.params.id) === req.user.sub && role !== 'admin') {
-    return res.status(400).json({ error: 'You cannot remove your own admin role' });
+    return res.status(400).json({ error: 'You cannot remove your own Super Admin role' });
+  }
+  const existing = await get('SELECT role, departmentId, collegeId FROM users WHERE id = ?', [req.params.id]);
+  if (!existing) return res.status(404).json({ error: 'Not found' });
+  const effectiveRole = role !== undefined ? role : existing.role;
+  const effectiveDept = departmentId !== undefined ? departmentId : existing.departmentId;
+  const effectiveCollege = collegeId !== undefined ? collegeId : existing.collegeId;
+  if (isDepartmentScoped(effectiveRole) && !effectiveDept) {
+    return res.status(400).json({ error: 'A department is required for this role.' });
+  }
+  if (isCollegeScoped(effectiveRole) && !effectiveCollege) {
+    return res.status(400).json({ error: 'A college is required for this role.' });
   }
   const cols = [];
   const params = [];
   if (name !== undefined) { cols.push('name = ?'); params.push(name); }
   if (role !== undefined) { cols.push('role = ?'); params.push(role); }
+  if (departmentId !== undefined) { cols.push('departmentId = ?'); params.push(departmentId || null); }
+  if (collegeId !== undefined) { cols.push('collegeId = ?'); params.push(collegeId || null); }
   if (!cols.length) return res.status(400).json({ error: 'No fields to update' });
   params.push(req.params.id);
   await run(`UPDATE users SET ${cols.join(', ')} WHERE id = ?`, params);
   const row = await get(`SELECT ${SAFE_COLUMNS} FROM users WHERE id = ?`, [req.params.id]);
   if (!row) return res.status(404).json({ error: 'Not found' });
-  await logAudit(req.user, 'update', 'users', req.params.id, { name, role });
+  await logAudit(req.user, 'update', 'users', req.params.id, { name, role, departmentId, collegeId });
   res.json(row);
 }));
 

@@ -1,0 +1,10 @@
+/* Lexend — soft humanist UI font, vendored locally (like the Tabler icons) so the Electron
+   desktop build works offline and stays within the app's CSP. Single variable-weight file
+   (@fontsource-variable/lexend v5) covers every weight the app uses. */
+@font-face {
+  font-family: 'Lexend';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('./fonts/lexend-variable.woff2') format('woff2');
+}

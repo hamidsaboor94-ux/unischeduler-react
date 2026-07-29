@@ -28,6 +28,9 @@ import BrandingSettingsPage from '../pages/BrandingSettingsPage.jsx';
 import GradingScalePage from '../pages/GradingScalePage.jsx';
 import StudentProfilePage from '../pages/StudentProfilePage.jsx';
 import ApplicationsPage from '../pages/ApplicationsPage.jsx';
+import AdviseesPage from '../pages/AdviseesPage.jsx';
+import FinancePage from '../pages/FinancePage.jsx';
+import MyFeesPage from '../pages/MyFeesPage.jsx';
 
 export default function AppShell() {
   const { isLoading } = useAppData();
@@ -78,6 +81,9 @@ export default function AppShell() {
           <GradingScalePage />
           <StudentProfilePage />
           <ApplicationsPage />
+          <AdviseesPage />
+          <FinancePage />
+          <MyFeesPage />
         </div>
       </div>
 

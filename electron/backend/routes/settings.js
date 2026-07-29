@@ -3,7 +3,8 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const { all, run, logAudit, DB_PATH } = require('../db');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth } = require('../middleware/auth');
+const { requirePermission } = require('../middleware/permission');
 const asyncHandler = require('../middleware/asyncHandler');
 const { getGradingScale, validateScale, recomputeFinalGradesForCourse } = require('../gradingScale');
 
@@ -60,7 +61,7 @@ router.get('/branding/logo', asyncHandler(async (req, res) => {
 /** orgName being unset is what "first run" means for this feature (see AppDataContext's
     boot()) — so this endpoint is also how first-run setup completes, not just how settings
     get edited later. Both call sites (the setup screen and the Settings page) use it. */
-router.put('/branding', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.put('/branding', requireAuth, requirePermission('branding', 'write'), asyncHandler(async (req, res) => {
   const { orgName, brandColor, emailDomain } = req.body;
   if (orgName !== undefined) {
     const trimmed = String(orgName).trim();
@@ -84,7 +85,7 @@ router.put('/branding', requireAuth, requireRole('admin'), asyncHandler(async (r
   res.json(brandingPayload(await getAllSettings()));
 }));
 
-router.post('/branding/logo', requireAuth, requireRole('admin'), upload.single('logo'), asyncHandler(async (req, res) => {
+router.post('/branding/logo', requireAuth, requirePermission('branding', 'write'), upload.single('logo'), asyncHandler(async (req, res) => {
   if (!BRANDING_DIR) return res.status(400).json({ error: 'Cannot store a logo for an in-memory database' });
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   if (!ALLOWED_LOGO_TYPES.has(req.file.mimetype)) {
@@ -98,7 +99,7 @@ router.post('/branding/logo', requireAuth, requireRole('admin'), upload.single('
   res.json(brandingPayload(await getAllSettings()));
 }));
 
-router.delete('/branding/logo', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.delete('/branding/logo', requireAuth, requirePermission('branding', 'write'), asyncHandler(async (req, res) => {
   if (BRANDING_DIR) { try { fs.unlinkSync(logoFile()); } catch { /* already gone */ } }
   await run("DELETE FROM settings WHERE key = 'logoContentType'");
   await logAudit(req.user, 'remove-logo', 'settings', null, null);
@@ -107,11 +108,11 @@ router.delete('/branding/logo', requireAuth, requireRole('admin'), asyncHandler(
 
 // --- Grading scale — a single system-wide set of percent -> letter-grade bands, admin only ---
 
-router.get('/grading-scale', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.get('/grading-scale', requireAuth, requirePermission('gradingScale', 'read'), asyncHandler(async (req, res) => {
   res.json({ bands: await getGradingScale() });
 }));
 
-router.put('/grading-scale', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.put('/grading-scale', requireAuth, requirePermission('gradingScale', 'write'), asyncHandler(async (req, res) => {
   const { bands } = req.body;
   const error = validateScale(bands);
   if (error) return res.status(400).json({ error });
@@ -132,13 +133,13 @@ router.put('/grading-scale', requireAuth, requireRole('admin'), asyncHandler(asy
 // the Student Profile page to show "completed vs required" credits; null/unset until an admin
 // configures it (no default guessed here). ---
 
-router.get('/graduation-requirement', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.get('/graduation-requirement', requireAuth, requirePermission('gradingScale', 'read'), asyncHandler(async (req, res) => {
   const s = await getAllSettings();
   const n = Number(s.requiredCreditsForGraduation);
   res.json({ requiredCredits: s.requiredCreditsForGraduation && !Number.isNaN(n) ? n : null });
 }));
 
-router.put('/graduation-requirement', requireAuth, requireRole('admin'), asyncHandler(async (req, res) => {
+router.put('/graduation-requirement', requireAuth, requirePermission('gradingScale', 'write'), asyncHandler(async (req, res) => {
   const { requiredCredits } = req.body;
   if (requiredCredits === null) {
     await setSetting('requiredCreditsForGraduation', '');

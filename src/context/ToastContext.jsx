@@ -1,51 +1,32 @@
-import { createContext, useContext, useCallback, useRef, useState } from 'react';
+import { createContext, useContext, useCallback, useState } from 'react';
 
 const ToastContext = createContext(null);
 
 let toastIdSeq = 1;
 
+/** Ephemeral, client-only feedback — form validation, save confirmations, request failures.
+    Shown once and auto-dismissed; never written to any store, never shown to any other account,
+    and never survives a page reload. This is deliberately the *only* thing toast() does: it must
+    never become a second, uncontrolled channel into the persisted per-user notification feed
+    (see AppDataContext's `notifications`, sourced from GET /notifications and rendered by
+    NotificationPanel.jsx) — that feed is reserved for meaningful domain events on the backend's
+    notification type allowlist (see api/src/notificationTypes.js). */
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
-  const [notificationHistory, setNotificationHistory] = useState([]);
-  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
-  const [notifPanelOpen, setNotifPanelOpen] = useState(false);
-  const notifPanelOpenRef = useRef(false);
-  notifPanelOpenRef.current = notifPanelOpen;
 
   const removeToast = useCallback((id) => {
     setToasts(list => list.filter(t => t.id !== id));
   }, []);
 
-  /** Shows a toast. `type` is 'info' (default), 'warning', or 'error' — errors and warnings stay on
-      screen longer and are logged to the notification bell. */
+  /** Shows a toast. `type` is 'info' (default), 'warning', or 'error' — errors and warnings stay
+      on screen longer. */
   const toast = useCallback((msg, type = 'info') => {
     const id = toastIdSeq++;
     const duration = type === 'error' ? 6000 : type === 'warning' ? 5000 : 3000;
     setToasts(list => [...list, { id, msg, type, duration }]);
-
-    setNotificationHistory(hist => {
-      const next = [{ msg, type, time: new Date() }, ...hist];
-      if (next.length > 30) next.length = 30;
-      return next;
-    });
-    setUnreadNotifCount(n => n + 1);
   }, []);
 
-  const toggleNotificationPanel = useCallback(() => {
-    setNotifPanelOpen(open => {
-      const opening = !open;
-      if (opening) setUnreadNotifCount(0);
-      return opening;
-    });
-  }, []);
-
-  const closeNotificationPanel = useCallback(() => setNotifPanelOpen(false), []);
-
-  const value = {
-    toasts, toast, removeToast,
-    notificationHistory, unreadNotifCount, notifPanelOpen,
-    toggleNotificationPanel, closeNotificationPanel,
-  };
+  const value = { toasts, toast, removeToast };
 
   return <ToastContext.Provider value={value}>{children}</ToastContext.Provider>;
 }

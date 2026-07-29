@@ -76,12 +76,18 @@
     "cannotChangeOwnRole": "Use another admin account to change your own role",
     "confirmDelete": "Delete user {{name}}? This cannot be undone.",
     "deleteAriaLabel": "Delete user {{name}}",
+    "selectDepartment": "Select department…",
+    "departmentScopeTitle": "This role only sees and manages this department's data",
+    "selectCollege": "Select college…",
+    "collegeScopeTitle": "This role sees and manages every department in this college",
     "table": {
       "idNumber": "ID Number",
       "joined": "Joined"
     },
     "toast": {
       "roleUpdated": "Role updated.",
+      "needDepartmentFirst": "Create a department first — this role must be scoped to one.",
+      "needCollegeFirst": "Create a college first — this role must be scoped to one.",
       "userRemoved": "User removed",
       "unsupportedFileType": "Please upload a .csv or .xlsx file.",
       "fileReadError": "Could not read that file.",
@@ -96,7 +102,8 @@
     "submit": "Create account",
     "toast": {
       "nameEmailRequired": "Name and email are required.",
-      "pickDepartment": "Pick a department for a faculty account."
+      "pickDepartment": "Pick a department for a faculty account.",
+      "pickCollege": "Pick a college for a Dean account."
     }
   },
   "resetPasswordForm": {

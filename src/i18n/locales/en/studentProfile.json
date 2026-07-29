@@ -1,4 +1,11 @@
 {
+  "advisees": {
+    "loading": "Loading advisees…",
+    "empty": "No students are currently assigned to you as advisor.",
+    "department": "Department",
+    "semester": "Semester",
+    "view": "View profile"
+  },
   "title": "Student Profile",
   "noStudentSelected": "Open a student's profile from Users to view it here.",
   "notFound": "This student's profile could not be found.",
