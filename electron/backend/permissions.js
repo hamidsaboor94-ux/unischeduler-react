@@ -16,7 +16,7 @@ const MODULES = [
   'dashboard', 'reports', 'timetable', 'rooms', 'courses', 'teachers', 'students',
   'departments', 'terms', 'exams', 'enrollment', 'attendance', 'grades',
   'gradingScale', 'admissions', 'conflicts', 'finance', 'users', 'audit',
-  'backup', 'branding', 'announcements',
+  'backup', 'branding', 'announcements', 'approvals',
 ];
 
 // Access levels. WRITE implies READ. Absence of a role from a module's row
@@ -103,6 +103,10 @@ const POLICY = {
   // regardless of this policy, can always read notices addressed to them via the self-scoped
   // /notices/me endpoints (not module-gated, matching /finance/me).
   announcements: { registrar:W, dean:W, dept_head:W, viewer:R },
+  // The Approvals reviewer queue (see approvalEngine.js) — just "may this role see the page
+  // shell at all". Real per-request eligibility (whose turn it is, canAct ownership checks) is
+  // enforced dynamically server-side in approvalEngine.js, not by this module policy.
+  approvals: { registrar:R, faculty:R },
 };
 
 /** Access level (0/1/2) a role has for a module. admin always WRITE. */

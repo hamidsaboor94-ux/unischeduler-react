@@ -25,6 +25,7 @@
       "attendance": "حاضري",
       "gradebook": "نمرې",
       "myGrades": "زما نمرې",
+      "myTranscript": "زما لیک لیست",
       "advisees": "زما مشوره‌ورکړل‌شوي",
       "conflicts": "ټکرونه",
       "users": "کاروونکي",
@@ -40,7 +41,9 @@
       "admissions": "غوښتنلیکونه",
       "finance": "مالي چارې",
       "myFees": "زما فیسونه",
-      "announcements": "اعلانونه"
+      "announcements": "اعلانونه",
+      "approvals": "منظورۍ",
+      "myAppeals": "زما بیاکتنې غوښتنې"
     },
     "noTermsYet": "تر اوسه هیڅ سمستر نشته"
   },

@@ -11,6 +11,7 @@ const { isScopedRequest, departmentInScope, resolveScopedDepartment, scopedDepar
 // requirePermission('courses', 'write') from middleware/permission.js. Read routes are unchanged
 // (still gated at the app.js mount via requireModuleAccess).
 const { requirePermission } = require('../authz');
+const { wouldCreateCycle } = require('../eligibility');
 
 /** Resolves { departmentId } for an existing course by id — used as requirePermission's
     scopeOf so a Dept Head/Dean 403s before the handler runs if the course is outside their
@@ -20,7 +21,7 @@ async function courseScopeOf(req) {
 }
 
 const router = express.Router();
-const FIELDS = ['code', 'name', 'departmentId', 'credits', 'teacherId', 'roomId', 'maxStudents', 'termId'];
+const FIELDS = ['code', 'name', 'departmentId', 'credits', 'teacherId', 'roomId', 'maxStudents', 'termId', 'programId'];
 
 function validateCourse(body) {
   if (body.credits !== undefined && !isPositiveInt(body.credits)) return 'Credits must be a positive number.';
@@ -180,6 +181,7 @@ router.delete('/:id', requireAuth, requirePermission('courses.Delete', { scopeOf
   await run('DELETE FROM timetable_slots WHERE courseId = ?', [id]);
   await run('DELETE FROM exams WHERE courseId = ?', [id]);
   await run('DELETE FROM enrollments WHERE courseId = ?', [id]);
+  await run('DELETE FROM course_offerings WHERE courseId = ?', [id]);
   await run('DELETE FROM courses WHERE id = ?', [id]);
   await logAudit(req.user, 'delete', 'courses', id, null, course, null);
   res.status(204).end();
@@ -187,7 +189,7 @@ router.delete('/:id', requireAuth, requirePermission('courses.Delete', { scopeOf
 
 router.get('/:id/prerequisites', requireAuth, asyncHandler(async (req, res) => {
   const rows = await all(
-    `SELECT c.* FROM course_prerequisites cp JOIN courses c ON c.id = cp.prerequisiteCourseId WHERE cp.courseId = ?`,
+    `SELECT c.*, cp.groupId, cp.type FROM course_prerequisites cp JOIN courses c ON c.id = cp.prerequisiteCourseId WHERE cp.courseId = ?`,
     [req.params.id]
   );
   res.json(rows);
@@ -212,26 +214,47 @@ router.post('/:id/prerequisites', requireAuth, requirePermission('courses.Update
   const course = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
   if (!course) return res.status(404).json({ error: 'Not found' });
   if (!(await canManageCourse(req, course))) return res.status(403).json({ error: 'You do not have access to this course.' });
-  const { prerequisiteCourseId } = req.body;
+  const { prerequisiteCourseId, groupId, type } = req.body;
   if (!prerequisiteCourseId) return res.status(400).json({ error: 'prerequisiteCourseId required' });
   if (Number(prerequisiteCourseId) === Number(req.params.id)) {
     return res.status(400).json({ error: 'A course cannot be its own prerequisite' });
   }
+  if (type != null && type !== 'prerequisite' && type !== 'corequisite') {
+    return res.status(400).json({ error: "type must be 'prerequisite' or 'corequisite'" });
+  }
+  const prereqCourse = await get('SELECT id FROM courses WHERE id = ?', [prerequisiteCourseId]);
+  if (!prereqCourse) return res.status(404).json({ error: 'Prerequisite course not found' });
+  // Reject a cycle (A requires B, B already (transitively) requires A) before it's ever written —
+  // section-aware, so a cycle routed through a sibling section is caught too (see eligibility.js).
+  if (await wouldCreateCycle(req.params.id, prerequisiteCourseId)) {
+    return res.status(409).json({ error: 'This would create a prerequisite cycle.' });
+  }
   await run(
-    'INSERT INTO course_prerequisites (courseId, prerequisiteCourseId) VALUES (?, ?) ON CONFLICT (courseId, prerequisiteCourseId) DO NOTHING',
-    [req.params.id, prerequisiteCourseId]
+    `INSERT INTO course_prerequisites (courseId, prerequisiteCourseId, groupId, type) VALUES (?, ?, ?, ?)
+     ON CONFLICT (courseId, prerequisiteCourseId) DO UPDATE SET groupId = excluded.groupId, type = excluded.type`,
+    [req.params.id, prerequisiteCourseId, groupId ?? null, type || 'prerequisite']
   );
-  res.status(201).json({ courseId: Number(req.params.id), prerequisiteCourseId: Number(prerequisiteCourseId) });
+  await logAudit(req.user, 'add-prerequisite', 'courses', req.params.id, {
+    courseId: Number(req.params.id), courseCode: course.code,
+    prerequisiteCourseId: Number(prerequisiteCourseId), prerequisiteCourseCode: prereqCourse.code,
+    groupId: groupId ?? null, type: type || 'prerequisite',
+  });
+  res.status(201).json({ courseId: Number(req.params.id), prerequisiteCourseId: Number(prerequisiteCourseId), groupId: groupId ?? null, type: type || 'prerequisite' });
 }));
 
 router.delete('/:id/prerequisites/:prereqId', requireAuth, requirePermission('courses.Update', { scopeOf: courseScopeOf }), asyncHandler(async (req, res) => {
   const course = await get('SELECT * FROM courses WHERE id = ?', [req.params.id]);
   if (!course) return res.status(404).json({ error: 'Not found' });
   if (!(await canManageCourse(req, course))) return res.status(403).json({ error: 'You do not have access to this course.' });
+  const prereqCourse = await get('SELECT code FROM courses WHERE id = ?', [req.params.prereqId]);
   await run(
     'DELETE FROM course_prerequisites WHERE courseId = ? AND prerequisiteCourseId = ?',
     [req.params.id, req.params.prereqId]
   );
+  await logAudit(req.user, 'remove-prerequisite', 'courses', req.params.id, {
+    courseId: Number(req.params.id), courseCode: course.code,
+    prerequisiteCourseId: Number(req.params.prereqId), prerequisiteCourseCode: prereqCourse?.code,
+  });
   res.status(204).end();
 }));
 

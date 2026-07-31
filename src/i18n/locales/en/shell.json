@@ -25,6 +25,7 @@
       "attendance": "Attendance",
       "gradebook": "Gradebook",
       "myGrades": "My Grades",
+      "myTranscript": "My Transcript",
       "advisees": "My Advisees",
       "conflicts": "Conflicts",
       "users": "Users",
@@ -40,7 +41,9 @@
       "admissions": "Applications",
       "finance": "Finance",
       "myFees": "My Fees",
-      "announcements": "Announcements"
+      "announcements": "Announcements",
+      "approvals": "Approvals",
+      "myAppeals": "My Appeals"
     },
     "noTermsYet": "No terms yet"
   },

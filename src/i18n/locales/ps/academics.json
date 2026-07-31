@@ -126,6 +126,9 @@
     "removeConfirm": "{{name}} له دې کورس څخه لرې شي؟",
     "removeAriaLabel": "{{name}} له دې کورس څخه لرې کول",
     "removed": "لرې شو",
+    "withdrawConfirm": "د دې کورس د لرې کولو نیټه تېره شوې ده. د {{name}} اوس لرې کول یو دايمي وتل ثبتوي — د هغوی په لیک لیست کې به \"W\" ښکاره شي او پر GPA اغیز نلري. ادامه ورکړئ؟",
+    "withdrawn": "وتل ثبت شو.",
+    "withdrawnPill": "W",
     "rosterExported": "لیست صادر شو.",
     "csv": {
       "studentId": "د زده کوونکي شمېره",
@@ -231,6 +234,8 @@
     "gradeInProgress": "روان دی",
     "withdrawAriaLabel": "له {{code}} څخه ایستل",
     "withdrawn": "ایستل شو",
+    "withdrawConfirm": "د {{code}} د لرې کولو نیټه تېره شوې ده. اوس وتل دايمي دي — ستاسو په لیک لیست کې به \"W\" ښکاره شي او پر GPA اغیز نلري. ادامه ورکړئ؟",
+    "withdrawnRecorded": "وتل ثبت شول — ستاسو په لیک لیست کې به د \"W\" په توګه ښکاره شي.",
     "emptyState": "تاسو تر اوسه په هیڅ کورس کې نومول شوي نه یاست — د نوملیکنې لپاره کتالوګ ته لاړ شئ.",
     "unseenCountTitle_one": "{{count}} نوی توکی",
     "unseenCountTitle_other": "{{count}} نوي توکي"

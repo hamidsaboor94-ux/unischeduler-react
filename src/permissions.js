@@ -10,7 +10,7 @@ export const MODULES = [
   'dashboard', 'reports', 'timetable', 'rooms', 'courses', 'teachers', 'students',
   'departments', 'terms', 'exams', 'enrollment', 'attendance', 'grades',
   'gradingScale', 'admissions', 'conflicts', 'finance', 'users', 'audit',
-  'backup', 'branding', 'announcements',
+  'backup', 'branding', 'announcements', 'approvals',
 ];
 
 const NONE = 0, READ = 1, WRITE = 2;
@@ -62,6 +62,8 @@ const POLICY = {
   backup:       {},
   branding:     {},
   announcements: { registrar:W, dean:W, dept_head:W, viewer:R },
+  // Mirrors api/src/permissions.js — just "may this role see the Approvals page shell at all".
+  approvals: { registrar:R, faculty:R },
 };
 
 function levelFor(role, module) {
@@ -93,16 +95,17 @@ export function accessibleModules(role) {
 // Section name (the `?section=` value / Section.jsx `name` prop) → module, for the sections
 // reachable from Sidebar.jsx's nav (kept in sync with STAFF_NAV there, same convention as the
 // frontend/backend POLICY mirror above). Sections NOT listed here — parameterized drill-down
-// pages like student-detail/student-profile/teacher-profile/faculty-onboarding, reached only via
-// an explicit button + id payload, never a bare nav click — are intentionally left ungated by
-// this table; they already enforce access themselves server-side and via their own reactive
-// isForbidden handling.
+// pages like student-detail/student-profile/teacher-profile/faculty-onboarding/transcript
+// (staff mode), reached only via an explicit button + id payload, never a bare nav click — are
+// intentionally left ungated by this table; they already enforce access themselves server-side
+// and via their own reactive isForbidden handling.
 const SECTION_MODULES = {
   dashboard: 'dashboard', reports: 'reports', timetable: 'timetable', rooms: 'rooms',
   courses: 'courses', teachers: 'teachers', students: 'students', departments: 'departments',
   semesters: 'terms', exams: 'exams', enrollment: 'enrollment', attendance: 'attendance',
   gradebook: 'grades', applications: 'admissions', finance: 'finance', conflicts: 'conflicts',
   users: 'users', audit: 'audit', backup: 'backup', branding: 'branding', 'grading-scale': 'gradingScale',
+  approvals: 'approvals',
 };
 // Every role — including ones with no 'announcements' module access — is always at least a
 // recipient of announcements addressed to them (matches Sidebar.jsx's STAFF_NAV comment).
@@ -114,7 +117,7 @@ const ALWAYS_VISIBLE_SECTIONS = new Set(['announcements']);
 const ROLE_ONLY_SECTIONS = {
   advisees: ['advisor'],
   catalog: ['student'], myschedule: ['student'], 'my-attendance': ['student'],
-  mygrades: ['student'], 'my-fees': ['student'],
+  mygrades: ['student'], 'my-fees': ['student'], 'my-transcript': ['student'], 'my-appeals': ['student'],
 };
 
 /** True if `role` may navigate to the top-level, sidebar-reachable section `name`. Sections not

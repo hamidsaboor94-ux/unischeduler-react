@@ -1,0 +1,29 @@
+{
+  "title": "Transcript",
+  "print": "Print",
+  "officialTranscript": "Official Academic Transcript",
+  "printedOn": "Printed on",
+  "studentInfo": "Student Information",
+  "name": "Name",
+  "studentId": "Student ID",
+  "program": "Program",
+  "department": "Department",
+  "status": "Status",
+  "graduationDate": "Graduation Date",
+  "noCourses": "No completed or in-progress courses on record.",
+  "table": {
+    "code": "Code",
+    "course": "Course",
+    "credits": "Credits",
+    "grade": "Grade"
+  },
+  "inProgress": "In Progress",
+  "withdrawnHint": "Withdrawn after the drop deadline — no GPA impact",
+  "termGpa": "Term GPA",
+  "termCredits": "Term Credits",
+  "cumulativeGpa": "Cumulative GPA",
+  "completedCredits": "Completed Credits",
+  "attemptedCredits": "Attempted Credits",
+  "gradingScale": "Grading Scale",
+  "noData": "No transcript data available."
+}

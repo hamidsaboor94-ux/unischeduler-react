@@ -126,6 +126,9 @@
     "removeConfirm": "Remove {{name}} from this course?",
     "removeAriaLabel": "Remove {{name}} from this course",
     "removed": "Removed",
+    "withdrawConfirm": "The drop deadline for this course has passed. Removing {{name}} now records a permanent withdrawal — it will show as a \"W\" on their transcript and does not affect GPA. Continue?",
+    "withdrawn": "Withdrawal recorded.",
+    "withdrawnPill": "W",
     "rosterExported": "Roster exported.",
     "csv": {
       "studentId": "Student ID",
@@ -231,6 +234,8 @@
     "gradeInProgress": "In progress",
     "withdrawAriaLabel": "Withdraw from {{code}}",
     "withdrawn": "Withdrawn",
+    "withdrawConfirm": "The drop deadline for {{code}} has passed. Withdrawing now is permanent — it will show as a \"W\" on your transcript and does not affect your GPA. Continue?",
+    "withdrawnRecorded": "Withdrawal recorded — will show as \"W\" on your transcript.",
     "emptyState": "You're not enrolled in anything yet — visit the Catalog to register.",
     "unseenCountTitle_one": "{{count}} new item",
     "unseenCountTitle_other": "{{count}} new items"

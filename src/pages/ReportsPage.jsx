@@ -8,14 +8,31 @@ import Section from '../components/Section.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
 import { useNavigation } from '../context/NavigationContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
-import { api } from '../api.js';
+import { api, exportDashboardChartPdf, exportDashboardChartXlsx } from '../api.js';
 import { StatCard } from '../components/ui/StatCard.jsx';
 import { can } from '../permissions.js';
+import CustomReportBuilder from '../components/reports/CustomReportBuilder.jsx';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAY_COLORS = ['#4B7FE8', '#1B9E5A', '#E8A84B', '#7F77DD', '#D85A30', '#2FA9B0', '#8A93AA'];
 
-function ChartPanel({ title, subtitle, children, empty }) {
+function ChartExportButtons({ t, exportKey, exportingKey, onExport }) {
+  if (!exportKey) return null;
+  return (
+    <div className="panel-header-actions">
+      <button type="button" className="icon-btn" aria-label={t('dashboard:reports.builder.exportPdf')} title={t('dashboard:reports.builder.exportPdf')}
+        disabled={exportingKey === `${exportKey}-pdf`} onClick={() => onExport(exportKey, 'pdf')}>
+        {exportingKey === `${exportKey}-pdf` ? <span className="spinner"></span> : <i className="ti ti-file-type-pdf" aria-hidden="true"></i>}
+      </button>
+      <button type="button" className="icon-btn" aria-label={t('dashboard:reports.builder.exportXlsx')} title={t('dashboard:reports.builder.exportXlsx')}
+        disabled={exportingKey === `${exportKey}-xlsx`} onClick={() => onExport(exportKey, 'xlsx')}>
+        {exportingKey === `${exportKey}-xlsx` ? <span className="spinner"></span> : <i className="ti ti-file-type-xls" aria-hidden="true"></i>}
+      </button>
+    </div>
+  );
+}
+
+function ChartPanel({ title, subtitle, children, empty, exportKey, exportingKey, onExport, t }) {
   return (
     <div className="panel chart-panel">
       <div className="panel-header">
@@ -23,6 +40,7 @@ function ChartPanel({ title, subtitle, children, empty }) {
           <div className="panel-title">{title}</div>
           <div className="panel-subtitle">{subtitle}</div>
         </div>
+        <ChartExportButtons t={t} exportKey={exportKey} exportingKey={exportingKey} onExport={onExport} />
       </div>
       {empty ? <div className="field-hint" style={{ padding: 14 }}>{empty}</div> : (
         <ResponsiveContainer width="100%" height={280}>
@@ -44,10 +62,24 @@ export default function ReportsPage() {
   const { toast } = useToast();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [tab, setTab] = useState('analytics');
+  const [exportingKey, setExportingKey] = useState(null);
 
   // Recharts has no logical-property support, so swap left/right margins by hand for RTL languages.
   const isRtl = document.documentElement.dir === 'rtl';
   const chartMargin = isRtl ? { top: 8, right: 0, left: 16, bottom: 8 } : { top: 8, right: 16, left: 0, bottom: 8 };
+
+  const exportChart = async (chartKey, format) => {
+    setExportingKey(`${chartKey}-${format}`);
+    try {
+      const fn = format === 'pdf' ? exportDashboardChartPdf : exportDashboardChartXlsx;
+      await fn(chartKey, activeTermId, `${chartKey}.${format}`);
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      setExportingKey(null);
+    }
+  };
 
   useEffect(() => {
     // Every page in this app stays mounted at all times regardless of role (see AppShell.jsx) —
@@ -82,8 +114,15 @@ export default function ReportsPage() {
         <h2>{t('reports.title')}</h2>
       </div>
       <div id="content">
-        {!activeTermId && <div className="field-hint" style={{ padding: 14 }}>{t('reports.noTermSelected')}</div>}
-        {activeTermId && activeSection === 'reports' && (
+        <div className="tabs" style={{ marginBottom: 14 }}>
+          <button className={'tab' + (tab === 'analytics' ? ' active' : '')} onClick={() => setTab('analytics')}>{t('reports.tabs.analytics')}</button>
+          <button className={'tab' + (tab === 'custom' ? ' active' : '')} onClick={() => setTab('custom')}>{t('reports.tabs.custom')}</button>
+        </div>
+
+        {tab === 'custom' && activeSection === 'reports' && <CustomReportBuilder />}
+
+        {tab === 'analytics' && !activeTermId && <div className="field-hint" style={{ padding: 14 }}>{t('reports.noTermSelected')}</div>}
+        {tab === 'analytics' && activeTermId && activeSection === 'reports' && (
           <>
             <div className="panel-subtitle" style={{ marginBottom: 10 }}>
               <Trans
@@ -99,6 +138,7 @@ export default function ReportsPage() {
                   <div className="panel-title">{t('admissions:reports.panelTitle')}</div>
                   <div className="panel-subtitle">{t('admissions:reports.panelSubtitle')}</div>
                 </div>
+                <ChartExportButtons t={t} exportKey="applications" exportingKey={exportingKey} onExport={exportChart} />
               </div>
               <div className="stat-grid" style={{ marginBottom: 0 }}>
                 <StatCard icon="ti-clipboard-list" hue="indigo" label={t('admissions:reports.total')} value={applicationStats.total} />
@@ -117,6 +157,7 @@ export default function ReportsPage() {
               title={t('reports.chartTitles.roomUtilization')}
               subtitle={t('reports.chartSubtitles.roomUtilization')}
               empty={!loading && rooms.length === 0 ? t('reports.empty.rooms') : null}
+              exportKey="roomUtilization" exportingKey={exportingKey} onExport={exportChart} t={t}
             >
               <BarChart data={rooms} margin={chartMargin}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -135,6 +176,7 @@ export default function ReportsPage() {
                 title={t('reports.chartTitles.mostPopular')}
                 subtitle={t('reports.chartSubtitles.byEnrollment')}
                 empty={!loading && mostPopular.length === 0 ? t('reports.empty.courses') : null}
+                exportKey="coursePopularity" exportingKey={exportingKey} onExport={exportChart} t={t}
               >
                 <BarChart data={mostPopular} layout="vertical" margin={chartMargin}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -164,6 +206,7 @@ export default function ReportsPage() {
               title={t('reports.chartTitles.teacherWorkload')}
               subtitle={t('reports.chartSubtitles.teacherWorkload')}
               empty={!loading && teachers.length === 0 ? t('reports.empty.teachers') : null}
+              exportKey="teacherWorkload" exportingKey={exportingKey} onExport={exportChart} t={t}
             >
               <BarChart data={teachers} margin={chartMargin}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -181,6 +224,7 @@ export default function ReportsPage() {
               title={t('reports.chartTitles.enrollmentTrends')}
               subtitle={t('reports.chartSubtitles.enrollmentTrends')}
               empty={!loading && trends.length === 0 ? t('reports.empty.terms') : null}
+              exportKey="enrollmentTrends" exportingKey={exportingKey} onExport={exportChart} t={t}
             >
               <LineChart data={trends} margin={chartMargin}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />

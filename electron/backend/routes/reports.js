@@ -1,105 +1,213 @@
 const express = require('express');
-const { all, get } = require('../db');
+const { all, get, run, logAudit } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
+const { listEntities, ENTITIES } = require('../reportEntities');
+const { runReport, httpError } = require('../reportBuilder');
+const { renderPdf, renderXlsx } = require('../reportExport');
+const { computeDashboardData } = require('../dashboardAnalytics');
+const { buildDashboardExport } = require('../dashboardExport');
 
 const router = express.Router();
 
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+function sanitizeFilename(name) {
+  return String(name || 'report').replace(/[^a-z0-9-_ ]/gi, '_').trim().slice(0, 80) || 'report';
+}
 
-/** Admin-only analytics for the Reports page. termId scopes room utilization, course
-    popularity, and teacher workload to a single term (defaults to the currently active
-    one); enrollment trends are intentionally term-independent, covering every term so
-    growth/decline is visible across semesters. */
-router.get('/', requireAuth, asyncHandler(async (req, res) => {
-  let termId = req.query.termId ? Number(req.query.termId) : null;
-  if (!termId) {
-    const active = await get('SELECT id FROM terms WHERE isActive = 1 ORDER BY id DESC LIMIT 1');
-    termId = active ? active.id : null;
+function sendPdf(res, filename, buffer) {
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="${sanitizeFilename(filename)}.pdf"`);
+  res.send(buffer);
+}
+
+function sendXlsx(res, filename, buffer) {
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="${sanitizeFilename(filename)}.xlsx"`);
+  res.send(buffer);
+}
+
+function respondError(res, err) {
+  if (err.status) return res.status(err.status).json({ error: err.message });
+  throw err;
+}
+
+function parseConfig(raw) {
+  if (!raw) throw httpError(400, 'Missing report config.');
+  try {
+    return typeof raw === 'string' ? JSON.parse(raw) : raw;
+  } catch {
+    throw httpError(400, 'Malformed report config.');
   }
+}
 
-  const rooms = await all('SELECT id, name, type, capacity FROM rooms ORDER BY name');
-  const roomSlots = termId
-    ? await all(
-        `SELECT ts.roomId, ts.day, ts.durationMinutes
-         FROM timetable_slots ts WHERE ts.termId = ? AND ts.roomId IS NOT NULL`,
-        [termId]
-      )
-    : [];
-  const roomUtilization = rooms.map(r => {
-    const byDay = Object.fromEntries(DAYS.map(d => [d, 0]));
-    let totalMinutes = 0;
-    let sessions = 0;
-    for (const s of roomSlots) {
-      if (s.roomId !== r.id) continue;
-      const mins = s.durationMinutes || 60;
-      if (byDay[s.day] !== undefined) byDay[s.day] += mins;
-      totalMinutes += mins;
-      sessions += 1;
-    }
-    return {
-      roomId: r.id, name: r.name, type: r.type, capacity: r.capacity,
-      sessions, weeklyHours: Math.round((totalMinutes / 60) * 10) / 10,
-      byDay: Object.fromEntries(DAYS.map(d => [d, Math.round((byDay[d] / 60) * 10) / 10])),
-    };
-  }).sort((a, b) => b.weeklyHours - a.weeklyHours);
+/** Analytics for the Reports page — see dashboardAnalytics.js for the query itself (shared with
+    the PDF/Excel dashboard export below, so there's exactly one query path for this data). */
+router.get('/', requireAuth, asyncHandler(async (req, res) => {
+  res.json(await computeDashboardData(req.query.termId));
+}));
 
-  const coursePopularity = termId
-    ? (await all(
-        `SELECT c.id as courseId, c.code, c.name,
-                COUNT(CASE WHEN e.status = 'enrolled' THEN 1 END) as enrolledCount,
-                COUNT(CASE WHEN e.status = 'waitlisted' THEN 1 END) as waitlistedCount,
-                c.maxStudents
-         FROM courses c
-         LEFT JOIN enrollments e ON e.courseId = c.id
-         WHERE c.termId = ?
-         GROUP BY c.id
-         ORDER BY enrolledCount DESC`,
-        [termId]
-      ))
-    : [];
+/* ---------------------------- Custom report builder ---------------------------- *
+ * Deterministic report builder (see reportEntities.js / reportBuilder.js): the client picks an
+ * entity, columns, filters and an optional grouping from a server-side whitelist — never raw SQL.
+ * Mounted behind requireModuleAccess('reports') like the rest of this router (app.js), so GET
+ * routes need reports:read (registrar/records_officer/viewer/admin) and mutating routes need
+ * reports:write (records_officer/admin) — running a report is a GET (read-only, no side effects)
+ * even though its config can be large, so it doesn't require write access just to view data.
+ */
 
-  const teacherWorkload = termId
-    ? (await all(
-        `SELECT t.id as teacherId, t.name,
-                COUNT(DISTINCT c.id) as sections,
-                COALESCE(SUM(ts.durationMinutes), 0) as totalMinutes
-         FROM teachers t
-         LEFT JOIN courses c ON c.teacherId = t.id AND c.termId = ?
-         LEFT JOIN timetable_slots ts ON ts.courseId = c.id
-         GROUP BY t.id
-         ORDER BY totalMinutes DESC`,
-        [termId]
-      )).map(row => ({
-        teacherId: row.teacherId, name: row.name, sections: row.sections,
-        weeklyHours: Math.round((row.totalMinutes / 60) * 10) / 10,
-      }))
-    : [];
+/** Entity/field metadata that drives the builder's picker UI. */
+router.get('/entities', requireAuth, asyncHandler(async (req, res) => {
+  res.json(listEntities());
+}));
 
-  const enrollmentTrends = await all(
-    `SELECT t.id as termId, t.name as termName, t.startDate,
-            COUNT(CASE WHEN e.status = 'enrolled' THEN 1 END) as totalEnrolled
-     FROM terms t
-     LEFT JOIN courses c ON c.termId = t.id
-     LEFT JOIN enrollments e ON e.courseId = c.id
-     GROUP BY t.id
-     ORDER BY t.startDate IS NULL, t.startDate, t.id`
+/** Ad-hoc run: GET with the config JSON-encoded in a query param (kept a GET, not a POST, so
+    read-only roles can run reports without needing reports:write). */
+router.get('/run', requireAuth, asyncHandler(async (req, res) => {
+  try {
+    const config = parseConfig(req.query.config);
+    const result = await runReport(req.query.entity, config);
+    res.json(result);
+  } catch (err) { respondError(res, err); }
+}));
+
+/* --------------------------------- Export (PDF/Excel) --------------------------------- *
+ * Every export route is a GET, same as /run and /definitions/:id/run — exporting is a read
+ * operation on data you could already see on screen, so it needs reports:read, never
+ * reports:write. Each route fetches its data via runReport()/buildDashboardExport() (the same
+ * functions the JSON endpoints above use) and hands the result straight to reportExport.js —
+ * no query is ever written twice for "view" vs "export".
+ */
+router.get('/export/pdf', requireAuth, asyncHandler(async (req, res) => {
+  try {
+    const config = parseConfig(req.query.config);
+    const result = await runReport(req.query.entity, config);
+    const buffer = await renderPdf({ title: ENTITIES[req.query.entity]?.label, columns: result.columns, rows: result.rows, chart: result.chart });
+    sendPdf(res, ENTITIES[req.query.entity]?.label, buffer);
+  } catch (err) { respondError(res, err); }
+}));
+
+router.get('/export/xlsx', requireAuth, asyncHandler(async (req, res) => {
+  try {
+    const config = parseConfig(req.query.config);
+    const result = await runReport(req.query.entity, config);
+    const buffer = await renderXlsx({ title: ENTITIES[req.query.entity]?.label, columns: result.columns, rows: result.rows });
+    sendXlsx(res, ENTITIES[req.query.entity]?.label, buffer);
+  } catch (err) { respondError(res, err); }
+}));
+
+router.get('/export/dashboard/pdf', requireAuth, asyncHandler(async (req, res) => {
+  try {
+    const shaped = await buildDashboardExport(req.query.chart, req.query.termId);
+    const buffer = await renderPdf(shaped);
+    sendPdf(res, shaped.title, buffer);
+  } catch (err) { respondError(res, err); }
+}));
+
+router.get('/export/dashboard/xlsx', requireAuth, asyncHandler(async (req, res) => {
+  try {
+    const shaped = await buildDashboardExport(req.query.chart, req.query.termId);
+    const buffer = await renderXlsx(shaped);
+    sendXlsx(res, shaped.title, buffer);
+  } catch (err) { respondError(res, err); }
+}));
+
+router.get('/definitions', requireAuth, asyncHandler(async (req, res) => {
+  const rows = await all(
+    `SELECT rd.id, rd.name, rd.entity, rd.config, rd.chartType, rd.createdAt, rd.updatedAt,
+            rd.createdBy, u.name as createdByName
+     FROM report_definitions rd
+     LEFT JOIN users u ON u.id = rd.createdBy
+     ORDER BY rd.updatedAt DESC`
   );
+  res.json(rows.map((r) => ({ ...r, config: JSON.parse(r.config) })));
+}));
 
-  // Term-independent, like enrollmentTrends — admissions isn't scoped to a single term.
-  const statusCounts = await all(`SELECT status, COUNT(*) as n FROM applications GROUP BY status`);
-  const countOf = (status) => statusCounts.find(s => s.status === status)?.n || 0;
-  const total = statusCounts.reduce((sum, s) => sum + s.n, 0);
-  const accepted = countOf('Accepted');
-  const rejected = countOf('Rejected');
-  const pending = total - accepted - rejected;
-  const decided = accepted + rejected;
-  const applicationStats = {
-    total, accepted, rejected, pending,
-    acceptanceRate: decided > 0 ? Math.round((accepted / decided) * 1000) / 10 : null,
-  };
+router.get('/definitions/:id', requireAuth, asyncHandler(async (req, res) => {
+  const row = await get(
+    `SELECT rd.id, rd.name, rd.entity, rd.config, rd.chartType, rd.createdAt, rd.updatedAt,
+            rd.createdBy, u.name as createdByName
+     FROM report_definitions rd
+     LEFT JOIN users u ON u.id = rd.createdBy
+     WHERE rd.id = ?`,
+    [req.params.id]
+  );
+  if (!row) return res.status(404).json({ error: 'Not found' });
+  res.json({ ...row, config: JSON.parse(row.config) });
+}));
 
-  res.json({ termId, roomUtilization, coursePopularity, teacherWorkload, enrollmentTrends, applicationStats });
+router.get('/definitions/:id/run', requireAuth, asyncHandler(async (req, res) => {
+  const def = await get('SELECT entity, config FROM report_definitions WHERE id = ?', [req.params.id]);
+  if (!def) return res.status(404).json({ error: 'Not found' });
+  try {
+    const result = await runReport(def.entity, JSON.parse(def.config));
+    res.json(result);
+  } catch (err) { respondError(res, err); }
+}));
+
+router.get('/definitions/:id/export/pdf', requireAuth, asyncHandler(async (req, res) => {
+  const def = await get('SELECT name, entity, config FROM report_definitions WHERE id = ?', [req.params.id]);
+  if (!def) return res.status(404).json({ error: 'Not found' });
+  try {
+    const result = await runReport(def.entity, JSON.parse(def.config));
+    const buffer = await renderPdf({ title: def.name, columns: result.columns, rows: result.rows, chart: result.chart });
+    sendPdf(res, def.name, buffer);
+  } catch (err) { respondError(res, err); }
+}));
+
+router.get('/definitions/:id/export/xlsx', requireAuth, asyncHandler(async (req, res) => {
+  const def = await get('SELECT name, entity, config FROM report_definitions WHERE id = ?', [req.params.id]);
+  if (!def) return res.status(404).json({ error: 'Not found' });
+  try {
+    const result = await runReport(def.entity, JSON.parse(def.config));
+    const buffer = await renderXlsx({ title: def.name, columns: result.columns, rows: result.rows });
+    sendXlsx(res, def.name, buffer);
+  } catch (err) { respondError(res, err); }
+}));
+
+router.post('/definitions', requireAuth, asyncHandler(async (req, res) => {
+  const { name, entity, config, chartType } = req.body || {};
+  if (!name || !String(name).trim()) throw httpError(400, 'A report name is required.');
+  const parsedConfig = parseConfig(config);
+  try {
+    // Validate the config against the whitelist before saving — a bad save should fail loudly,
+    // not silently produce an empty report every time it's later run.
+    await runReport(entity, parsedConfig);
+  } catch (err) { return respondError(res, err); }
+
+  const { id } = await run(
+    'INSERT INTO report_definitions (name, entity, config, chartType, createdBy) VALUES (?, ?, ?, ?, ?)',
+    [String(name).trim(), entity, JSON.stringify(parsedConfig), chartType || null, req.user.sub]
+  );
+  await logAudit(req.user, 'report-definition-create', 'report_definitions', id, null, null, { name, entity });
+  const row = await get('SELECT id, name, entity, config, chartType, createdAt, updatedAt, createdBy FROM report_definitions WHERE id = ?', [id]);
+  res.status(201).json({ ...row, config: JSON.parse(row.config) });
+}));
+
+router.put('/definitions/:id', requireAuth, asyncHandler(async (req, res) => {
+  const existing = await get('SELECT * FROM report_definitions WHERE id = ?', [req.params.id]);
+  if (!existing) return res.status(404).json({ error: 'Not found' });
+  const { name, entity, config, chartType } = req.body || {};
+  const nextEntity = entity || existing.entity;
+  const nextConfig = config !== undefined ? parseConfig(config) : JSON.parse(existing.config);
+  try {
+    await runReport(nextEntity, nextConfig);
+  } catch (err) { return respondError(res, err); }
+
+  await run(
+    'UPDATE report_definitions SET name = ?, entity = ?, config = ?, chartType = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?',
+    [name ? String(name).trim() : existing.name, nextEntity, JSON.stringify(nextConfig), chartType !== undefined ? chartType : existing.chartType, req.params.id]
+  );
+  await logAudit(req.user, 'report-definition-update', 'report_definitions', Number(req.params.id), null, { name: existing.name }, { name: name || existing.name });
+  const row = await get('SELECT id, name, entity, config, chartType, createdAt, updatedAt, createdBy FROM report_definitions WHERE id = ?', [req.params.id]);
+  res.json({ ...row, config: JSON.parse(row.config) });
+}));
+
+router.delete('/definitions/:id', requireAuth, asyncHandler(async (req, res) => {
+  const existing = await get('SELECT id, name FROM report_definitions WHERE id = ?', [req.params.id]);
+  if (!existing) return res.status(404).json({ error: 'Not found' });
+  await run('DELETE FROM report_definitions WHERE id = ?', [req.params.id]);
+  await logAudit(req.user, 'report-definition-delete', 'report_definitions', existing.id, null, { name: existing.name }, null);
+  res.json({ ok: true });
 }));
 
 module.exports = router;

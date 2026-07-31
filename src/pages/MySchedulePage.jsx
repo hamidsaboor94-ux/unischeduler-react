@@ -11,9 +11,27 @@ import { DAYS, courseById, roomName, termName, icsEscape, nextDateForDay, downlo
 export default function MySchedulePage() {
   const { t } = useTranslation(['academics', 'common']);
   const { slots, courses, rooms, terms, activeTermId, myEnrollments, afterMutate, slotExceptions, branding, unviewedActivityCourseIds, unviewedActivityCounts, myFinalGrades } = useAppData();
-  const { openModal } = useModal();
+  const { openModal, confirmAction } = useModal();
   const { toast } = useToast();
   const [dayFilter, setDayFilter] = useState('');
+
+  /** Mirrors the server's own rule (routes/enrollments.js): on/after a term's
+      registrationClosesAt, dropping a course becomes a withdrawal — permanent, transcript-visible
+      as "W". Used only to pick the right confirmation copy before the request goes out; the
+      server is still the source of truth for which outcome actually happens. */
+  function isPastDropDeadline(termId) {
+    const term = terms.find(t => t.id === termId);
+    return !!(term?.registrationClosesAt && new Date() >= new Date(term.registrationClosesAt));
+  }
+
+  function dropOrWithdraw(e) {
+    if (isPastDropDeadline(e.termId)) {
+      confirmAction(t('academics:mySchedulePage.withdrawConfirm', { code: e.code }), () =>
+        afterMutate(withdrawFromCourse(e.enrollmentId), t('academics:mySchedulePage.withdrawnRecorded')));
+      return;
+    }
+    afterMutate(withdrawFromCourse(e.enrollmentId), t('academics:mySchedulePage.withdrawn'));
+  }
 
   const enrolledCourseIds = new Set(myEnrollments.filter(e => e.status === 'enrolled').map(e => e.id));
   const mySlots = slots.filter(s => enrolledCourseIds.has(s.courseId));
@@ -122,7 +140,7 @@ export default function MySchedulePage() {
                   <td><span className={'pill ' + (e.status === 'waitlisted' ? 'pill-amber' : 'pill-green')}>{e.status === 'waitlisted' ? t('academics:mySchedulePage.waitlisted') : t('academics:mySchedulePage.enrolled')}</span></td>
                   <td>{renderGradeCell(e.id)}</td>
                   <td>
-                    <button className="icon-btn danger" aria-label={t('academics:mySchedulePage.withdrawAriaLabel', { code: e.code })} onClick={(ev) => { ev.stopPropagation(); afterMutate(withdrawFromCourse(e.enrollmentId), t('academics:mySchedulePage.withdrawn')); }}>
+                    <button className="icon-btn danger" aria-label={t('academics:mySchedulePage.withdrawAriaLabel', { code: e.code })} onClick={(ev) => { ev.stopPropagation(); dropOrWithdraw(e); }}>
                       <i className="ti ti-x" aria-hidden="true"></i>
                     </button>
                   </td>

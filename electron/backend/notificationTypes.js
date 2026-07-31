@@ -14,6 +14,9 @@ const NOTIFICATION_TYPES = new Set([
   'announcement_posted',   // a new announcement was posted in a course the recipient is enrolled in
   'application_submitted', // a new admissions application is awaiting review — alerts admins
   'notice_published',      // a targeted university-wide announcement (see routes/notices.js) was published to this recipient
+  'approval_status_changed', // an approval-chain request the recipient submitted moved to a new
+                              // status (In Review at a later step, Returned, Approved, Rejected) —
+                              // see approvalEngine.js.
 ]);
 
 const { run } = require('./db');

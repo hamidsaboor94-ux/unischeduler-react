@@ -218,6 +218,63 @@ async function init() {
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- Generic approval-chain engine (see approvalEngine.js): one request/review/decision shape
+    -- shared by every "submit -> reviewed by an ordered chain of role-owned steps -> approved/
+    -- rejected" flow (appeals today; leave, readmission, graduation clearance, financial aid later
+    -- each register their own chain + effect instead of hand-rolling a new status machine).
+    CREATE TABLE IF NOT EXISTS approval_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL,
+      subjectType TEXT NOT NULL,
+      subjectId INTEGER NOT NULL REFERENCES users(id),
+      requestedBy INTEGER NOT NULL REFERENCES users(id),
+      payload TEXT,
+      currentStepOrder INTEGER NOT NULL DEFAULT 1,
+      status TEXT NOT NULL DEFAULT 'In Review',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- The ordered chain of reviewer roles for a given request 'type' — lazily upserted by
+    -- approvalEngine.js's registerRequestType()/ensureChainSeeded() the first time that type is
+    -- actually used, not hand-edited here.
+    CREATE TABLE IF NOT EXISTS approval_chain_steps (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL,
+      stepOrder INTEGER NOT NULL,
+      role TEXT NOT NULL,
+      label TEXT,
+      UNIQUE(type, stepOrder)
+    );
+
+    -- One row per decision made on a request (approve / reject / return). A 'return' sends the
+    -- request back to the requester for more info; a resubmission re-enters the SAME step, which
+    -- can produce a second decision row at that stepOrder.
+    CREATE TABLE IF NOT EXISTS approval_decisions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      requestId INTEGER NOT NULL REFERENCES approval_requests(id),
+      stepOrder INTEGER NOT NULL,
+      reviewerId INTEGER NOT NULL REFERENCES users(id),
+      decision TEXT NOT NULL,
+      note TEXT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- A saved custom report (see reportBuilder.js / reportEntities.js): 'entity' is a whitelisted
+    -- key (e.g. 'students'), 'config' is the JSON {columns, filters, groupBy, aggregate, sort}
+    -- consumed by buildQuery() -- never raw SQL. Re-running a saved definition re-validates its
+    -- config against the current whitelist, so a field removed later just drops out quietly.
+    CREATE TABLE IF NOT EXISTS report_definitions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      entity TEXT NOT NULL,
+      config TEXT NOT NULL,
+      chartType TEXT,
+      createdBy INTEGER REFERENCES users(id),
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     -- White-label branding: org display name, brand color, and whether a custom logo has
     -- been uploaded (the logo image itself lives on disk next to the database, not here —
     -- see routes/settings.js). A simple key-value table rather than dedicated columns since
@@ -1030,6 +1087,14 @@ async function init() {
   // all of them — so this needed no changes to those read sites.
   ensureColumn('enrollments', 'deletedAt', 'TEXT');
 
+  // Withdrawal: a second, distinct soft-delete outcome for enrollments.js's DELETE endpoint.
+  // Unlike 'dropped' (pre-deadline, erased from the academic record), 'withdrawn' happens on/after
+  // a term's registrationClosesAt and DOES stay on the transcript (as "W" — see routes/transcript.js)
+  // with zero GPA impact, since computeAcademicSummary only ever counts status='enrolled' rows.
+  // withdrawalDate/withdrawalReason are only populated for that outcome.
+  ensureColumn('enrollments', 'withdrawalDate', 'TEXT');
+  ensureColumn('enrollments', 'withdrawalReason', 'TEXT');
+
   // Voiding a payment must never destroy the record of it having existed (auditability) — instead
   // of DELETE FROM payments, routes/finance.js now flips status to 'reversed' and keeps the row.
   ensureColumn('payments', 'status', "TEXT DEFAULT 'completed'");
@@ -1188,6 +1253,23 @@ async function init() {
   // syncApplicationAid can tell an application-sourced award apart from a manually-awarded one
   // and detect when the application's aid figures have since changed.
   ensureColumn('student_financial_aid', 'applicationId', 'INTEGER');
+
+  // Prerequisite eligibility engine (see eligibility.js). groupId groups rows into OR-sets: NULL
+  // means "required" (AND with every other row on this course); rows sharing the same non-null
+  // (courseId, groupId) are OR'd — satisfying any one member satisfies that requirement. type
+  // distinguishes a true prerequisite (must be completed beforehand) from a corequisite (may be
+  // satisfied by concurrent/in-progress enrollment).
+  ensureColumn('course_prerequisites', 'groupId', 'INTEGER');
+  ensureColumn('course_prerequisites', 'type', "TEXT NOT NULL DEFAULT 'prerequisite'");
+
+  // Optional program scope for a course, used by the eligibility engine's "student is in the
+  // program associated with the course" gate. Nullable and fails open (same convention as
+  // departmentId's existing eligibility check) — a course with no program set is open to every
+  // program, so this never silently locks students out of a course nobody bothered to scope.
+  ensureColumn('courses', 'programId', 'INTEGER');
+
+  db.exec('CREATE INDEX IF NOT EXISTS idx_approval_requests_subject ON approval_requests(subjectType, subjectId)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_approval_decisions_request ON approval_decisions(requestId)');
 
   await seedAuthzTables();
 }

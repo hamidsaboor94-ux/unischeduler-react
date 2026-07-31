@@ -376,6 +376,12 @@ export default function StudentsPage() {
                                 <i className="ti ti-cash" aria-hidden="true"></i>
                               </button>
                             )}
+                            {s.kind === 'linked' && (
+                              <button className="icon-btn" aria-label={t('management:studentsPage.quickActions.transcript')} title={t('management:studentsPage.quickActions.transcript')}
+                                onClick={e => { e.stopPropagation(); showSection('transcript', { studentId: s.id }); }}>
+                                <i className="ti ti-file-text" aria-hidden="true"></i>
+                              </button>
+                            )}
                           </>
                         )}
                         {s.kind === 'no_account' && (
@@ -437,6 +443,12 @@ export default function StudentsPage() {
                           <button className="icon-btn" aria-label={t('management:studentsPage.quickActions.finance')} title={t('management:studentsPage.quickActions.finance')}
                             onClick={e => { e.stopPropagation(); showSection('finance', { studentId: s.id }); }}>
                             <i className="ti ti-cash" aria-hidden="true"></i>
+                          </button>
+                        )}
+                        {s.kind === 'linked' && (
+                          <button className="icon-btn" aria-label={t('management:studentsPage.quickActions.transcript')} title={t('management:studentsPage.quickActions.transcript')}
+                            onClick={e => { e.stopPropagation(); showSection('transcript', { studentId: s.id }); }}>
+                            <i className="ti ti-file-text" aria-hidden="true"></i>
                           </button>
                         )}
                       </div>

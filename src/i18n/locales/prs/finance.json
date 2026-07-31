@@ -114,6 +114,10 @@
     "method": "روش",
     "reference": "مرجع (اختیاری)",
     "record": "ثبت پرداخت",
+    "payNextInstallment": "پرداخت قسط بعدی ({{amount}})",
+    "payFullBalance": "پرداخت تمام باقی‌مانده ({{amount}})",
+    "paidInFull": "به طور کامل پرداخت شده",
+    "partiallyPaid": "قسماً پرداخت شده",
     "paymentRecorded": "پرداخت ثبت شد — رسید {{receipt}}",
     "payments": "پرداخت‌ها / رسیدها",
     "receiptNo": "رسید",
@@ -274,7 +278,8 @@
         "partial": "جزئی",
         "paid": "پرداخت‌شده",
         "overdue": "معوقه"
-      }
+      },
+      "dueNextTag": "قسط بعدی"
     },
     "aid": {
       "title": "کمک مالی",

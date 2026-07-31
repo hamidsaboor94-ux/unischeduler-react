@@ -15,7 +15,7 @@ const APPLICATION_STATUS_PILL = {
   Waitlisted: 'pill-amber', Accepted: 'pill-green', Rejected: 'pill-red',
 };
 const FINANCE_STATUS_TONE = { cleared: 'positive', partial: 'warning', outstanding: 'neutral', overdue: 'negative', not_billed: 'neutral' };
-const ENROLLMENT_STATUS_PILL = { enrolled: 'pill-green', dropped: 'pill-red', waitlisted: 'pill-amber' };
+const ENROLLMENT_STATUS_PILL = { enrolled: 'pill-green', dropped: 'pill-red', waitlisted: 'pill-amber', withdrawn: 'pill-red' };
 
 /** The canonical read-mostly 360° view of a student — application, finance summary, and
     enrollment history — composed from data the Students module doesn't duplicate: the editable
@@ -78,6 +78,9 @@ export default function StudentDetailPage() {
           <div className="topbar-actions">
             <button className="btn-sm" onClick={() => showSection('student-profile', { studentId })}>
               <i className="ti ti-id-badge-2"></i> {t('management:studentDetailPage.fullProfile')}
+            </button>
+            <button className="btn-sm" onClick={() => showSection('transcript', { studentId })}>
+              <i className="ti ti-file-text"></i> {t('management:studentDetailPage.viewTranscript')}
             </button>
           </div>
         )}

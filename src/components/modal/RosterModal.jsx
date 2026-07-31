@@ -12,7 +12,7 @@ import CourseScheduleSummary from './CourseScheduleSummary.jsx';
     context updates flow through). */
 export default function RosterModal({ editId: courseId }) {
   const { t } = useTranslation(['academics', 'common']);
-  const { courses, courseRosters, currentUser, afterMutate } = useAppData();
+  const { courses, courseRosters, terms, currentUser, afterMutate } = useAppData();
   const { closeModal, confirmAction, openModal } = useModal();
   const { toast } = useToast();
 
@@ -23,9 +23,19 @@ export default function RosterModal({ editId: courseId }) {
   // attendance are their domain) but do not add or remove students from it.
   const canModify = currentUser.role === 'admin' || currentUser.role === 'registrar';
 
+  // Staff can remove a student regardless of the term's deadline, but the outcome still follows
+  // the server's own rule (routes/enrollments.js): on/after registrationClosesAt it's a permanent,
+  // transcript-visible withdrawal ("W") rather than a plain drop — so the confirmation should say so.
+  const term = terms.find(t => t.id === course?.termId);
+  const isWithdrawal = !!(term?.registrationClosesAt && new Date() >= new Date(term.registrationClosesAt));
+
   function removeStudent(r) {
     closeModal();
-    confirmAction(t('academics:rosterModal.removeConfirm', { name: r.name }), () => afterMutate(withdrawFromCourse(r.enrollmentId), t('academics:rosterModal.removed')));
+    const message = isWithdrawal
+      ? t('academics:rosterModal.withdrawConfirm', { name: r.name })
+      : t('academics:rosterModal.removeConfirm', { name: r.name });
+    const successMessage = isWithdrawal ? t('academics:rosterModal.withdrawn') : t('academics:rosterModal.removed');
+    confirmAction(message, () => afterMutate(withdrawFromCourse(r.enrollmentId), successMessage));
   }
 
   function exportRosterCsv() {
@@ -53,10 +63,12 @@ export default function RosterModal({ editId: courseId }) {
                 <code className="roster-id">{r.idNumber || '—'}</code> {r.name}{' '}
                 {r.status === 'waitlisted'
                   ? <span className="pill pill-amber" style={{ marginInlineStart: 6 }}>{t('academics:rosterModal.waitlistPill')}</span>
+                  : r.status === 'withdrawn'
+                  ? <span className="pill pill-red" style={{ marginInlineStart: 6 }}>{t('academics:rosterModal.withdrawnPill')}</span>
                   : r.grade ? <span className="pill pill-blue" style={{ marginInlineStart: 6 }}>{r.grade}</span> : null}
               </span>
               <span style={{ display: 'flex', alignItems: 'center' }}>
-                {canModify && (
+                {canModify && r.status !== 'withdrawn' && (
                   <button className="icon-btn danger" aria-label={t('academics:rosterModal.removeAriaLabel', { name: r.name })} onClick={() => removeStudent(r)}>
                     <i className="ti ti-x" aria-hidden="true"></i>
                   </button>

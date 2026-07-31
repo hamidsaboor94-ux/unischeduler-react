@@ -1493,6 +1493,58 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
   50% { transform: scale(1.045); box-shadow: 0 0 20px 4px color-mix(in srgb, var(--accent) 32%, transparent); }
 }
 
+/* Landing intro: a splash mark fades/scales in at the viewport center, peaking as the card
+   (transform-origin 50% 50%, same center point) starts blooming outward from a pinpoint. The
+   card's own header logo fades in as the splash fades out so the mark reads as one continuous
+   object handing off between the two, and the form content only appears once the card has
+   finished growing. Gated in JS (AuthScreen.jsx) to fire once per app load, not per remount. */
+.auth-splash {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; z-index: 20;
+}
+.auth-splash-logo {
+  width: 68px; height: 68px;
+  border-radius: 16px;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 26px; font-weight: 600;
+  overflow: hidden;
+  animation: authSplashLogo 1s cubic-bezier(.22, .61, .36, 1) both;
+}
+.auth-splash-logo img { width: 100%; height: 100%; object-fit: cover; }
+@keyframes authSplashLogo {
+  0% { opacity: 0; transform: scale(.4); }
+  60% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 0; transform: scale(1.15); }
+}
+
+.auth-box-intro {
+  transform-origin: 50% 50%;
+  animation: authCardBloom .7s cubic-bezier(.34, 1.56, .64, 1) .6s both;
+}
+@keyframes authCardBloom {
+  0% { opacity: 0; transform: scale(.12); }
+  45% { opacity: 1; }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.auth-logo.auth-logo-intro {
+  animation: authLogoFadeIn .4s ease-out .6s both, authLogoPulse 3.6s ease-in-out .6s infinite;
+}
+@keyframes authLogoFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.auth-content-intro {
+  animation: authContentFadeIn .3s ease-out 1.05s both;
+}
+@keyframes authContentFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .auth-heading { text-align: center; margin-bottom: 24px; }
 .auth-heading h1 { font-size: 21px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
 .auth-heading p { font-size: 12.5px; color: var(--text-secondary); }
@@ -1514,6 +1566,10 @@ nav { flex: 1; padding: 4px 0; overflow-y: auto; }
 @media (prefers-reduced-motion: reduce) {
   .auth-logo { animation: none; }
   .auth-box.shake { animation: none; }
+  .auth-splash { display: none; }
+  .auth-box-intro { animation: none; opacity: 1; transform: scale(1); }
+  .auth-logo.auth-logo-intro { animation: none; opacity: 1; }
+  .auth-content-intro { animation: none; opacity: 1; transform: none; }
 }
 
 .logo-picker { display: flex; align-items: center; gap: 14px; }
@@ -1783,6 +1839,53 @@ button.btn-loading { pointer-events: none; opacity: 0.75; }
    before this). Hides app chrome (sidebar, utility tray, loading bar, any .no-print control)
    and forces a plain ink-friendly palette on the panels regardless of the active theme, so the
    printout reads like a clean document rather than a screenshot of the app. */
+/* ============ Approval-chain engine (MyAppealsPage / ApprovalsPage) ============ */
+.approval-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.approval-card:last-child { margin-bottom: 0; }
+.approval-card-header {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+  margin-bottom: 6px;
+}
+.approval-timeline {
+  list-style: none; margin: 8px 0 0; padding: 0;
+  border-inline-start: 2px solid var(--border);
+}
+.approval-timeline li {
+  padding: 4px 0 4px 12px;
+  font-size: 12px; color: var(--text-secondary);
+}
+.btn-sm.danger { color: var(--danger); border-color: var(--danger); }
+.btn-sm.danger:hover { background: var(--danger-bg); }
+
+/* ============ Custom report builder (CustomReportBuilder.jsx) ============ */
+.report-column-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-checkbox {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--surface-recessed); color: var(--text-secondary);
+  font-size: 11.5px; cursor: pointer; transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+.chip-checkbox input { margin: 0; }
+.chip-checkbox.active { border-color: var(--accent); color: var(--text-primary); background: var(--accent-soft, var(--surface-card)); }
+.report-filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.report-definition-list { list-style: none; margin: 0; padding: 0; }
+.report-definition-list li {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.report-definition-list li:last-child { border-bottom: none; }
+.report-definition-list li.active { background: var(--surface-recessed); }
+.report-definition-item {
+  flex: 1; text-align: start; background: transparent; border: none; cursor: pointer;
+  padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; color: var(--text-primary);
+  font-size: 12.5px;
+}
+
 @media print {
   #sidebar, #sidebar-toggle, #sidebar-overlay, .utility-tray, #loading-bar, .no-print { display: none !important; }
   #app, #main { display: block !important; height: auto !important; overflow: visible !important; }
@@ -1891,6 +1994,42 @@ button.btn-loading { pointer-events: none; opacity: 0.75; }
    filled in here since the Finance redesign leans on it heavily for empty student/aid/payment
    lists and it should read consistently wherever else it already appears. */
 .empty-state { padding: 20px 14px; text-align: center; color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+
+/* TranscriptPage.jsx — an official document rendered inline in the normal page flow (unlike
+   ReceiptView's portalled overlay, since a transcript is the page's whole content, not a triggered
+   popup), so it rides the existing .panel card and the generic print rules above rather than its
+   own body-class print block. Structure/naming intentionally mirrors .receipt-* above. */
+.transcript-doc { padding: 20px; }
+.transcript-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 2px solid var(--border-strong); padding-bottom: 12px; margin-bottom: 16px; }
+.transcript-org { display: flex; align-items: center; gap: 10px; }
+.transcript-org-logo {
+  width: 44px; height: 44px; border-radius: 8px; color: #fff; font-weight: 700; font-size: 15px;
+  display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
+}
+.transcript-org-logo img { width: 100%; height: 100%; object-fit: contain; }
+.transcript-org-name { font-size: 16px; font-weight: 700; }
+.transcript-org-sub { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.transcript-meta { text-align: end; font-size: 11.5px; }
+.transcript-meta div { display: flex; justify-content: space-between; gap: 10px; }
+.transcript-meta span { color: var(--text-muted); }
+.transcript-section { margin-bottom: 20px; }
+.transcript-section h4 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+.transcript-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; }
+.transcript-grid div { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dotted var(--border); padding-bottom: 3px; }
+.transcript-grid span { color: var(--text-muted); }
+.transcript-term-summary { display: flex; gap: 20px; padding: 8px 4px 0; font-size: 12px; }
+.transcript-footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px; margin-top: 12px; padding-top: 14px; border-top: 2px solid var(--border-strong); }
+.transcript-cumulative { display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; }
+.transcript-legend { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; font-size: 11px; color: var(--text-muted); }
+.transcript-legend-item { border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; }
+
+@media print {
+  .transcript-org-name, .transcript-section h4, .transcript-grid div, .transcript-term-summary,
+  .transcript-cumulative, .transcript-legend { color: #111 !important; }
+  .transcript-org-sub, .transcript-meta span, .transcript-grid span, .transcript-legend { color: #555 !important; }
+  .transcript-header, .transcript-footer { border-color: #000 !important; }
+  .transcript-section h4 { border-color: #ccc !important; }
+}
 
 /* ============ Finance dashboard redesign ============
    FinancePage.jsx — layout only; all data still comes from the existing /finance API (see

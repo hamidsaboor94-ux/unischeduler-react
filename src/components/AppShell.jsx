@@ -35,7 +35,10 @@ import ApplicationsPage from '../pages/ApplicationsPage.jsx';
 import AdviseesPage from '../pages/AdviseesPage.jsx';
 import FinancePage from '../pages/FinancePage.jsx';
 import MyFeesPage from '../pages/MyFeesPage.jsx';
+import TranscriptPage from '../pages/TranscriptPage.jsx';
 import AnnouncementsPage from '../pages/AnnouncementsPage.jsx';
+import MyAppealsPage from '../pages/MyAppealsPage.jsx';
+import ApprovalsPage from '../pages/ApprovalsPage.jsx';
 
 export default function AppShell() {
   const { isLoading } = useAppData();
@@ -93,7 +96,10 @@ export default function AppShell() {
           <AdviseesPage />
           <FinancePage />
           <MyFeesPage />
+          <TranscriptPage />
           <AnnouncementsPage />
+          <MyAppealsPage />
+          <ApprovalsPage />
         </div>
       </div>
 

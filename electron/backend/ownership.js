@@ -82,10 +82,10 @@ async function courseScopeClause(req) {
   return { clause: 'teacherId = ?', params: [teacherId ?? -1] };
 }
 
-/** Course ids a student is currently enrolled in (any status except a dropped/soft-deleted
-    enrollment) — used to scope their view of slots/exams. */
+/** Course ids a student is currently enrolled in (excludes dropped and withdrawn — either way
+    they're no longer an active participant) — used to scope their view of slots/exams. */
 async function enrolledCourseIds(userId) {
-  const rows = await all(`SELECT DISTINCT courseId FROM enrollments WHERE studentId = ? AND status != 'dropped'`, [userId]);
+  const rows = await all(`SELECT DISTINCT courseId FROM enrollments WHERE studentId = ? AND status NOT IN ('dropped', 'withdrawn')`, [userId]);
   return rows.map(r => r.courseId);
 }
 

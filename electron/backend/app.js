@@ -186,6 +186,11 @@ app.use('/api/student-profile', require('./routes/studentProfile'));
 app.use('/api/progression', require('./routes/progression'));
 app.use('/api/students', require('./routes/students'));
 app.use('/api/finance', require('./routes/finance'));
+app.use('/api/transcript', require('./routes/transcript'));
+// Loads and registers every approval-chain flow type (see approvalEngine.js) before the route
+// that serves them is reachable.
+require('./appealsFlow');
+app.use('/api/approvals', require('./routes/approvals'));
 app.use('/api/applications', require('./routes/applications'));
 app.use('/api/timetable-import', requireAuth, requireModuleAccess('timetable'), require('./routes/timetableImport'));
 app.use('/api/backup', requireAuth, requireModuleAccess('backup'), require('./routes/backup'));

@@ -64,7 +64,7 @@ export default function FinanceBillingStatusPanel({ students, search, setSearch,
                     <div className="fin-student-idnum">{s.idNumber}</div>
                   </td>
                   <td>{money(s.totalCharged)}</td>
-                  <td style={s.totalAid > 0 ? { color: 'var(--success)' } : undefined}>{s.totalAid > 0 ? `− ${money(s.totalAid)}` : '—'}</td>
+                  <td style={s.totalAid > 0 ? { color: 'var(--success)' } : undefined}>{s.totalAid > 0 ? money(s.totalAid) : '—'}</td>
                   <td>{money(s.netPayable)}</td>
                   <td>{money(s.totalPaid)}</td>
                   <td>{money(s.balance)}</td>

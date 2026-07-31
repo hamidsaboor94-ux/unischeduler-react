@@ -178,7 +178,8 @@
       "viewProfile": "دیدن پروفایل",
       "edit": "ویرایش",
       "academicRecord": "سوابق اکادمیک",
-      "finance": "امور مالی"
+      "finance": "امور مالی",
+      "transcript": "ترانسکریپت"
     },
     "bulk": {
       "selectedCount_one": "{{count}} محصل انتخاب شد",
@@ -212,6 +213,7 @@
     "title": "جزئیات محصل",
     "noStudentSelected": "برای دیدن جزئیات، یک محصل را از لیست محصلین انتخاب کنید.",
     "fullProfile": "پروفایل کامل",
+    "viewTranscript": "ترانسکریپت",
     "roleMismatchBanner": "رول این شخص اکنون \"{{role}}\" است — سابقه محصلی او فقط به صورت خواندنی نمایش داده می‌شود.",
     "sections": {
       "application": "درخواستی",
@@ -238,7 +240,8 @@
     "enrollmentStatus": {
       "enrolled": "ثبت‌نام شده",
       "dropped": "لغو شده",
-      "waitlisted": "در لیست انتظار"
+      "waitlisted": "در لیست انتظار",
+      "withdrawn": "انصراف داده شده (W)"
     }
   },
   "departmentsPage": {

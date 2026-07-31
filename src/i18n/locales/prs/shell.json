@@ -25,6 +25,7 @@
       "attendance": "حاضری",
       "gradebook": "نمرات",
       "myGrades": "نمرات من",
+      "myTranscript": "ترانسکریپت من",
       "advisees": "محصلان تحت مشوره",
       "conflicts": "تداخل‌ها",
       "users": "کاربران",
@@ -40,7 +41,9 @@
       "admissions": "درخواست‌ها",
       "finance": "امور مالی",
       "myFees": "فیس‌های من",
-      "announcements": "اعلانات"
+      "announcements": "اعلانات",
+      "approvals": "تصویب‌ها",
+      "myAppeals": "درخواست‌های تجدیدنظر من"
     },
     "noTermsYet": "هنوز سمستری وجود ندارد"
   },

@@ -35,6 +35,7 @@ const STAFF_NAV = [
     { name: 'enrollment', icon: 'ti-users', label: 'enrollment', module: 'enrollment' },
     { name: 'attendance', icon: 'ti-clipboard-check', label: 'attendance', module: 'attendance' },
     { name: 'gradebook', icon: 'ti-report-analytics', label: 'gradebook', module: 'grades' },
+    { name: 'approvals', icon: 'ti-checklist', label: 'approvals', module: 'approvals' },
   ] },
   { key: 'admissions', items: [
     { name: 'applications', icon: 'ti-clipboard-list', label: 'admissions', module: 'admissions' },
@@ -145,6 +146,7 @@ export default function Sidebar() {
               <NavItem name="enrollment" icon="ti-users" label={t('shell:sidebar.nav.enrollment')} />
               <NavItem name="attendance" icon="ti-clipboard-check" label={t('shell:sidebar.nav.attendance')} />
               <NavItem name="gradebook" icon="ti-report-analytics" label={t('shell:sidebar.nav.gradebook')} />
+              <NavItem name="approvals" icon="ti-checklist" label={t('shell:sidebar.nav.approvals')} />
             </div>
           </div>
         )}
@@ -160,7 +162,9 @@ export default function Sidebar() {
               <NavItem name="myschedule" icon="ti-calendar-week" label={t('shell:sidebar.nav.mySchedule')} />
               <NavItem name="my-attendance" icon="ti-clipboard-check" label={t('shell:sidebar.nav.myAttendance')} />
               <NavItem name="mygrades" icon="ti-report-analytics" label={t('shell:sidebar.nav.myGrades')} />
+              <NavItem name="my-transcript" icon="ti-file-text" label={t('shell:sidebar.nav.myTranscript')} />
               <NavItem name="my-fees" icon="ti-cash" label={t('shell:sidebar.nav.myFees')} />
+              <NavItem name="my-appeals" icon="ti-gavel" label={t('shell:sidebar.nav.myAppeals')} />
             </div>
           </div>
         )}

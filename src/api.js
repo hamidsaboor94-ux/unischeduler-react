@@ -148,6 +148,8 @@ export const fetchCourseGradebook = (courseId) => api('GET', `/grades?courseId=$
 export const setGradeScore = (data) => api('PUT', '/grades/score', data);
 export const fetchDepartmentGradeSummary = (departmentId) => api('GET', `/grades/department-summary${departmentId ? `?departmentId=${departmentId}` : ''}`);
 export const fetchMyGrades = () => api('GET', '/grades/me');
+export const fetchMyTranscript = () => api('GET', '/transcript/me');
+export const fetchStudentTranscript = (studentId) => api('GET', `/transcript/students/${studentId}`);
 export const fetchGradingScale = () => api('GET', '/settings/grading-scale');
 export const saveGradingScale = (bands) => api('PUT', '/settings/grading-scale', { bands });
 export const fetchCourseAssignments = (courseId) => api('GET', `/assignments?courseId=${courseId}`);
@@ -372,3 +374,40 @@ export const uploadApplicationDocument = (applicationId, { documentType, title, 
 export const downloadApplicationDocument = (applicationId, documentId, fileName) =>
   apiDownload(`/applications/${applicationId}/documents/${documentId}/file`, fileName);
 export const deleteApplicationDocument = (applicationId, documentId) => api('DELETE', `/applications/${applicationId}/documents/${documentId}`);
+
+/* ------------------------- Generic approval-chain engine ------------------------- */
+/** type: 'appeal' today, more request types register on the backend over time — see
+    api/src/approvalEngine.js. payload shape is type-specific. */
+export const submitApprovalRequest = (type, payload) => api('POST', '/approvals', { type, payload });
+export const fetchMyApprovalRequests = () => api('GET', '/approvals/mine');
+export const fetchPendingApprovals = () => api('GET', '/approvals/pending');
+export const decideApprovalRequest = (id, decision, note) => api('POST', `/approvals/${id}/decide`, { decision, note });
+export const cancelApprovalRequest = (id) => api('POST', `/approvals/${id}/cancel`, {});
+export const resubmitApprovalRequest = (id, payload) => api('POST', `/approvals/${id}/resubmit`, { payload });
+
+/* ---------------------------- Custom report builder ---------------------------- */
+/** Entity/field metadata (whitelist) that drives the builder's picker UI — see
+    api/src/reportEntities.js. */
+export const fetchReportEntities = () => api('GET', '/reports/entities');
+/** Ad-hoc run against a whitelisted entity: config = {columns, filters, groupBy, aggregate, sort}. */
+export const runReport = (entity, config) =>
+  api('GET', `/reports/run?entity=${encodeURIComponent(entity)}&config=${encodeURIComponent(JSON.stringify(config))}`);
+export const fetchReportDefinitions = () => api('GET', '/reports/definitions');
+export const runReportDefinition = (id) => api('GET', `/reports/definitions/${id}/run`);
+export const saveReportDefinition = (definition) => api('POST', '/reports/definitions', definition);
+export const updateReportDefinition = (id, definition) => api('PUT', `/reports/definitions/${id}`, definition);
+export const deleteReportDefinition = (id) => api('DELETE', `/reports/definitions/${id}`);
+
+/** PDF/Excel export — server-rendered (api/src/reportExport.js), same reports:read scope as
+    running the report. filename is chosen client-side since apiDownload() doesn't parse
+    Content-Disposition. */
+export const exportReportPdf = (entity, config, filename) =>
+  apiDownload(`/reports/export/pdf?entity=${encodeURIComponent(entity)}&config=${encodeURIComponent(JSON.stringify(config))}`, filename);
+export const exportReportXlsx = (entity, config, filename) =>
+  apiDownload(`/reports/export/xlsx?entity=${encodeURIComponent(entity)}&config=${encodeURIComponent(JSON.stringify(config))}`, filename);
+export const exportReportDefinitionPdf = (id, filename) => apiDownload(`/reports/definitions/${id}/export/pdf`, filename);
+export const exportReportDefinitionXlsx = (id, filename) => apiDownload(`/reports/definitions/${id}/export/xlsx`, filename);
+export const exportDashboardChartPdf = (chart, termId, filename) =>
+  apiDownload(`/reports/export/dashboard/pdf?chart=${encodeURIComponent(chart)}${termId ? `&termId=${termId}` : ''}`, filename);
+export const exportDashboardChartXlsx = (chart, termId, filename) =>
+  apiDownload(`/reports/export/dashboard/xlsx?chart=${encodeURIComponent(chart)}${termId ? `&termId=${termId}` : ''}`, filename);

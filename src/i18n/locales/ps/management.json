@@ -178,7 +178,8 @@
       "viewProfile": "پروفایل کتل",
       "edit": "سمول",
       "academicRecord": "علمي ریکارډ",
-      "finance": "مالي چارې"
+      "finance": "مالي چارې",
+      "transcript": "لیک لیست"
     },
     "bulk": {
       "selectedCount_one": "{{count}} زده کوونکی وټاکل شو",
@@ -212,6 +213,7 @@
     "title": "د زده کوونکي جزئیات",
     "noStudentSelected": "د جزئیاتو لیدلو لپاره د زده کوونکو له لیست نه یو زده کوونکی وټاکئ.",
     "fullProfile": "بشپړ پروفایل",
+    "viewTranscript": "لیک لیست",
     "roleMismatchBanner": "د دې کس رول اوس \"{{role}}\" دی — د هغه پخوانی زده کوونکي ثبت یوازې لوستلو لپاره ښودل کیږي.",
     "sections": {
       "application": "غوښتنلیک",
@@ -238,7 +240,8 @@
     "enrollmentStatus": {
       "enrolled": "نومول شوی",
       "dropped": "لغوه شوی",
-      "waitlisted": "په لیستې کې"
+      "waitlisted": "په لیستې کې",
+      "withdrawn": "وتلی (W)"
     }
   },
   "departmentsPage": {

@@ -114,6 +114,10 @@
     "method": "Method",
     "reference": "Reference (optional)",
     "record": "Record payment",
+    "payNextInstallment": "Pay next installment ({{amount}})",
+    "payFullBalance": "Pay full balance ({{amount}})",
+    "paidInFull": "Paid in full",
+    "partiallyPaid": "Partially paid",
     "paymentRecorded": "Payment recorded — receipt {{receipt}}",
     "payments": "Payments / receipts",
     "receiptNo": "Receipt",
@@ -274,7 +278,8 @@
         "partial": "Partial",
         "paid": "Paid",
         "overdue": "Overdue"
-      }
+      },
+      "dueNextTag": "Due next"
     },
     "aid": {
       "title": "Financial aid",

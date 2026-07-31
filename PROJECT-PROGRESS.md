@@ -7,7 +7,7 @@
 >
 > **Status legend:** ✅ Done · 🔶 Partially done · ⬜ Not started · ❓ Needs a decision (see §6)
 >
-> Last updated: 2026-07-27
+> Last updated: 2026-07-30
 
 ---
 
@@ -172,6 +172,19 @@ re-run after any change under `uni scheduling/api/src`.
   and a lightweight `studentStatus` field (Active/Graduated/Suspended/Withdrawn/On Leave) — a
   partial, display-focused implementation of the fuller "Student status lifecycle" item in §3.1,
   not a replacement for it (no status-change history/effects like blocked enrollment yet).
+- ✅ Transcript generation *(2026-07-30)* — closes the §3.1 P1 gap. New `GET /transcript/me` /
+  `GET /transcript/students/:studentId` (`api/src/routes/transcript.js`), same self/staff split as
+  `finance.js`. Built entirely from existing data — no schema changes: enrollments grouped by term
+  (via `courses.termId`, since `enrollments` has no `termId` of its own), per-term and cumulative
+  GPA from the existing `computeAcademicSummary()` (never `semester_records`' GPA snapshots, which
+  only exist for progression-evaluated semesters), grading-scale legend from the existing
+  `settings.gradingScale`. Frontend: `TranscriptPage.jsx`, reachable as `my-transcript` (student
+  sidebar/dashboard self-view) and the ungated `transcript` drill-down (Students/StudentDetail
+  quick action with a `studentId` payload, same parameterized-page convention as `student-detail`/
+  `student-profile`). No PDF library added — prints via `window.print()` + a new `@media print`
+  block, matching the existing Student Profile / Payment Receipt pattern; branded with the existing
+  `GET /settings/branding` org name/logo. New `api/test/transcript.test.js` (self/other-student/
+  staff access, per-term + cumulative GPA math, in-progress courses excluded from GPA).
 
 ### 2.9 Administration & operations
 - ✅ Reports (admin): room utilization, course popularity, teacher workload, enrollment trends (charts)
@@ -227,6 +240,47 @@ re-run after any change under `uni scheduling/api/src`.
   implemented per the "prioritize in-app first" decision), a rich WYSIWYG editor (message support
   is a small XSS-safe markdown-like subset — bold/italic/lists/links — not a toolbar).
 
+### 2.13 Custom report builder *(2026-07-30)*
+- ✅ Deterministic, whitelist-driven query engine (`api/src/reportEntities.js` +
+  `api/src/reportBuilder.js`) — six reportable entities (students, courses, enrollments,
+  attendance, finance transactions, admissions applications), each with a fixed set of allowed
+  columns/filters/groupings. No raw SQL, table, or column name ever comes from the client; filter
+  *values* are always parameterized. A user picks an entity, columns, filters, and an optional
+  grouping; grouped runs return chart-ready `{label, value}` data alongside the row table.
+- ✅ New `report_definitions` table — saved, reusable report configs (name + entity + JSON
+  config), re-validated against the current whitelist every time they're run.
+- ✅ HTTP surface under the existing `reports` module/permission (`GET /reports/entities`,
+  `GET /reports/run`, full `/reports/definitions` CRUD + `/reports/definitions/:id/run`) — running
+  a report is a GET so read-only roles (Registrar/Viewer) can use it; saving/editing/deleting a
+  definition needs `reports:write` (Records Officer/Admin), same split as the rest of the app.
+- ✅ Frontend: a "Custom Reports" tab alongside the existing Analytics tab on the Reports page —
+  entity/column/filter/group picker, table + bar/line chart output, CSV export, and a saved-reports
+  panel to load/update/delete definitions.
+- This is the base the next reporting item (§3.6 — PDF/Excel export for every report/chart) is
+  meant to sit on top of, reusing these same report definitions as its export source rather than a
+  second query path.
+
+### 2.14 PDF + Excel export for reports and dashboard charts *(2026-07-30)*
+- ✅ One shared renderer (`api/src/reportExport.js`) — `renderPdf()` and `renderXlsx()` both take
+  the exact `{title, columns, rows, chart}` shape `runReport()` (§2.13) already returns, so
+  export is never a second query path, just a different renderer over the same data. PDF is
+  pdfkit (a bar/line chart hand-drawn with its own vector primitives, no headless-browser/canvas
+  dependency) with the table capped at 300 rows per file (with a note pointing at the Excel
+  export for the rest); Excel is exceljs — real, typed, uncapped data rows, not an image.
+- ✅ Extracted the Reports page's analytics query into `api/src/dashboardAnalytics.js` and a
+  `api/src/dashboardExport.js` shaper (5 named charts: room utilization, course popularity,
+  teacher workload, enrollment trends, admissions summary) so the live Analytics tab and its
+  export share the one query path too.
+- ✅ Export routes (`GET /reports/export/{pdf,xlsx}`, `/reports/definitions/:id/export/{pdf,xlsx}`,
+  `/reports/export/dashboard/{pdf,xlsx}`) are all GETs behind the same `reports:read` gate as
+  running a report — no new permissions, exporting needs nothing more than viewing already did.
+- ✅ Frontend: PDF/Excel buttons next to the report builder's CSV export and on each saved
+  definition, plus small export icons on every Analytics tab chart panel.
+- Tests (`api/test/reportExport.test.js`, 8 new): PDF magic-byte + size check, an Excel
+  round-trip that reloads the exported bytes with exceljs and asserts the actual cell data, and a
+  role-scope check (no `reports` access → 403 on export; read-only `viewer` → 200, confirming no
+  new permission was introduced).
+
 ---
 
 ## 3. Requirements — TO DO (recommended)
@@ -235,8 +289,6 @@ Priorities: **P1** = core gap for a real university deployment · **P2** = stron
 **P3** = later / depends on direction. Items marked ❓ need your decision first (§6).
 
 ### 3.1 Registrar & academic records
-- ⬜ **P1 — Transcript generation**: official per-student transcript (all terms, courses, grades,
-  GPA per term + cumulative), printable/PDF, with branding.
 - ⬜ **P1 — Academic calendar**: term dates, holidays, registration window, add/drop deadline,
   exam period; enrollment endpoints should enforce the registration window.
 - 🔶 **P1 — Student status lifecycle**: active / on-leave / suspended / graduated / withdrawn,
@@ -289,7 +341,11 @@ Priorities: **P1** = core gap for a real university deployment · **P2** = stron
   PDF), class rosters, attendance sheets — universities live on printed lists.
 - ⬜ **P2 — Attendance analytics**: per-student percentage vs a configurable threshold,
   exam-eligibility (e.g. barred under 75%), faculty/admin warnings.
-- ⬜ **P2 — Exportable CSV/Excel** for every major table (users, enrollments, grades…).
+- ⬜ **P2 — Exportable CSV/Excel** for every major table not already covered (users, enrollments,
+  grades…) — the Students page already has CSV export, and the report builder/dashboard now
+  covers arbitrary reports (✅ **2026-07-30 — see §2.14**: PDF + Excel export for any saved
+  report definition, ad-hoc report-builder result, or Analytics tab chart, server-rendered, same
+  `reports:read` scope as viewing).
 - ⬜ **P3 — Custom certificate/letter templates** (enrollment certificate, character letter).
 
 ### 3.7 Platform, security & operations

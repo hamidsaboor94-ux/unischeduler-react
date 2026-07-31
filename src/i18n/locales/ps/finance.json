@@ -114,6 +114,10 @@
     "method": "طریقه",
     "reference": "حواله (اختیاري)",
     "record": "تادیه ثبت کړئ",
+    "payNextInstallment": "راتلونکی قسط ادا کړئ ({{amount}})",
+    "payFullBalance": "ټوله پاتې بیله ادا کړئ ({{amount}})",
+    "paidInFull": "په بشپړ ډول تادیه شوی",
+    "partiallyPaid": "نیمګړی تادیه شوی",
     "paymentRecorded": "تادیه ثبت شوه — رسید {{receipt}}",
     "payments": "تادیات / رسیدونه",
     "receiptNo": "رسید",
@@ -274,7 +278,8 @@
         "partial": "نیمګړی",
         "paid": "تادیه شوی",
         "overdue": "ناوخته شوی"
-      }
+      },
+      "dueNextTag": "راتلونکی وار"
     },
     "aid": {
       "title": "مالي مرسته",

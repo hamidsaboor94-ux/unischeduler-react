@@ -178,7 +178,8 @@
       "viewProfile": "View profile",
       "edit": "Edit",
       "academicRecord": "Academic record",
-      "finance": "Finance"
+      "finance": "Finance",
+      "transcript": "Transcript"
     },
     "bulk": {
       "selectedCount_one": "{{count}} student selected",
@@ -212,6 +213,7 @@
     "title": "Student Details",
     "noStudentSelected": "Select a student from the Students list to view their details.",
     "fullProfile": "Full profile",
+    "viewTranscript": "Transcript",
     "roleMismatchBanner": "This person's role is now \"{{role}}\" — showing their historical student record read-only.",
     "sections": {
       "application": "Application",
@@ -238,7 +240,8 @@
     "enrollmentStatus": {
       "enrolled": "Enrolled",
       "dropped": "Dropped",
-      "waitlisted": "Waitlisted"
+      "waitlisted": "Waitlisted",
+      "withdrawn": "Withdrawn (W)"
     }
   },
   "departmentsPage": {

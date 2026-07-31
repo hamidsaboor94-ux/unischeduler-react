@@ -1,0 +1,59 @@
+{
+  "status": {
+    "In Review": "In Review",
+    "Returned": "Returned",
+    "Approved": "Approved",
+    "Rejected": "Rejected",
+    "Cancelled": "Cancelled"
+  },
+  "decision": {
+    "approve": "Approved",
+    "reject": "Rejected",
+    "return": "Returned for info"
+  },
+  "type": {
+    "appeal": "Academic appeal"
+  },
+  "mine": {
+    "title": "My Appeals",
+    "form": {
+      "title": "Submit an appeal",
+      "course": "Course",
+      "selectCourse": "Select a course…",
+      "reason": "Reason",
+      "reasonPlaceholder": "Explain what you're appealing and why.",
+      "submit": "Submit appeal",
+      "validationError": "Select a course and enter a reason.",
+      "submitted": "Appeal submitted."
+    },
+    "list": {
+      "title": "My submitted appeals",
+      "empty": "You haven't submitted any appeals.",
+      "submitted": "Submitted"
+    },
+    "confirmCancel": "Cancel this appeal? This cannot be undone.",
+    "cancelled": "Appeal cancelled.",
+    "cancelAction": "Cancel appeal",
+    "resubmitted": "Appeal resubmitted.",
+    "resubmitLabel": "Add the requested information and resubmit",
+    "resubmitAction": "Resubmit"
+  },
+  "queue": {
+    "title": "Approvals",
+    "panelTitle": "Pending your review",
+    "panelHint": "Requests currently awaiting a decision at your step.",
+    "empty": "Nothing awaiting your review right now.",
+    "from": "From {{name}}",
+    "notePlaceholder": "Optional note for the requester…",
+    "decided": {
+      "approve": "Approved.",
+      "reject": "Rejected.",
+      "return": "Returned to the requester."
+    },
+    "actions": {
+      "approve": "Approve",
+      "return": "Return for info",
+      "reject": "Reject"
+    }
+  }
+}

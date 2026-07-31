@@ -271,6 +271,10 @@ export default function StudentDashboard() {
                 <i className="ti ti-report-analytics course-action-tile-icon" aria-hidden="true"></i>
                 <span className="course-action-tile-label">{t('dashboard.studentDashboard.quickLinks.myGrades')}</span>
               </button>
+              <button className="course-action-tile" onClick={() => showSection('my-transcript')}>
+                <i className="ti ti-file-text course-action-tile-icon" aria-hidden="true"></i>
+                <span className="course-action-tile-label">{t('dashboard.studentDashboard.quickLinks.myTranscript')}</span>
+              </button>
               <button className="course-action-tile" onClick={() => showSection('my-attendance')}>
                 <i className="ti ti-clipboard-check course-action-tile-icon" aria-hidden="true"></i>
                 <span className="course-action-tile-label">{t('dashboard.studentDashboard.quickLinks.myAttendance')}</span>

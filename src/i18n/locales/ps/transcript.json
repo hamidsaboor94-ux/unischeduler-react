@@ -1,0 +1,29 @@
+{
+  "title": "لیک لیست (ټرانسکرېپټ)",
+  "print": "چاپول",
+  "officialTranscript": "رسمي علمي لیک لیست",
+  "printedOn": "چاپ نېټه",
+  "studentInfo": "د زده کوونکي معلومات",
+  "name": "نوم",
+  "studentId": "د زده کوونکي شمېره",
+  "program": "پروګرام",
+  "department": "څانګه",
+  "status": "حالت",
+  "graduationDate": "د فراغت نېټه",
+  "noCourses": "هیڅ بشپړ شوی یا روان کورس ثبت شوی نه دی.",
+  "table": {
+    "code": "کوډ",
+    "course": "کورس",
+    "credits": "کریډیټونه",
+    "grade": "درجه"
+  },
+  "inProgress": "روان دی",
+  "withdrawnHint": "د لیرې کولو د نیټې وروسته وتلی — پر GPA اغیز نلري",
+  "termGpa": "د سمستر GPA",
+  "termCredits": "د سمستر کریډیټونه",
+  "cumulativeGpa": "ټولیز GPA",
+  "completedCredits": "بشپړ شوي کریډیټونه",
+  "attemptedCredits": "هڅه شوي کریډیټونه",
+  "gradingScale": "د نمرو معیار",
+  "noData": "د لیک لیست معلومات شتون نلري."
+}

@@ -6,6 +6,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { departmentScopeClause, departmentInScope } = require('../scope');
 const { studentStatement } = require('../finance');
 const { discoverStudents } = require('../studentDiscovery');
+const { getEligibleCatalog } = require('../eligibility');
 
 const router = express.Router();
 
@@ -78,6 +79,20 @@ function buildFilters(req) {
 
   return { clauses, params, scope, structuralFilters };
 }
+
+/**
+ * Self-scoped eligibility-aware course catalog for the logged-in student — bare (no module gate),
+ * same pattern as every other .../me endpoint in this app (enrollments.js's GET /me, finance.js's
+ * GET /me): the 'students' module policy grants the student role no access at all (it's a staff
+ * browsing surface), but a student always has read access to their own eligibility regardless.
+ * See eligibility.js's getEligibleCatalog for the single source of truth this also backs POST
+ * /enrollments with.
+ */
+router.get('/me/eligible-courses', requireAuth, asyncHandler(async (req, res) => {
+  if (req.user.role !== 'student') return res.status(403).json({ error: 'This endpoint is only available to students.' });
+  const catalog = await getEligibleCatalog(req.user.sub);
+  res.json(catalog);
+}));
 
 router.get('/', requireAuth, requirePermission('students', 'read'), asyncHandler(async (req, res) => {
   const { clauses, params, scope, structuralFilters } = buildFilters(req);
@@ -217,7 +232,7 @@ router.get('/:id/overview', requireAuth, requirePermission('students', 'read'), 
      FROM enrollments e
      JOIN courses c ON c.id = e.courseId
      LEFT JOIN terms t ON t.id = c.termId
-     WHERE e.studentId = ? AND e.deletedAt IS NULL
+     WHERE e.studentId = ? AND e.status != 'dropped'
      ORDER BY t.startDate DESC, c.code`,
     [studentId]
   );

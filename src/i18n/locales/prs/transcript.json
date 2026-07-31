@@ -1,0 +1,29 @@
+{
+  "title": "ترانسکریپت",
+  "print": "چاپ",
+  "officialTranscript": "ترانسکریپت رسمی تحصیلی",
+  "printedOn": "تاریخ چاپ",
+  "studentInfo": "معلومات محصل",
+  "name": "نام",
+  "studentId": "شماره محصل",
+  "program": "پروگرام",
+  "department": "دیپارتمنت",
+  "status": "وضعیت",
+  "graduationDate": "تاریخ فراغت",
+  "noCourses": "هیچ کورس تکمیل‌شده یا در حال جریان ثبت نشده است.",
+  "table": {
+    "code": "کود",
+    "course": "کورس",
+    "credits": "کریدیت‌ها",
+    "grade": "نمره"
+  },
+  "inProgress": "در حال جریان",
+  "withdrawnHint": "بعد از ضرب‌الاجل حذف، انصراف داده شده — تأثیری بر GPA ندارد",
+  "termGpa": "GPA ترم",
+  "termCredits": "کریدیت‌های ترم",
+  "cumulativeGpa": "GPA مجموعی",
+  "completedCredits": "کریدیت‌های تکمیل‌شده",
+  "attemptedCredits": "کریدیت‌های سعی‌شده",
+  "gradingScale": "معیار نمرات",
+  "noData": "معلومات ترانسکریپت موجود نیست."
+}

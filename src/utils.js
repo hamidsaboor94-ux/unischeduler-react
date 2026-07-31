@@ -77,6 +77,14 @@ export function fmtDate(d) {
   return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+/** 'YYYY-MM-DD' -> '15 Feb 2026' (day-month-year, matches how the Finance statement shows due
+    dates — en-GB ordering gives day-first without a comma, unlike en-US's "Feb 15, 2026"). */
+export function fmtLongDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 export function withinNextDays(dateStr, days) {
   if (!dateStr) return false;
   const diff = (new Date(dateStr + 'T00:00:00') - new Date()) / (1000 * 60 * 60 * 24);
