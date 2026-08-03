@@ -22,6 +22,7 @@ const {
 const router = express.Router();
 const PAYMENT_METHODS = ['cash', 'bank', 'card', 'mobile', 'other'];
 const SCHOLARSHIP_TYPES = ['fixed', 'percentage'];
+const { safeCreateNotification, createBulkNotifications } = require('../notificationTypes');
 
 async function setSetting(key, value) {
   await run(
@@ -262,6 +263,10 @@ router.post('/terms/:termId/generate-charges', requireAuth, requirePermission('f
     throw err;
   }
   await logAudit(req.user, 'generate-charges', 'finance_transactions', term.id, summary);
+  const billed=await all(`SELECT DISTINCT e.studentId id FROM enrollments e JOIN courses c ON c.id=e.courseId WHERE e.status='enrolled' AND c.termId=?`,[term.id]);
+  await createBulkNotifications({recipientUserIds:billed.map(x=>x.id),type:'invoice_generated',title:'New university invoice',
+    message:`Charges for ${term.name} are now available in your protected finance statement.`,severity:'info',entityType:'term',entityId:term.id,
+    actionSection:'my-fees',deduplicationKeyPrefix:`invoice-generated:${term.id}`,createdBy:req.user.sub,category:'finance_reminders'});
   res.json(summary);
 }));
 
@@ -369,8 +374,17 @@ router.post('/students/:studentId/payments', requireAuth, requirePermission('fin
     return inserted;
   });
   await logAudit(req.user, 'record-payment', 'payments', payment.id, { studentId, amount: round2(amount), method, receiptNo: payment.receiptNo });
+  const statement=await studentStatement(studentId,termId);
+  await safeCreateNotification({recipientUserId:studentId,type:'payment_recorded',title:'Payment recorded',
+    message:`Your payment was recorded. Receipt ${payment.receiptNo} is available in your protected finance page.`,severity:'success',entityType:'payment',entityId:payment.id,
+    actionSection:'my-fees',deduplicationKey:`payment-recorded:${payment.id}`,createdBy:req.user.sub});
+  await safeCreateNotification({recipientUserId:studentId,type:'receipt_generated',title:'Receipt available',message:'An official payment receipt is available.',
+    severity:'info',entityType:'payment',entityId:payment.id,actionSection:'my-fees',deduplicationKey:`receipt-generated:${payment.id}`,createdBy:req.user.sub});
+  if(statement.balance<=0.004)await safeCreateNotification({recipientUserId:studentId,type:'account_cleared',title:'Account fully paid',
+    message:'Your current university account is fully paid.',severity:'success',entityType:'student',entityId:studentId,actionSection:'my-fees',
+    deduplicationKey:`account-cleared:${studentId}:${termId||'all'}:${payment.id}`,createdBy:req.user.sub});
 
-  res.status(201).json({ payment, statement: await studentStatement(studentId, termId) });
+  res.status(201).json({ payment, statement });
 }));
 
 // --- A payment's full receipt — finance staff for anyone, a student for their own. Immutable

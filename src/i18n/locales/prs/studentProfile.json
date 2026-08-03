@@ -14,6 +14,10 @@
   "editContact": "ویرایش معلومات تماس",
   "adminEditHint": "فقط ادمین می‌تواند این فیلدها را ویرایش کند.",
   "memberSince": "عضویت از: {{date}}",
+  "graduation": {
+    "conferredLine": "{{degree}} — اعطا شده به تاریخ {{date}}",
+    "downloadCertificate": "دانلود سند فراغت"
+  },
   "sections": {
     "personal": "معلومات شخصی",
     "address": "معلومات آدرس",

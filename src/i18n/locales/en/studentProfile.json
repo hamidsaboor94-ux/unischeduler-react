@@ -14,6 +14,10 @@
   "editContact": "Edit Contact Info",
   "adminEditHint": "Only an admin can edit these fields.",
   "memberSince": "Member since {{date}}",
+  "graduation": {
+    "conferredLine": "{{degree}} — conferred {{date}}",
+    "downloadCertificate": "Download Certificate"
+  },
   "sections": {
     "personal": "Personal Details",
     "address": "Address Details",

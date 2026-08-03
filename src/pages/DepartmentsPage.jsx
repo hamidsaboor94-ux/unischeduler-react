@@ -5,6 +5,7 @@ import { useAppData } from '../context/AppDataContext.jsx';
 import { useModal } from '../context/ModalContext.jsx';
 import { useToast } from '../context/ToastContext.jsx';
 import { deleteDepartment, saveCollege, deleteCollege, deleteProgram } from '../api.js';
+import CurriculumManager from '../components/CurriculumManager.jsx';
 
 // Single-institution deployment — no college/faculty layer in use yet. Set to true to bring
 // back the Colleges panel and the College column; the colleges table, collegeId column, and
@@ -13,7 +14,7 @@ const SHOW_COLLEGES = false;
 
 export default function DepartmentsPage() {
   const { t } = useTranslation(['management', 'common']);
-  const { departments, colleges, programs, courses, teachers, afterMutate } = useAppData();
+  const { departments, colleges, programs, courses, teachers, currentUser, afterMutate } = useAppData();
   const { openModal, confirmAction } = useModal();
   const { toast } = useToast();
   const [newCollege, setNewCollege] = useState('');
@@ -137,6 +138,7 @@ export default function DepartmentsPage() {
             </table>
           )}
         </div>
+        <CurriculumManager programs={programs} courses={courses} currentUser={currentUser} />
       </div>
     </Section>
   );

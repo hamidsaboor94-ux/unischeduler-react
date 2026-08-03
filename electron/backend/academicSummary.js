@@ -19,11 +19,14 @@ async function computeAcademicSummary(studentId, { termId } = {}) {
     const credits = r.credits || 0;
     attemptedCredits += credits;
     if (r.grade) {
-      completedCredits += credits;
       const band = scale.find(b => b.label === r.grade);
-      qualityPoints += (band?.point ?? 0) * credits;
+      const gradePoints = band?.point ?? 0;
+      qualityPoints += gradePoints * credits;
       gpaCredits += credits;
-      if (r.grade === 'F') failedCount += 1;
+      // Attempted and completed credits are different institutional measures. A final failing
+      // grade contributes to attempted credits and GPA, but it cannot earn degree credit.
+      if (gradePoints > 0) completedCredits += credits;
+      else failedCount += 1;
     }
   }
   return {

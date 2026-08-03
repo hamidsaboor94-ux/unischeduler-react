@@ -10,10 +10,27 @@ const { canManageExam, isInvigilator, courseScopeClause, enrolledCourseIds, teac
 const { courseInScope, isScopedRequest } = require('../scope');
 const { requirePermission } = require('../middleware/permission');
 const { hasFinancialHold } = require('../finance');
+const { createBulkNotifications } = require('../notificationTypes');
 
 const router = express.Router();
 const FIELDS = ['courseId', 'date', 'time', 'durationMinutes', 'roomId', 'invigilatorId', 'termId', 'type'];
 const EXAM_TYPES = ['quiz', 'midterm', 'final'];
+
+async function notifyExamAudience(exam,event,actorId){
+  if(!exam?.courseId)return;
+  if(event!=='cancelled'&&(!exam.date||!exam.time||!exam.roomId))return;
+  const [course,room,teacher,invigilator,students]=await Promise.all([
+    get('SELECT code,name,teacherId FROM courses WHERE id=?',[exam.courseId]),exam.roomId?get('SELECT name FROM rooms WHERE id=?',[exam.roomId]):null,
+    get(`SELECT u.id FROM teachers t JOIN users u ON u.id=t.userId WHERE t.id=(SELECT teacherId FROM courses WHERE id=?)`,[exam.courseId]),
+    exam.invigilatorId?get('SELECT userId id FROM teachers WHERE id=?',[exam.invigilatorId]):null,
+    all(`SELECT studentId id FROM enrollments WHERE courseId=? AND status='enrolled'`,[exam.courseId])]);
+  const recipients=[...students.map(x=>x.id),teacher?.id,invigilator?.id].filter(Boolean);
+  const type=event==='scheduled'?'exam_scheduled':event==='cancelled'?'exam_cancelled':'exam_rescheduled';
+  const details=`${course?.code||'Course'} ${exam.type||'exam'} — ${exam.date||'date pending'}, ${exam.time||'time pending'}, ${room?.name||'room pending'}`;
+  await createBulkNotifications({recipientUserIds:recipients,type,title:event==='cancelled'?'Exam cancelled':event==='scheduled'?'Exam scheduled':'Exam schedule changed',
+    message:details,severity:event==='cancelled'?'critical':'info',entityType:'exam',entityId:exam.id,actionSection:'exams',actionData:{examId:exam.id},
+    deduplicationKeyPrefix:`exam:${exam.id}:${event}:${exam.date||'none'}:${exam.time||'none'}:${exam.roomId||'none'}:${exam.invigilatorId||'none'}`,createdBy:actorId,category:'academic_updates'});
+}
 
 router.get('/', requireAuth, asyncHandler(async (req, res) => {
   const clauses = [];
@@ -83,6 +100,7 @@ router.post('/', requireAuth, requirePermission('exams', 'write'), asyncHandler(
   if (result === undefined) return;
   const row = await get('SELECT * FROM exams WHERE id = ?', [result.id]);
   await logAudit(req.user, 'create', 'exams', result.id, req.body);
+  await notifyExamAudience(row,'scheduled',req.user.sub);
   res.status(201).json(row);
 }));
 
@@ -104,6 +122,7 @@ router.put('/:id', requireAuth, requirePermission('exams', 'write'), asyncHandle
   const row = await get('SELECT * FROM exams WHERE id = ?', [req.params.id]);
   if (!row) return res.status(404).json({ error: 'Not found' });
   await logAudit(req.user, 'update', 'exams', req.params.id, req.body);
+  await notifyExamAudience(row,'rescheduled',req.user.sub);
   res.json(row);
 }));
 
@@ -115,6 +134,7 @@ router.delete('/:id', requireAuth, requirePermission('exams', 'write'), asyncHan
   if (!(await canManageExam(req, existing))) return res.status(403).json({ error: 'You do not have access to this exam.' });
   await run('DELETE FROM exams WHERE id = ?', [req.params.id]);
   await logAudit(req.user, 'delete', 'exams', req.params.id, null);
+  await notifyExamAudience(existing,'cancelled',req.user.sub);
   res.status(204).end();
 }));
 
@@ -166,6 +186,10 @@ router.post('/auto-schedule', requireAuth, requirePermission('exams', 'write'), 
   // surface that separately from `unresolved` (which is for exams that couldn't be placed at all).
   const needsInvigilator = updates.filter(u => u.invigilatorId == null);
   await logAudit(req.user, 'auto-schedule', 'exams', termId, { examType, created, scheduled: updates.length, unresolved: unresolved.length, needsInvigilator: needsInvigilator.length });
+  for(const u of updates){
+    // eslint-disable-next-line no-await-in-loop
+    await notifyExamAudience(await get('SELECT * FROM exams WHERE id=?',[u.examId]),'scheduled',req.user.sub);
+  }
 
   const courseById = new Map(courses.map(c => [c.id, c]));
   const withCourse = (u) => ({ ...u, courseCode: courseById.get(u.courseId)?.code, courseName: courseById.get(u.courseId)?.name });

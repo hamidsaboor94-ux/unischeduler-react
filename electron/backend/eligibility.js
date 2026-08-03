@@ -17,6 +17,7 @@ const { getGradingScale } = require('./gradingScale');
 const { hasScheduleClash } = require('./enrollmentChecks');
 const { hasFinancialHold } = require('./finance');
 const { overlapsMinutes } = require('./scheduling');
+const { curriculumRegistrationCheck, getStudentAssignment } = require('./curriculum');
 
 function familyKey(name) {
   return String(name || '').trim().toLowerCase();
@@ -176,13 +177,14 @@ async function wouldCreateCycle(courseId, prerequisiteCourseId) {
 function computeRowEligibility({
   studentActive, programMismatch, departmentMismatch, offeredThisTerm, familyStatus,
   alreadyEnrolledOrWaitlisted, siblingCode, prereqResult, scheduleClash, creditIssueMessage,
-  financialHold, maxStudents, enrolledCount,
+  financialHold, maxStudents, enrolledCount, registrationWindowMessage,
 }) {
   const blocking = [];
   if (!studentActive) blocking.push({ code: 'inactive', message: 'Your student status does not permit enrollment.' });
   if (programMismatch) blocking.push({ code: 'wrong-program', message: 'This course is not offered in your program.' });
   if (departmentMismatch) blocking.push({ code: 'wrong-department', message: 'This course is not offered in your department.' });
   if (offeredThisTerm === false) blocking.push({ code: 'not-offered', message: 'This course is not offered this term.' });
+  if (registrationWindowMessage) blocking.push({ code: 'registration-window', message: registrationWindowMessage });
   if (familyStatus === 'passed') blocking.push({ code: 'already-completed', message: 'You have already completed this course.' });
   if (alreadyEnrolledOrWaitlisted) {
     blocking.push({
@@ -213,11 +215,30 @@ function computeRowEligibility({
 /** Live, per-course eligibility check — used at enroll time (routes/enrollments.js). Also
     surfaces `prereqIssues` (flat course-code array) and `scheduleClash` (boolean) for the
     existing staff-enroll warning/override flow, which predates and doesn't need the richer
-    `prerequisites`/`blocking` shape. */
-async function evaluateEligibility(studentId, courseId) {
+    `prerequisites`/`blocking` shape.
+
+    `enforceRegistrationWindow` (default true) gates the course term's registrationOpensAt/
+    registrationClosesAt. Callers pass false for Registrar/Admin-initiated enrollment (single
+    staff enroll, bulk enroll) — staff can enroll a student any time, same as they already work
+    around prerequisite/schedule-clash issues via `override`, so the window isn't even surfaced
+    as a warning for them. Self-enrollment always enforces it. */
+async function evaluateEligibility(studentId, courseId, opts = {}) {
+  const enforceRegistrationWindow = opts.enforceRegistrationWindow !== false;
   const course = await get('SELECT * FROM courses WHERE id = ?', [courseId]);
   if (!course) {
     return { eligible: false, blocking: [{ code: 'not-found', message: 'Course not found' }], reason: 'Course not found', willWaitlist: false, prerequisites: [], missingPrerequisites: [], prereqIssues: [], scheduleClash: false };
+  }
+
+  // Degree-plan membership/timing is checked first and remains separate from prerequisite
+  // evaluation below. Only an authorized caller may ask to relax the semester recommendation;
+  // curriculum membership and prerequisites are never bypassed here.
+  const curriculumResult = await curriculumRegistrationCheck(studentId, courseId, {
+    allowSemesterOverride: opts.allowSemesterOverride === true,
+  });
+  if (!curriculumResult.eligible) {
+    return { eligible:false, blocking:[{code:curriculumResult.code,message:curriculumResult.reason}],
+      reason:curriculumResult.reason, curriculum:curriculumResult, willWaitlist:false,
+      prerequisites:[],missingPrerequisites:[],prereqIssues:[],scheduleClash:false };
   }
 
   const profile = await get('SELECT * FROM student_profiles WHERE studentId = ?', [studentId]);
@@ -239,19 +260,31 @@ async function evaluateEligibility(studentId, courseId) {
   const prereqResult = await evaluatePrerequisites(studentId, courseId);
   const scheduleClash = await hasScheduleClash(studentId, courseId, course.termId);
 
+  const courseTerm = course.termId ? await get('SELECT * FROM terms WHERE id = ?', [course.termId]) : null;
+
   let creditIssueMessage = null;
-  if (course.termId) {
-    const term = await get('SELECT * FROM terms WHERE id = ?', [course.termId]);
-    if (term && term.creditLimit != null) {
-      const enrolledCourses = await all(
-        `SELECT c.credits FROM enrollments e JOIN courses c ON c.id = e.courseId
-         WHERE e.studentId = ? AND e.status = 'enrolled' AND c.termId = ?`,
-        [studentId, course.termId]
-      );
-      const currentCredits = enrolledCourses.reduce((sum, r) => sum + (r.credits || 0), 0);
-      if (currentCredits + (course.credits || 0) > term.creditLimit) {
-        creditIssueMessage = `This would exceed your ${term.creditLimit}-credit limit for ${term.name} — you currently have ${currentCredits} credits enrolled.`;
-      }
+  if (courseTerm && courseTerm.creditLimit != null) {
+    const enrolledCourses = await all(
+      `SELECT c.credits FROM enrollments e JOIN courses c ON c.id = e.courseId
+       WHERE e.studentId = ? AND e.status = 'enrolled' AND c.termId = ?`,
+      [studentId, course.termId]
+    );
+    const currentCredits = enrolledCourses.reduce((sum, r) => sum + (r.credits || 0), 0);
+    if (currentCredits + (course.credits || 0) > courseTerm.creditLimit) {
+      creditIssueMessage = `This would exceed your ${courseTerm.creditLimit}-credit limit for ${courseTerm.name} — you currently have ${currentCredits} credits enrolled.`;
+    }
+  }
+
+  // Gates self-enrollment to the term's configured registration window (set on the Semesters
+  // admin screen). registrationOpensAt/registrationClosesAt are each optional independently —
+  // a term with neither set has no window restriction (fails open, same as a termless course).
+  let registrationWindowMessage = null;
+  if (enforceRegistrationWindow && courseTerm) {
+    const now = new Date();
+    if (courseTerm.registrationOpensAt && now < new Date(courseTerm.registrationOpensAt)) {
+      registrationWindowMessage = `Registration for ${courseTerm.name} has not opened yet (opens ${courseTerm.registrationOpensAt}).`;
+    } else if (courseTerm.registrationClosesAt && now >= new Date(courseTerm.registrationClosesAt)) {
+      registrationWindowMessage = `Registration for ${courseTerm.name} closed on ${courseTerm.registrationClosesAt}.`;
     }
   }
 
@@ -272,9 +305,10 @@ async function evaluateEligibility(studentId, courseId) {
     financialHold,
     maxStudents: course.maxStudents,
     enrolledCount: enrolledCountRow.n,
+    registrationWindowMessage,
   });
 
-  return { ...result, prereqIssues: missingPrerequisiteCodes(prereqResult), scheduleClash };
+  return { ...result, curriculum: curriculumResult, prereqIssues: missingPrerequisiteCodes(prereqResult), scheduleClash };
 }
 
 /**
@@ -286,6 +320,13 @@ async function evaluateEligibility(studentId, courseId) {
  * endpoint would then reject.
  */
 async function getEligibleCatalog(studentId) {
+  const assignment = (await getStudentAssignment(studentId)).current;
+  if (!assignment) return { eligible:[], currentlyEnrolled:[], completed:[], notYetEligible:[], notOffered:[], error:'Student has no assigned curriculum.', code:'NO_CURRICULUM' };
+  const curriculumRows = await all(`SELECT LOWER(TRIM(c.name)) familyName,cs.semesterNumber,
+    COALESCE(cc.courseType,CASE WHEN cc.required=1 THEN 'required' ELSE 'elective' END) courseType,
+    cc.electiveGroupId FROM curriculum_course cc JOIN curriculum_semester cs ON cs.id=cc.curriculumSemesterId
+    JOIN courses c ON c.id=cc.courseId WHERE cs.curriculumId=?`, [assignment.curriculumId]);
+  const curriculumByFamily = new Map(curriculumRows.map(r=>[r.familyName,r]));
   const [profile, activeTerm, courses, enrollmentRows, prereqRows, scale] = await Promise.all([
     get('SELECT * FROM student_profiles WHERE studentId = ?', [studentId]),
     getActiveTerm(),
@@ -368,9 +409,23 @@ async function getEligibleCatalog(studentId) {
 
   const studentActive = !profile || !profile.studentStatus || profile.studentStatus === 'Active';
 
+  // Same window rule as evaluateEligibility (always enforced here — this catalog is a student's
+  // own self-service view, there's no staff-bypass case to thread through).
+  let activeTermRegistrationWindowMessage = null;
+  if (activeTerm) {
+    const now = new Date();
+    if (activeTerm.registrationOpensAt && now < new Date(activeTerm.registrationOpensAt)) {
+      activeTermRegistrationWindowMessage = `Registration for ${activeTerm.name} has not opened yet (opens ${activeTerm.registrationOpensAt}).`;
+    } else if (activeTerm.registrationClosesAt && now >= new Date(activeTerm.registrationClosesAt)) {
+      activeTermRegistrationWindowMessage = `Registration for ${activeTerm.name} closed on ${activeTerm.registrationClosesAt}.`;
+    }
+  }
+
   const eligible = [], currentlyEnrolled = [], completed = [], notYetEligible = [], notOffered = [];
 
   for (const [key, familyCourses] of familiesByKey) {
+    // Other programs/versions are intentionally absent from the default catalog.
+    if (!curriculumByFamily.has(key)) continue;
     const status = familyStatus(key);
     if (status === 'passed') {
       const rep = [...familyCourses].sort((a, b) => (b.termId || 0) - (a.termId || 0))[0];
@@ -407,6 +462,7 @@ async function getEligibleCatalog(studentId) {
       if (course.termId && activeTerm?.creditLimit != null && currentCredits + (course.credits || 0) > activeTerm.creditLimit) {
         creditIssueMessage = `This would exceed your ${activeTerm.creditLimit}-credit limit for ${activeTerm.name} — you currently have ${currentCredits} credits enrolled.`;
       }
+      const registrationWindowMessage = course.termId ? activeTermRegistrationWindowMessage : null;
 
       const result = computeRowEligibility({
         studentActive,
@@ -422,6 +478,7 @@ async function getEligibleCatalog(studentId) {
         financialHold,
         maxStudents: course.maxStudents,
         enrolledCount: enrolledCountByCourseId.get(course.id) || 0,
+        registrationWindowMessage,
       });
 
       const entry = {
@@ -430,6 +487,10 @@ async function getEligibleCatalog(studentId) {
         availableSeats: course.maxStudents != null ? Math.max(0, course.maxStudents - (enrolledCountByCourseId.get(course.id) || 0)) : null,
         willWaitlist: result.willWaitlist,
         prerequisites: result.prerequisites,
+        recommendedSemester: curriculumByFamily.get(key).semesterNumber,
+        recommended: Number(curriculumByFamily.get(key).semesterNumber) === Number(profile?.programSemester || 1),
+        courseType: curriculumByFamily.get(key).courseType,
+        electiveGroupId: curriculumByFamily.get(key).electiveGroupId,
       };
       if (result.eligible) eligible.push(entry);
       else notYetEligible.push({ ...entry, reason: result.reason, blocking: result.blocking, missingPrerequisites: result.missingPrerequisites });

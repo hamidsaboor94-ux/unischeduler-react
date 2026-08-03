@@ -6,7 +6,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { DAYS } = require('../scheduling');
 const { courseInScope, isScopedRequest } = require('../scope');
 const { canManageCourse } = require('../ownership');
-const { createNotification } = require('../notificationTypes');
+const { safeCreateNotification } = require('../notificationTypes');
 const { notifyCourseStudents } = require('../notify');
 
 const router = express.Router();
@@ -41,7 +41,7 @@ async function notifyOfCancellation(slot, date) {
   const meta = { courseId: course.id, entityType: 'timetable_slot', entityId: slot.id };
   if (course.teacherId) {
     const teacher = await get('SELECT userId FROM teachers WHERE id = ?', [course.teacherId]);
-    if (teacher && teacher.userId) await createNotification(teacher.userId, message, 'class_cancelled', meta);
+    if (teacher && teacher.userId) await safeCreateNotification(teacher.userId, message, 'class_cancelled', meta);
   }
   await notifyCourseStudents(course.id, message, { type: 'class_cancelled', ...meta });
 }
@@ -58,7 +58,7 @@ async function notifyOfReschedule(slot, { newDate, newTime, newRoomId }) {
   const meta = { courseId: course.id, entityType: 'timetable_slot', entityId: slot.id };
   if (course.teacherId) {
     const teacher = await get('SELECT userId FROM teachers WHERE id = ?', [course.teacherId]);
-    if (teacher && teacher.userId) await createNotification(teacher.userId, message, 'class_rescheduled', meta);
+    if (teacher && teacher.userId) await safeCreateNotification(teacher.userId, message, 'class_rescheduled', meta);
   }
   await notifyCourseStudents(course.id, message, { type: 'class_rescheduled', ...meta });
 }

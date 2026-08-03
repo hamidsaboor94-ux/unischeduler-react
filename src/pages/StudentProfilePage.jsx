@@ -10,6 +10,7 @@ import {
   fetchStudentProfile, updateMyStudentProfile, updateStudentProfile,
   uploadStudentDocument, downloadStudentDocument, deleteStudentDocument,
   fetchProgressionHistory, fetchCurrentProgression, evaluateProgression, overrideProgression,
+  downloadGraduationCertificate,
 } from '../api.js';
 import { can } from '../permissions.js';
 import { fmtDate, isForbidden } from '../utils.js';
@@ -62,7 +63,7 @@ function FieldRow({ label, display, editing, children }) {
 export default function StudentProfilePage() {
   const { t } = useTranslation(['studentProfile', 'common']);
   const { currentUser, departments, teachers, programs, studentTypes } = useAppData();
-  const { sectionFocus } = useNavigation();
+  const { sectionFocus, showSection } = useNavigation();
   const { confirmAction } = useModal();
   const { toast } = useToast();
   const { run: runSaveAdmin, loading: savingAdmin } = useAsyncAction();
@@ -70,6 +71,7 @@ export default function StudentProfilePage() {
   const { run: runUpload, loading: uploading } = useAsyncAction();
   const { run: runEvaluate, loading: evaluating } = useAsyncAction();
   const { run: runOverride, loading: overriding } = useAsyncAction();
+  const { run: runDownloadCert, loading: downloadingCert } = useAsyncAction();
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -172,6 +174,14 @@ export default function StudentProfilePage() {
     }
   }
 
+  async function handleDownloadCertificate() {
+    try {
+      await runDownloadCert(downloadGraduationCertificate(viewingStudentId, `certificate-${data?.student?.idNumber || viewingStudentId}.pdf`));
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  }
+
   async function handleSaveAdmin() {
     const payload = {};
     for (const f of ADMIN_FIELDS) {
@@ -257,7 +267,7 @@ export default function StudentProfilePage() {
         {!loading && forbidden && <div className="field-hint" style={{ padding: 14 }}>{t('common:accessDenied')}</div>}
         {!loading && !forbidden && !data && <div className="field-hint" style={{ padding: 14 }}>{t('studentProfile:notFound')}</div>}
         {!loading && data && (() => {
-          const { student, profile, department, program, studentType, advisor, activeTerm, gpa, completedCredits, requiredCredits, documents } = data;
+          const { student, profile, department, program, studentType, advisor, activeTerm, gpa, completedCredits, requiredCredits, documents, graduationRecord } = data;
           const pct = requiredCredits ? Math.min(100, Math.round((completedCredits / requiredCredits) * 100)) : 0;
           const admissionYear = profile.enrollmentDate ? profile.enrollmentDate.slice(0, 4) : null;
           const semesterStatus = profile.semesterStatus || 'In Progress';
@@ -276,6 +286,24 @@ export default function StudentProfilePage() {
                     {profile.studentStatus && <span className={'pill ' + (STUDENT_STATUS_PILL[profile.studentStatus] || 'pill-gray')}>{t(`studentProfile:studentStatusOptions.${profile.studentStatus}`)}</span>}
                   </div>
                   <div className="field-hint" style={{ margin: '4px 0 0' }}>{t('studentProfile:memberSince', { date: (student.createdAt || '').split(' ')[0] || na })}</div>
+                  {profile.studentStatus === 'Graduated' && (
+                    <div className="field-hint" style={{ margin: '6px 0 0', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                      <span>
+                        {t('studentProfile:graduation.conferredLine', {
+                          degree: profile.degreeAwarded || na,
+                          date: profile.graduationDate ? fmtDate(profile.graduationDate) : na,
+                        })}
+                      </span>
+                      <button className={'btn-sm no-print' + (downloadingCert ? ' btn-loading' : '')} disabled={downloadingCert} onClick={handleDownloadCertificate}>
+                        {downloadingCert ? <span className="spinner"></span> : <><i className="ti ti-certificate"></i> {t('studentProfile:graduation.downloadCertificate')}</>}
+                      </button>
+                      {graduationRecord && can(currentUser.role, 'graduation', 'read') && (
+                        <button className="btn-sm no-print" onClick={() => showSection('graduates-registry', { graduateId: graduationRecord.id })}>
+                          <i className="ti ti-external-link"></i> Official graduate record
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
                 {isAdmin && !adminEditing && (
                   <button className="btn-sm no-print" onClick={() => setAdminEditing(true)}><i className="ti ti-pencil"></i> {t('studentProfile:editProfile')}</button>

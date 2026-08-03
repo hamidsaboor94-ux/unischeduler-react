@@ -11,7 +11,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { isValidEmail } = require('../validate');
 const { createAccountWithTempPassword } = require('../accounts');
 const { sendMail } = require('../mailer');
-const { createNotification } = require('../notificationTypes');
+const { safeCreateNotification, createBulkNotifications } = require('../notificationTypes');
 const { AID_TYPES, AID_BASES, resyncApplicationAidForBilledTerms } = require('../finance');
 
 const router = express.Router();
@@ -104,9 +104,10 @@ async function insertApplication(body, { source, createdBy }) {
 
 async function notifyAdmins(message, applicationId) {
   const admins = await all(`SELECT id FROM users WHERE role = 'admin'`);
-  for (const a of admins) {
-    await createNotification(a.id, message, 'application_submitted', { entityType: 'application', entityId: applicationId });
-  }
+  const reviewers=await all(`SELECT id FROM users WHERE role IN ('admissions_officer','registrar')`);
+  await createBulkNotifications({recipientUserIds:[...admins,...reviewers].map(x=>x.id),message,type:'application_submitted',title:'New admissions application',
+    severity:'info',entityType:'application',entityId:applicationId,actionSection:'applications',actionData:{applicationId},
+    deduplicationKeyPrefix:`application-submitted:${applicationId}`});
 }
 
 // --- Public intake — no requireAuth ---
@@ -271,6 +272,9 @@ router.put('/:id/status', requireAuth, requirePermission('admissions', 'write'),
       text: statusMessage(orgName, status, decisionNote),
     });
   }
+  if(application.createdStudentId)await safeCreateNotification({recipientUserId:application.createdStudentId,type:'application_status_changed',
+    title:'Admission status changed',message:`Your admission application status is now ${status}.`,severity:status==='Rejected'?'warning':'info',
+    entityType:'application',entityId:application.id,actionSection:'student-profile',deduplicationKey:`application-status:${application.id}:${status}`,createdBy:req.user.sub});
 
   res.json({ ...(await get('SELECT * FROM applications WHERE id = ?', [req.params.id])), emailSent: emailResult.sent, emailError: emailResult.sent ? null : emailResult.reason });
 }));
@@ -343,6 +347,12 @@ router.post('/:id/approve', requireAuth, requirePermission('admissions', 'write'
   });
 
   await logAudit(req.user, 'approve-application', 'applications', req.params.id, { studentId: account.id, idNumber });
+  await safeCreateNotification({recipientUserId:account.id,type:'student_account_created',title:'Student account created',
+    message:`Your admission was approved and student account ${idNumber} is active. Sign in and change your temporary password.`,severity:'success',
+    entityType:'application',entityId:Number(req.params.id),actionSection:'student-profile',deduplicationKey:`student-account-created:${account.id}`,createdBy:req.user.sub});
+  await safeCreateNotification({recipientUserId:account.id,type:'temporary_credentials_issued',title:'Temporary credentials issued',
+    message:'Temporary login credentials were issued through the approved delivery channel. Change your password after signing in.',severity:'critical',
+    entityType:'user',entityId:account.id,actionSection:'student-profile',deduplicationKey:`temporary-credentials:${account.id}`,createdBy:req.user.sub});
 
   res.json({
     student: { id: account.id, name: application.fullName, email: generatedEmail, idNumber },
@@ -370,6 +380,10 @@ router.post('/:id/documents', requireAuth, requirePermission('admissions', 'writ
   fs.mkdirSync(APPLICATION_DOCS_DIR, { recursive: true });
   fs.writeFileSync(appDocFile(result.id), req.file.buffer);
   await logAudit(req.user, 'upload-document', 'application_documents', result.id, { applicationId: req.params.id, title: title.trim() });
+  const reviewers=await all(`SELECT id FROM users WHERE role IN ('admissions_officer','registrar')`);
+  await createBulkNotifications({recipientUserIds:reviewers.map(x=>x.id),type:'application_submitted',title:'Application document submitted',
+    message:'A document was added to an admissions application.',severity:'info',entityType:'application',entityId:Number(req.params.id),
+    actionSection:'applications',actionData:{applicationId:Number(req.params.id)},deduplicationKeyPrefix:`application-document:${result.id}`,createdBy:req.user.sub});
 
   res.status(201).json(await get('SELECT id, documentType, title, fileName, mimeType, createdAt FROM application_documents WHERE id = ?', [result.id]));
 }));

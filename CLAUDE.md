@@ -6,6 +6,20 @@ Trilingual: English, Pashto (`ps`), Dari (`prs`), with RTL. Sold with license-ke
 **The requirements & progress ledger is [PROJECT-PROGRESS.md](PROJECT-PROGRESS.md).** Before
 building a feature, find (or add) it there; after shipping, check it off there.
 
+**`docs/` holds source-audited reference documentation — keep it in sync.** When a feature, role,
+permission, module, or workflow changes, update the relevant file(s) as part of that change, not
+as a separate pass:
+- [docs/PRODUCT_DOCUMENTATION.md](docs/PRODUCT_DOCUMENTATION.md) — executive/sales-facing product
+  documentation (roles, modules, workflows, security, licensing) for non-technical readers
+  evaluating a purchase. Written in proposal language, not developer language; must never
+  contradict PROJECT-PROGRESS.md on what's shipped vs. roadmap.
+- [docs/FEATURE_INVENTORY.md](docs/FEATURE_INVENTORY.md) — per-module implementation status
+- [docs/RBAC_MATRIX.md](docs/RBAC_MATRIX.md) — full role/permission/scope detail
+- [docs/SYSTEM_ARCHITECTURE.md](docs/SYSTEM_ARCHITECTURE.md) — as-built architecture
+- [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md) / [docs/API_INVENTORY.md](docs/API_INVENTORY.md) — table/endpoint reference
+
+If code and a doc disagree, the code is correct — fix the doc.
+
 ## Two-folder layout
 
 | Part | Path |
@@ -40,10 +54,14 @@ or `license.json` there re-triggers the respective setup.
 
 ## Architecture notes
 
-- **Roles**: `admin` / `faculty` / `student`. No self-registration — admin creates accounts,
-  which get one-time temp passwords + forced first-login password change. Route guards via
-  `requireRole()` in `api/src/middleware/auth.js`; faculty course-ownership checks in
-  `api/src/ownership.js`.
+- **Roles**: 12 roles (`admin, registrar, admissions_officer, dept_head, dean, exam_officer,
+  records_officer, bursar, viewer, advisor, faculty, student`) — see
+  [docs/RBAC_MATRIX.md](docs/RBAC_MATRIX.md) for the full matrix. No self-registration — admin
+  creates accounts, which get one-time temp passwords + forced first-login password change. Two
+  authorization systems coexist by design (legacy `POLICY` in `api/src/permissions.js` +
+  `middleware/permission.js`, and newer granular `requirePermission('Module.Action')` in
+  `api/src/authz.js`); `dept_head`/`dean` are department/college-scoped via `api/src/scope.js`;
+  faculty course-ownership checks in `api/src/ownership.js`.
 - **Frontend state**: `src/context/AppDataContext.jsx` loads most collections up-front; pages are
   plain components switched by `NavigationContext` (no router). **Every page stays mounted** —
   when driving the UI via CDP/automation, query within the visible page, not the whole DOM.

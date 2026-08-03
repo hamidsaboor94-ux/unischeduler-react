@@ -15,8 +15,11 @@ export const API_BASE = globalThis.UNISCHEDULER_API_BASE || import.meta.env.VITE
 // (the UI should have hidden/disabled it — see e.g. RoomForm.jsx's canWrite). This is the one
 // place that turns that bare string into something a toast can actually show someone.
 const GENERIC_FORBIDDEN_MESSAGES = new Set(['Forbidden', undefined, null, '']);
-function friendlyErrorMessage(status, data) {
+function friendlyErrorMessage(status, data, path) {
   const message = data && data.error;
+  if (status === 404 && message === 'Not found' && String(path || '').startsWith('/graduation/')) {
+    return 'The running backend does not provide the graduation registry yet. Restart it with the current UMS backend.';
+  }
   if (status === 403 && GENERIC_FORBIDDEN_MESSAGES.has(message)) {
     return 'You don’t have permission to do this.';
   }
@@ -36,9 +39,12 @@ export async function api(method, path, body) {
   let data = null;
   try { data = await res.json(); } catch (e) { /* empty body, e.g. 204 */ }
   if (!res.ok) {
-    const err = new Error(friendlyErrorMessage(res.status, data));
+    const err = new Error(friendlyErrorMessage(res.status, data, path));
     err.status = res.status;
     err.code = data && data.code;
+    // Graduation confirm's 422 FINANCE_HOLD carries the exact blocking balance — surfaced here,
+    // same spot err.code already rides, rather than adding a second per-route error shape.
+    err.outstandingBalance = data && data.outstandingBalance;
     throw err;
   }
   return data;
@@ -113,6 +119,9 @@ export const fetchAvailableRooms = (params) => api('GET', `/conflicts/available-
 export const fetchAvailableTimes = (params) => api('GET', `/conflicts/available-times?${qs(params)}`);
 export const markNotificationRead = (id) => api('PUT', `/notifications/${id}/read`);
 export const markAllNotificationsRead = () => api('PUT', '/notifications/read-all');
+export const fetchNotifications = (params={}) => api('GET', `/notifications?${qs(params)}`);
+export const fetchNotificationPreferences = () => api('GET','/notifications/preferences');
+export const updateNotificationPreference = (category,enabled) => api('PUT',`/notifications/preferences/${category}`,{enabled});
 export const fetchCourseAttendance = (courseId) => api('GET', `/attendance?courseId=${courseId}`);
 export const fetchCourseRoster = (courseId) => api('GET', `/courses/${courseId}/roster`);
 export const fetchMyAttendance = () => api('GET', '/attendance/me');
@@ -411,3 +420,51 @@ export const exportDashboardChartPdf = (chart, termId, filename) =>
   apiDownload(`/reports/export/dashboard/pdf?chart=${encodeURIComponent(chart)}${termId ? `&termId=${termId}` : ''}`, filename);
 export const exportDashboardChartXlsx = (chart, termId, filename) =>
   apiDownload(`/reports/export/dashboard/xlsx?chart=${encodeURIComponent(chart)}${termId ? `&termId=${termId}` : ''}`, filename);
+
+/* ---------------------------- Data Migration Center ---------------------------- */
+export const fetchMigrationConnections = () => api('GET', '/migrations/connections');
+export const saveMigrationConnection = (data, id) =>
+  id ? api('PUT', `/migrations/connections/${id}`, data) : api('POST', '/migrations/connections', data);
+export const deleteMigrationConnection = (id) => api('DELETE', `/migrations/connections/${id}`);
+export const testMigrationConnection = (sourceType, config) => api('POST', '/migrations/connections/test', { sourceType, config });
+export const testSavedMigrationConnection = (id) => api('POST', `/migrations/connections/${id}/test`);
+
+export const fetchMigrationSourceTypes = () => api('GET', '/migrations/source-types');
+export const fetchMigrationTargets = () => api('GET', '/migrations/targets');
+
+export const fetchMigrations = () => api('GET', '/migrations');
+export const fetchMigration = (id) => api('GET', `/migrations/${id}`);
+export const createMigration = (data) => api('POST', '/migrations', data);
+export const uploadMigrationSource = (file, { label, sourceType }) => apiUploadForm('/migrations/upload', { file, label, sourceType });
+
+export const discoverMigration = (id) => api('POST', `/migrations/${id}/discover`, {});
+export const fetchMigrationMapping = (id) => api('GET', `/migrations/${id}/mapping`);
+export const saveMigrationMapping = (id, mappings) => api('POST', `/migrations/${id}/mapping`, mappings);
+export const validateMigration = (id) => api('POST', `/migrations/${id}/validate`, {});
+export const startMigrationDryRun = (id) => api('POST', `/migrations/${id}/dry-run`, {});
+export const startMigrationImport = (id) => api('POST', `/migrations/${id}/import`, {});
+export const fetchMigrationProgress = (id) => api('GET', `/migrations/${id}/progress`);
+export const cancelMigration = (id) => api('POST', `/migrations/${id}/cancel`, {});
+export const fetchMigrationReport = (id) => api('GET', `/migrations/${id}/report`);
+export const rollbackMigration = (id) => api('POST', `/migrations/${id}/rollback`, {});
+
+/* ---------------------- Graduation workflow and official registry ---------------------- */
+const queryString = params => {
+  const q = new URLSearchParams(Object.entries(params || {}).filter(([,v]) => v !== '' && v != null));
+  return q.size ? `?${q}` : '';
+};
+export const fetchGraduationCandidates = filters => api('GET', `/graduation/candidates${queryString(filters)}`);
+export const fetchGraduationEligible = () => api('GET', '/graduation/eligible');
+export const createGraduationApplication = data => api('POST', '/graduation/applications', data);
+export const updateGraduationApplicationStatus = (id, status, reason) => api('PATCH', `/graduation/applications/${id}/status`, { status, reason });
+export const runGraduationAudit = applicationId => api('POST', `/graduation/applications/${applicationId}/audit`, {});
+export const finalizeGraduation = (applicationId, data = {}) => api('POST', `/graduation/applications/${applicationId}/finalize`, data);
+export const fetchGraduatesRegistry = filters => api('GET', `/graduation/registry${queryString(filters)}`);
+export const fetchGraduateDetail = id => api('GET', `/graduation/registry/${id}`);
+export const updateGraduationIssuance = (id, type, data) => api('PATCH', `/graduation/registry/${id}/${type}`, data);
+export const correctGraduationRecord = (id, data) => api('POST', `/graduation/registry/${id}/corrections`, data);
+export const fetchGraduationReports = () => api('GET', '/graduation/reports');
+export const fetchGraduationReconciliationPreview = () => api('GET', '/graduation/reconciliation/preview');
+export const downloadGraduatesRegistry = filters => apiDownload(`/graduation/registry-export.xlsx${queryString(filters)}`, 'graduates-registry.xlsx');
+export const downloadGraduationCertificate = (studentId, fileName) =>
+  apiDownload(`/graduation/certificate/${studentId}`, fileName);

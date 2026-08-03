@@ -7,6 +7,7 @@ const { can } = require('../permissions');
 const { recomputeFinalGrade, recomputeFinalGradesForCourse } = require('../gradingScale');
 
 const router = express.Router();
+const { safeCreateNotification } = require('../notificationTypes');
 const CATEGORIES = ['assignment', 'quiz', 'midterm', 'exam', 'final'];
 // Display order for the spreadsheet-style sheet — quizzes (there can be several) group
 // together first, then the single assignment/midterm/final columns.
@@ -228,6 +229,28 @@ router.get('/department-summary', requireAuth, asyncHandler(async (req, res) => 
 //     Scoped entirely by req.user.sub in the WHERE clause below, same pattern as
 //     GET /enrollments/me and GET /attendance/me: no role check needed beyond requireAuth,
 //     since the query itself can never return another student's row. ---
+
+// Formal result release. Draft score edits never notify students; only this committed action does.
+router.post('/courses/:courseId/publish',requireAuth,asyncHandler(async(req,res)=>{
+  const courseId=Number(req.params.courseId),{course,error}=await requireCourseAccess(req,courseId);
+  if(error)return res.status(error.status).json({error:error.message});
+  await recomputeFinalGradesForCourse(courseId);
+  const rows=await all(`SELECT e.studentId,e.grade FROM enrollments e WHERE e.courseId=? AND e.status='enrolled'`,[courseId]);
+  const incomplete=rows.filter(r=>!r.grade);if(incomplete.length)return res.status(409).json({error:`${incomplete.length} enrolled student(s) still have incomplete final grades.`,code:'INCOMPLETE_GRADES'});
+  let published=0,changed=0;
+  for(const row of rows){
+    const previous=await get('SELECT * FROM published_grades WHERE courseId=? AND studentId=?',[courseId,row.studentId]);
+    const type=previous&&previous.letterGrade!==row.grade?'grade_changed':'grade_published';
+    if(previous&&previous.letterGrade===row.grade)continue;
+    await run(`INSERT INTO published_grades(courseId,studentId,letterGrade,publishedBy) VALUES(?,?,?,?) ON CONFLICT(courseId,studentId) DO UPDATE SET letterGrade=excluded.letterGrade,publishedBy=excluded.publishedBy,publishedAt=CURRENT_TIMESTAMP`,[courseId,row.studentId,row.grade,req.user.sub]);
+    await safeCreateNotification({recipientUserId:row.studentId,type,title:type==='grade_changed'?'Published grade changed':'Final grade published',
+      message:`Your final result for ${course.code} — ${course.name} is ${row.grade}.`,severity:row.grade==='F'?'warning':'success',entityType:'course',entityId:courseId,
+      courseId,actionSection:'mygrades',deduplicationKey:`published-grade:${courseId}:${row.studentId}:${row.grade}`,createdBy:req.user.sub,category:'academic_updates'});
+    if(type==='grade_changed')changed++;else published++;
+  }
+  await run('UPDATE courses SET resultsPublishedAt=CURRENT_TIMESTAMP WHERE id=?',[courseId]);
+  await logAudit(req.user,'publish-results','courses',courseId,{published,changed});res.json({courseId,published,changed});
+}));
 
 router.get('/me', requireAuth, asyncHandler(async (req, res) => {
   const enrollments = await all(

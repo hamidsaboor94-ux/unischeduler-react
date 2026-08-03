@@ -21,7 +21,7 @@ export default function GradebookPage() {
   const { t } = useTranslation(['gradebook', 'common']);
   const { courses, departments, currentUser } = useAppData();
   const { confirmAction } = useModal();
-  const { sectionFocus } = useNavigation();
+  const { activeSection, sectionFocus } = useNavigation();
   const { toast } = useToast();
   const isAdmin = currentUser.role === 'admin';
 
@@ -61,7 +61,11 @@ export default function GradebookPage() {
     // a student's very first courseId (courses[0], the full catalog for them, not scoped like
     // it is for faculty) would silently 403 against this admin/faculty-only endpoint the moment
     // the app boots, and the resulting error toast would show up in their notification bell.
-    if (!courseId || (!isAdmin && currentUser.role !== 'faculty')) { setGradebook({ items: [], rows: [] }); return; }
+    if (activeSection !== 'gradebook') return;
+    if (!courseId || (!isAdmin && currentUser.role !== 'faculty')) {
+      setGradebook({ items: [], rows: [] });
+      return;
+    }
     setLoading(true);
     try {
       setGradebook(await fetchCourseGradebook(courseId));
@@ -71,10 +75,10 @@ export default function GradebookPage() {
       setLoading(false);
     }
   }
-  useEffect(() => { loadGradebook(); setScoreDrafts({}); setScoreErrors({}); setMaxDrafts({}); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [courseId]);
+  useEffect(() => { loadGradebook(); setScoreDrafts({}); setScoreErrors({}); setMaxDrafts({}); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [activeSection, courseId]);
 
   async function loadDeptSummary() {
-    if (!isAdmin) return;
+    if (activeSection !== 'gradebook' || !isAdmin) return;
     setLoadingSummary(true);
     try {
       setDeptSummary(await fetchDepartmentGradeSummary(departmentFilter || null));
@@ -84,7 +88,7 @@ export default function GradebookPage() {
       setLoadingSummary(false);
     }
   }
-  useEffect(() => { loadDeptSummary(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [departmentFilter, isAdmin]);
+  useEffect(() => { loadDeptSummary(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [activeSection, departmentFilter, isAdmin]);
 
   const quizItems = gradebook.items.filter(i => i.category === 'quiz');
   function itemLabel(item) {

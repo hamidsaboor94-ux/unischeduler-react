@@ -132,6 +132,8 @@ app.put('/api/auth/change-password', requireAuth, authLimiter, asyncHandler(asyn
   const passwordHash = bcrypt.hashSync(newPassword, 8);
   await run('UPDATE users SET passwordHash = ?, mustChangePassword = 0 WHERE id = ?', [passwordHash, req.user.sub]);
   await logAudit(req.user, 'change-password', 'users', req.user.sub, null);
+  const {safeCreateNotification}=require('./notificationTypes');
+  await safeCreateNotification({recipientUserId:req.user.sub,type:'password_changed',title:'Password changed',message:'Your university account password was changed successfully.',severity:'critical',entityType:'user',entityId:req.user.sub,deduplicationKey:`password-changed:${req.user.sub}:${Date.now()}`,createdBy:req.user.sub});
   res.json({ ok: true });
 }));
 
@@ -146,6 +148,7 @@ app.use('/api/audit-log', requireAuth, requireModuleAccess('audit'), require('./
 app.use('/api/colleges', requireAuth, requireModuleAccess('departments', { openRead: true }), require('./routes/colleges'));
 app.use('/api/departments', requireAuth, requireModuleAccess('departments', { openRead: true }), require('./routes/departments'));
 app.use('/api/programs', requireAuth, requireModuleAccess('departments', { openRead: true }), require('./routes/programs'));
+app.use('/api/curricula', require('./routes/curricula'));
 app.use('/api/student-types', requireAuth, requireModuleAccess('finance', { openRead: true }), require('./routes/studentTypes'));
 app.use('/api/terms', requireAuth, requireModuleAccess('terms'), require('./routes/terms'));
 app.use('/api/teachers', requireAuth, requireModuleAccess('teachers', { openRead: true }), require('./routes/teachers'));
@@ -184,6 +187,7 @@ app.use('/api/course-activity', require('./routes/courseActivity'));
 app.use('/api/materials', require('./routes/materials'));
 app.use('/api/student-profile', require('./routes/studentProfile'));
 app.use('/api/progression', require('./routes/progression'));
+app.use('/api/graduation', require('./routes/graduation'));
 app.use('/api/students', require('./routes/students'));
 app.use('/api/finance', require('./routes/finance'));
 app.use('/api/transcript', require('./routes/transcript'));
@@ -194,6 +198,7 @@ app.use('/api/approvals', require('./routes/approvals'));
 app.use('/api/applications', require('./routes/applications'));
 app.use('/api/timetable-import', requireAuth, requireModuleAccess('timetable'), require('./routes/timetableImport'));
 app.use('/api/backup', requireAuth, requireModuleAccess('backup'), require('./routes/backup'));
+app.use('/api/migrations', requireAuth, requireModuleAccess('dataMigration'), require('./routes/migrations'));
 // Read-only system status for the Super Admin dashboard's pulse banner/health cards — no
 // module entry in permissions.js needed since it's gated directly to the admin role.
 app.use('/api/system-health', requireAuth, requireRole('admin'), require('./routes/systemHealth'));

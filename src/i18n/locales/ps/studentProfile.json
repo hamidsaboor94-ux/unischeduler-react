@@ -14,6 +14,10 @@
   "editContact": "د اړیکې معلومات سمول",
   "adminEditHint": "یوازې اډمین کولی شي دا ساحې سم کړي.",
   "memberSince": "د غړیتوب نېټه: {{date}}",
+  "graduation": {
+    "conferredLine": "{{degree}} — د {{date}} په نېټه ورکړل شوی",
+    "downloadCertificate": "سند ډاونلوډ کړئ"
+  },
   "sections": {
     "personal": "شخصي مالومات",
     "address": "د پتې مالومات",

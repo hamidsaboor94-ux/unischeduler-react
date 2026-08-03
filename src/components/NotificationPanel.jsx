@@ -11,7 +11,7 @@ import { useNavigation } from '../context/NavigationContext.jsx';
     never stored. Panel-open state is local to this component: nothing outside it cares. */
 export default function NotificationBell() {
   const { t } = useTranslation('shell');
-  const { notifications, dismissAllNotifications } = useAppData();
+  const { notifications, dismissNotification } = useAppData();
   const { showSection } = useNavigation();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
@@ -27,18 +27,15 @@ export default function NotificationBell() {
   const unread = notifications.filter(n => !n.isRead).length;
   const sorted = notifications.slice().sort((a, b) => new Date(b.createdAt + 'Z') - new Date(a.createdAt + 'Z'));
 
-  function handleToggle() {
-    if (!open && unread > 0) dismissAllNotifications();
-    setOpen(o => !o);
-  }
+  function handleToggle() { setOpen(o => !o); }
 
   /** A university-wide announcement notice jumps straight to its full detail (see §18: "Clicking
       the notification opens the full announcement") — every other notification type has no
       dedicated detail page yet, so it just closes the panel where it already reads the message. */
-  function handleItemClick(n) {
-    if (n.type === 'notice_published' && n.entityId) {
-      showSection('announcements', { noticeId: n.entityId });
-    }
+  async function handleItemClick(n) {
+    if(n.actionSection)showSection(n.actionSection,n.actionData||null);
+    else if (n.type === 'notice_published' && n.entityId) showSection('announcements', { noticeId: n.entityId });
+    await dismissNotification(n.id);
     setOpen(false);
   }
 
@@ -53,19 +50,20 @@ export default function NotificationBell() {
           <div className="notif-panel-header">{t('notifications.title')}</div>
           <div className="notif-panel-list">
             {sorted.length
-              ? sorted.map(n => (
+              ? sorted.slice(0,8).map(n => (
                 <div
-                  className={'notif-item alert' + (n.type === 'notice_published' ? ' notif-item-clickable' : '')}
+                  className={'notif-item alert notif-item-clickable' + (!n.isRead?' unread':'')}
                   key={n.id}
-                  onClick={n.type === 'notice_published' ? () => handleItemClick(n) : undefined}
-                  role={n.type === 'notice_published' ? 'button' : undefined}
-                  tabIndex={n.type === 'notice_published' ? 0 : undefined}
+                  onClick={() => handleItemClick(n)}
+                  role="button"
+                  tabIndex={0}
                 >
-                  <div>{n.message}</div>
+                  <strong>{n.title||n.type}</strong><div>{n.message}</div>
                   <div className="notif-item-time">{new Date(n.createdAt + 'Z').toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                 </div>
               ))
               : <div className="notif-empty">{t('notifications.empty')}</div>}
+            <button className="btn-sm" style={{margin:10}} onClick={()=>{showSection('notification-inbox');setOpen(false);}}>View all notifications</button>
           </div>
         </div>
       )}

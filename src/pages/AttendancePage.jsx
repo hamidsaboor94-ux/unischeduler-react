@@ -17,7 +17,7 @@ const STATUS_PILL = { present: 'pill-green', absent: 'pill-red', late: 'pill-amb
 export default function AttendancePage() {
   const { t } = useTranslation(['academics', 'common']);
   const { courses, slots, currentUser } = useAppData();
-  const { sectionFocus } = useNavigation();
+  const { activeSection, sectionFocus } = useNavigation();
   const { toast } = useToast();
   const canView = currentUser.role === 'admin' || currentUser.role === 'faculty';
 
@@ -60,6 +60,7 @@ export default function AttendancePage() {
     // a student's very first courseId (courses[0] — the full catalog for a student, unlike the
     // pre-scoped list faculty get) would silently 403 against this admin/faculty-only endpoint
     // the moment the app boots, and the resulting error toast would show up in their notification bell.
+    if (activeSection !== 'attendance') return;
     if (!courseId || !canView) { setHistory([]); return; }
     setLoadingHistory(true);
     try {
@@ -70,12 +71,13 @@ export default function AttendancePage() {
       setLoadingHistory(false);
     }
   }
-  useEffect(() => { loadHistory(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [courseId]);
+  useEffect(() => { loadHistory(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [activeSection, courseId]);
 
   // Fetched fresh per course (rather than reused from the app-wide roster snapshot taken at
   // login) so enrollments made elsewhere while this session has been open — by an admin, or
   // by this same faculty member in the Enrollment page — are always reflected here.
   async function loadRoster() {
+    if (activeSection !== 'attendance') return;
     if (!courseId || !canView) { setRoster([]); return; }
     setLoadingRoster(true);
     try {
@@ -86,7 +88,7 @@ export default function AttendancePage() {
       setLoadingRoster(false);
     }
   }
-  useEffect(() => { loadRoster(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [courseId]);
+  useEffect(() => { loadRoster(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [activeSection, courseId]);
 
   // Opening a date defaults everyone to Present (the common case — a teacher only has to
   // click to flag exceptions) but re-opening a date already submitted shows what was

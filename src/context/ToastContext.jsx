@@ -23,7 +23,13 @@ export function ToastProvider({ children }) {
   const toast = useCallback((msg, type = 'info') => {
     const id = toastIdSeq++;
     const duration = type === 'error' ? 6000 : type === 'warning' ? 5000 : 3000;
-    setToasts(list => [...list, { id, msg, type, duration }]);
+    setToasts(list => {
+      // A single failed operation can be observed by more than one mounted consumer (and
+      // development Strict Mode deliberately invokes effects twice). Keep transient feedback
+      // useful by showing one active copy of an identical message instead of a toast stack.
+      if (list.some(item => item.msg === msg && item.type === type)) return list;
+      return [...list, { id, msg, type, duration }];
+    });
   }, []);
 
   const value = { toasts, toast, removeToast };

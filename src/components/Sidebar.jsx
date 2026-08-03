@@ -36,6 +36,8 @@ const STAFF_NAV = [
     { name: 'attendance', icon: 'ti-clipboard-check', label: 'attendance', module: 'attendance' },
     { name: 'gradebook', icon: 'ti-report-analytics', label: 'gradebook', module: 'grades' },
     { name: 'approvals', icon: 'ti-checklist', label: 'approvals', module: 'approvals' },
+    { name: 'graduation-candidates', icon: 'ti-user-check', label: 'graduationCandidates', module: 'graduation' },
+    { name: 'graduates-registry', icon: 'ti-certificate', label: 'graduatesRegistry', module: 'graduation' },
   ] },
   { key: 'admissions', items: [
     { name: 'applications', icon: 'ti-clipboard-list', label: 'admissions', module: 'admissions' },
@@ -48,6 +50,7 @@ const STAFF_NAV = [
     { name: 'users', icon: 'ti-users-group', label: 'users', module: 'users' },
     { name: 'audit', icon: 'ti-history', label: 'auditLog', module: 'audit' },
     { name: 'backup', icon: 'ti-database-export', label: 'backup', module: 'backup' },
+    { name: 'data-migration', icon: 'ti-database-import', label: 'dataMigration', module: 'dataMigration' },
     { name: 'branding', icon: 'ti-palette', label: 'branding', module: 'branding' },
     { name: 'grading-scale', icon: 'ti-adjustments', label: 'gradingScale', module: 'gradingScale' },
   ] },

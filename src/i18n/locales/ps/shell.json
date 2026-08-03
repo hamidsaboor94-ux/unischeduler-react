@@ -31,6 +31,7 @@
       "users": "کاروونکي",
       "auditLog": "د پلټنې ثبت",
       "backup": "بیک اپ",
+      "dataMigration": "د معلوماتو لېږد",
       "branding": "برانډینګ",
       "gradingScale": "د نمرو معیار",
       "myCourses": "زما کورسونه",
@@ -43,7 +44,10 @@
       "myFees": "زما فیسونه",
       "announcements": "اعلانونه",
       "approvals": "منظورۍ",
-      "myAppeals": "زما بیاکتنې غوښتنې"
+      "myAppeals": "زما بیاکتنې غوښتنې",
+      "graduation": "فراغت",
+      "graduationCandidates": "د فراغت نوماندان",
+      "graduatesRegistry": "د فارغانو ثبت"
     },
     "noTermsYet": "تر اوسه هیڅ سمستر نشته"
   },
@@ -63,6 +67,10 @@
     "ariaLabel": "سمستر غوره کړئ"
   },
   "notifications": {
+    "inbox": "د خبرتیاوو صندوق", "markAllRead": "ټول لوستل شوي", "status": "حالت", "all": "ټول",
+    "unread": "نالوستل شوي", "read": "لوستل شوي", "severity": "اهمیت", "type": "ډول", "loading": "خبرتیاوې پورته کېږي…",
+    "previous": "مخکینی", "next": "بل", "preferences": "د خبرتیاوو غوره توبونه",
+    "mandatoryHint": "رسمي علمي، امنیتي، ازموینې، فراغت او مهم مالي خبرتیاوې نشي بندېدای.",
     "title": "خبرتیاوې",
     "empty": "تر اوسه هیڅ خبرتیا نشته."
   },

@@ -13,6 +13,13 @@
  */
 const { all, get, run, logAudit } = require('./db');
 const { computeAcademicSummary } = require('./academicSummary');
+const { studentAudit } = require('./curriculum');
+const { safeCreateNotification } = require('./notificationTypes');
+
+async function notifyProgression(studentId,type,title,message,severity,recordId,actorUser){
+  await safeCreateNotification({recipientUserId:Number(studentId),type,title,message,severity,entityType:'semester_record',entityId:recordId,
+    actionSection:'student-profile',deduplicationKey:`progression:${recordId}:${type}:${message}`,createdBy:actorUser?.sub,category:'academic_updates'});
+}
 
 const OPEN_STATUSES = ['In Progress', 'Awaiting Results', 'On Hold'];
 const VALID_STATUSES = ['In Progress', 'Awaiting Results', 'Passed', 'Failed', 'On Hold', 'Graduation Eligible'];
@@ -100,22 +107,29 @@ async function termCourseRows(studentId, termId) {
   );
 }
 
+/** The single source of truth for "how many credits does graduation require": the program's own
+    totalCredits when it defines one, otherwise the institution-wide requiredCreditsForGraduation
+    setting. Used both for the eligibility check below and for what's displayed on the student
+    profile, so the two can never show/require different numbers. */
+async function resolveRequiredCredits(program) {
+  if (program?.totalCredits) return program.totalCredits;
+  const row = await get(`SELECT value FROM settings WHERE key = 'requiredCreditsForGraduation'`);
+  const n = row?.value != null && row.value !== '' ? Number(row.value) : NaN;
+  return Number.isFinite(n) ? n : null;
+}
+
 /** Graduation eligibility after passing semester `semesterNumber`: prefers the program's credit
-    requirement (cumulative completed credits >= totalCredits) when the program defines one,
-    falling back to an explicit numberOfSemesters cap. False (never graduate) if the student has
-    no program assigned or the program defines neither signal — auto-graduation needs at least
-    one concrete target, never guessed. */
-async function resolveGraduationEligibility(studentId, semesterNumber) {
-  const profile = await get('SELECT programId FROM student_profiles WHERE studentId = ?', [studentId]);
-  if (!profile?.programId) return false;
-  const program = await get('SELECT totalCredits, numberOfSemesters FROM programs WHERE id = ?', [profile.programId]);
-  if (!program) return false;
-  if (program.totalCredits) {
-    const summary = await computeAcademicSummary(studentId);
-    if (summary.completedCredits >= program.totalCredits) return true;
-  }
-  if (program.numberOfSemesters && semesterNumber >= program.numberOfSemesters) return true;
-  return false;
+    requirement (cumulative completed credits >= totalCredits, or the global setting when the
+    program defines no totalCredits of its own — see resolveRequiredCredits), falling back to an
+    explicit numberOfSemesters cap. False (never graduate) if the student has no program assigned
+    or the program defines neither signal — auto-graduation needs at least one concrete target,
+    never guessed. */
+async function resolveGraduationEligibility(studentId) {
+  // An assigned curriculum is authoritative: total credits or semester count alone can never
+  // make the student graduation-eligible when required courses/elective groups remain missing.
+  const curriculumResult = await studentAudit(studentId);
+  if (curriculumResult.code === 'NO_CURRICULUM') return false;
+  return curriculumResult.eligible;
 }
 
 /**
@@ -145,6 +159,7 @@ async function evaluateStudentProgression(studentId, actorUser, { termIdHint } =
   const courses = await termCourseRows(studentId, termId);
 
   if (!courses.length) {
+    await notifyProgression(studentId,'progression_blocked','Semester progression blocked','Your semester progression is currently blocked because no course registrations were found.','warning',record.id,actorUser);
     return { studentId, advanced: false, status: record.status, semesterNumber: record.semesterNumber, reason: 'No enrollments recorded for the current semester yet.' };
   }
 
@@ -160,6 +175,7 @@ async function evaluateStudentProgression(studentId, actorUser, { termIdHint } =
         { semesterNumber: record.semesterNumber, gradedCount: courses.filter(c => c.grade != null).length, totalCount: courses.length },
         oldProfile, { semesterStatus: 'Awaiting Results' });
     }
+    await notifyProgression(studentId,'progression_blocked','Semester progression awaiting results','Your semester progression is waiting for all final grades to be published.','warning',record.id,actorUser);
     return { studentId, advanced: false, status: 'Awaiting Results', semesterNumber: record.semesterNumber, reason: 'Not all courses have final grades yet.' };
   }
 
@@ -187,6 +203,8 @@ async function evaluateStudentProgression(studentId, actorUser, { termIdHint } =
     const newProfile = await get('SELECT semesterStatus, enrollmentStatus, programSemester FROM student_profiles WHERE studentId = ?', [studentId]);
     await logAudit(actorUser, 'progress-evaluate', 'student_profiles', studentId,
       { semesterNumber: record.semesterNumber, failedCourses: failedCourses.map(c => c.code), maxAllowed }, oldProfile, newProfile);
+    await notifyProgression(studentId,'progression_blocked','Semester progression blocked',
+      `You must repeat or receive an academic decision because ${failedCourses.length} course(s) were not passed.`,'critical',record.id,actorUser);
     return {
       studentId, advanced: false, status: 'Failed', semesterNumber: record.semesterNumber,
       failedCourses: failedCourses.map(c => c.code),
@@ -226,6 +244,14 @@ async function evaluateStudentProgression(studentId, actorUser, { termIdHint } =
   const newProfile = await get('SELECT semesterStatus, enrollmentStatus, programSemester FROM student_profiles WHERE studentId = ?', [studentId]);
   await logAudit(actorUser, 'progress-evaluate', 'student_profiles', studentId,
     { semesterNumber: record.semesterNumber, passed: true, failedCourses: failedCourses.map(c => c.code), graduationEligible }, oldProfile, newProfile);
+
+  if(graduationEligible){
+    await notifyProgression(studentId,'graduation_eligible','Graduation eligibility reached',
+      'Your academic record has reached graduation eligibility. Formal clearance and approval are separate required steps.','success',record.id,actorUser);
+  }else{
+    await notifyProgression(studentId,'progression_succeeded','Semester promotion completed',
+      `You have been promoted from Semester ${record.semesterNumber} to Semester ${newSemesterNumber}.`,'success',record.id,actorUser);
+  }
 
   return {
     studentId, advanced: !graduationEligible, status: newProfileStatus,
@@ -284,9 +310,11 @@ async function manualOverride(studentId, { semesterNumber, status, reason, notes
       `UPDATE semester_records SET status = 'On Hold', notes = ?, completedAt = CURRENT_TIMESTAMP WHERE id = ?`,
       [`Overridden by ${actorUser.email || actorUser.sub}: ${trimmedReason}`, record.id]
     );
+    const activeTermId = await getActiveTermId();
+    const nextTermId = activeTermId && activeTermId !== record.termId ? activeTermId : null;
     await run(
       `INSERT INTO semester_records (studentId, semesterNumber, termId, status, notes, createdBy) VALUES (?, ?, ?, ?, ?, ?)`,
-      [studentId, newSemesterNumber, record.termId, newStatus, trimmedReason, actorUser.sub]
+      [studentId, newSemesterNumber, nextTermId, newStatus, trimmedReason, actorUser.sub]
     );
   } else {
     await run(
@@ -299,11 +327,14 @@ async function manualOverride(studentId, { semesterNumber, status, reason, notes
   const newProfile = await get('SELECT semesterStatus, programSemester FROM student_profiles WHERE studentId = ?', [studentId]);
   await logAudit(actorUser, 'progress-override', 'student_profiles', studentId, { reason: trimmedReason }, oldProfile, newProfile);
 
+  await notifyProgression(studentId,'progression_override','Semester progression override approved',
+    `An authorized academic officer changed your semester progression to Semester ${newSemesterNumber} (${newStatus}).`,'info',record.id,actorUser);
+
   return get('SELECT * FROM student_profiles WHERE studentId = ?', [studentId]);
 }
 
 module.exports = {
   OPEN_STATUSES, VALID_STATUSES, DEFAULT_MAX_FAILED_FOR_PROGRESSION,
   getMaxFailedCoursesPolicy, getOpenRecord, getHistory, ensureOpenRecord, termCourseRows,
-  resolveGraduationEligibility, evaluateStudentProgression, evaluateTerm, manualOverride,
+  resolveRequiredCredits, resolveGraduationEligibility, evaluateStudentProgression, evaluateTerm, manualOverride,
 };

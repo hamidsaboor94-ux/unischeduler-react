@@ -1,0 +1,24 @@
+import {useEffect,useState} from 'react';
+import {useTranslation} from 'react-i18next';
+import Section from '../components/Section.jsx';
+import {useNavigation} from '../context/NavigationContext.jsx';
+import {useToast} from '../context/ToastContext.jsx';
+import {fetchNotifications,fetchNotificationPreferences,markNotificationRead,markAllNotificationsRead,updateNotificationPreference} from '../api.js';
+
+const categories=['lms','assignment_reminders','finance_reminders','announcements','academic_updates'];
+export default function NotificationInboxPage(){
+  const {t}=useTranslation('shell'),{activeSection,showSection}=useNavigation(),{toast}=useToast();
+  const [data,setData]=useState({items:[],total:0,page:1,pageSize:20}),[filters,setFilters]=useState({page:1,pageSize:20,type:'',severity:'',status:''}),[prefs,setPrefs]=useState([]),[loading,setLoading]=useState(false);
+  const load=async()=>{setLoading(true);try{const [rows,p]=await Promise.all([fetchNotifications(filters),fetchNotificationPreferences()]);setData(rows);setPrefs(p);}catch(e){toast(e.message,'error');}finally{setLoading(false);}};
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(()=>{if(activeSection==='notification-inbox')load();},[activeSection,filters.page,filters.type,filters.severity,filters.status]);
+  const open=async n=>{if(n.actionSection)showSection(n.actionSection,n.actionData||null);await markNotificationRead(n.id);setData(d=>({...d,items:d.items.map(x=>x.id===n.id?{...x,isRead:1}:x)}));};
+  const allRead=async()=>{await markAllNotificationsRead();setData(d=>({...d,items:d.items.map(x=>({...x,isRead:1}))}));};
+  const toggle=async(category,enabled)=>{await updateNotificationPreference(category,enabled);setPrefs(p=>[...p.filter(x=>x.category!==category),{category,enabled:enabled?1:0}]);};
+  return <Section name="notification-inbox"><div className="topbar"><i className="ti ti-bell"></i><h2>{t('notifications.inbox')}</h2><div className="topbar-actions"><button className="btn-sm" onClick={allRead}>{t('notifications.markAllRead')}</button></div></div><div id="content">
+    <div className="panel" style={{padding:14,marginBottom:16}}><div className="form-row-3"><label className="form-row"><span className="form-label">{t('notifications.status')}</span><select value={filters.status} onChange={e=>setFilters(f=>({...f,status:e.target.value,page:1}))}><option value="">{t('notifications.all')}</option><option value="unread">{t('notifications.unread')}</option><option value="read">{t('notifications.read')}</option></select></label><label className="form-row"><span className="form-label">{t('notifications.severity')}</span><select value={filters.severity} onChange={e=>setFilters(f=>({...f,severity:e.target.value,page:1}))}><option value="">{t('notifications.all')}</option><option value="info">Info</option><option value="success">Success</option><option value="warning">Warning</option><option value="critical">Critical</option></select></label><label className="form-row"><span className="form-label">{t('notifications.type')}</span><input value={filters.type} onChange={e=>setFilters(f=>({...f,type:e.target.value,page:1}))} placeholder={t('notifications.all')}/></label></div></div>
+    <div className="panel" style={{marginBottom:16}}>{loading?<div className="field-hint" style={{padding:14}}>{t('notifications.loading')}</div>:data.items.length===0?<div className="notif-empty">{t('notifications.empty')}</div>:data.items.map(n=><button key={n.id} className="notif-item alert" style={{display:'block',width:'100%',textAlign:'start',border:0,borderBottom:'1px solid var(--border)'}} onClick={()=>open(n)}><div style={{display:'flex',justifyContent:'space-between',gap:10}}><strong>{n.title||n.type}</strong>{!n.isRead&&<span className="pill pill-blue">{t('notifications.unread')}</span>}</div><div>{n.message}</div><div className="notif-item-time">{new Date(n.createdAt+'Z').toLocaleString()}</div></button>)}</div>
+    <div style={{display:'flex',justifyContent:'space-between',marginBottom:16}}><span className="field-hint">{data.total} {t('notifications.title').toLowerCase()}</span><div><button className="btn-sm" disabled={data.page<=1} onClick={()=>setFilters(f=>({...f,page:f.page-1}))}>{t('notifications.previous')}</button> <button className="btn-sm" disabled={data.page*data.pageSize>=data.total} onClick={()=>setFilters(f=>({...f,page:f.page+1}))}>{t('notifications.next')}</button></div></div>
+    <div className="panel" style={{padding:14}}><div className="panel-title">{t('notifications.preferences')}</div><p className="field-hint">{t('notifications.mandatoryHint')}</p>{categories.map(c=>{const enabled=prefs.find(x=>x.category===c)?.enabled!==0;return <label key={c} style={{display:'flex',justifyContent:'space-between',padding:'8px 0'}}><span>{c.replaceAll('_',' ')}</span><input type="checkbox" checked={enabled} onChange={e=>toggle(c,e.target.checked)}/></label>;})}</div>
+  </div></Section>;
+}

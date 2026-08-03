@@ -46,6 +46,7 @@ function buildFilters(req) {
   if (req.query.studentTypeId) { clauses.push('sp.studentTypeId = ?'); params.push(Number(req.query.studentTypeId)); }
   if (req.query.status) { clauses.push('sp.enrollmentStatus = ?'); params.push(req.query.status); }
   if (req.query.studentStatus) { clauses.push('sp.studentStatus = ?'); params.push(req.query.studentStatus); }
+  else if (req.query.includeGraduated !== 'true') clauses.push("COALESCE(sp.studentStatus, 'Active') != 'Graduated'");
   if (req.query.semester) { clauses.push('sp.programSemester = ?'); params.push(Number(req.query.semester)); }
   if (req.query.batch) { clauses.push('sp.batch = ?'); params.push(req.query.batch); }
   if (req.query.courseId) {
@@ -174,6 +175,11 @@ router.put('/bulk', requireAuth, requirePermission('students', 'write'), asyncHa
   if (!cols.length) return res.status(400).json({ error: `changes must include at least one of: ${[...BULK_FIELDS].join(', ')}` });
   if (changes.studentStatus != null && !STUDENT_STATUSES.has(changes.studentStatus)) {
     return res.status(400).json({ error: `studentStatus must be one of: ${[...STUDENT_STATUSES].join(', ')}` });
+  }
+  // 'Graduated' requires the eligibility + financial-clearance checks that only
+  // POST /api/graduation/confirm/:studentId performs — never settable through this bulk edit.
+  if (changes.studentStatus === 'Graduated') {
+    return res.status(400).json({ error: "studentStatus 'Graduated' cannot be set here — use POST /api/graduation/confirm/:studentId" });
   }
   if (changes.departmentId != null) {
     const dept = await get('SELECT id FROM departments WHERE id = ?', [Number(changes.departmentId)]);

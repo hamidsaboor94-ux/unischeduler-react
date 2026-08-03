@@ -10,7 +10,8 @@ export const MODULES = [
   'dashboard', 'reports', 'timetable', 'rooms', 'courses', 'teachers', 'students',
   'departments', 'terms', 'exams', 'enrollment', 'attendance', 'grades',
   'gradingScale', 'admissions', 'conflicts', 'finance', 'users', 'audit',
-  'backup', 'branding', 'announcements', 'approvals',
+  'backup', 'branding', 'announcements', 'approvals', 'dataMigration', 'graduation',
+  'curriculum',
 ];
 
 const NONE = 0, READ = 1, WRITE = 2;
@@ -61,9 +62,14 @@ const POLICY = {
   audit:        {},
   backup:       {},
   branding:     {},
+  // Data Migration Center is Super Admin only, same as backup/branding — mirrors api/src/permissions.js.
+  dataMigration: {},
   announcements: { registrar:W, dean:W, dept_head:W, viewer:R },
   // Mirrors api/src/permissions.js — just "may this role see the Approvals page shell at all".
-  approvals: { registrar:R, faculty:R },
+  approvals: { registrar:R, records_officer:R, dept_head:R, bursar:R, faculty:R },
+  // Mirrors api/src/permissions.js — Super Admin + Registrar + Records Officer only.
+  graduation: { registrar:W, records_officer:W },
+  curriculum: { registrar:W, records_officer:W, dean:R, dept_head:R, viewer:R },
 };
 
 function levelFor(role, module) {
@@ -105,7 +111,8 @@ const SECTION_MODULES = {
   semesters: 'terms', exams: 'exams', enrollment: 'enrollment', attendance: 'attendance',
   gradebook: 'grades', applications: 'admissions', finance: 'finance', conflicts: 'conflicts',
   users: 'users', audit: 'audit', backup: 'backup', branding: 'branding', 'grading-scale': 'gradingScale',
-  approvals: 'approvals',
+  approvals: 'approvals', 'data-migration': 'dataMigration', graduation: 'graduation',
+  'graduation-candidates': 'graduation', 'graduates-registry': 'graduation',
 };
 // Every role — including ones with no 'announcements' module access — is always at least a
 // recipient of announcements addressed to them (matches Sidebar.jsx's STAFF_NAV comment).

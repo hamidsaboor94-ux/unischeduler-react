@@ -31,6 +31,7 @@
       "users": "کاربران",
       "auditLog": "ثبت وقایع",
       "backup": "بکپ",
+      "dataMigration": "انتقال معلومات",
       "branding": "برندسازی",
       "gradingScale": "معیار نمرات",
       "myCourses": "کورس‌های من",
@@ -43,7 +44,10 @@
       "myFees": "فیس‌های من",
       "announcements": "اعلانات",
       "approvals": "تصویب‌ها",
-      "myAppeals": "درخواست‌های تجدیدنظر من"
+      "myAppeals": "درخواست‌های تجدیدنظر من",
+      "graduation": "فراغت",
+      "graduationCandidates": "نامزدان فراغت",
+      "graduatesRegistry": "ثبت فارغان"
     },
     "noTermsYet": "هنوز سمستری وجود ندارد"
   },
@@ -63,6 +67,10 @@
     "ariaLabel": "انتخاب سمستر"
   },
   "notifications": {
+    "inbox": "صندوق اطلاعیه‌ها", "markAllRead": "همه خوانده شد", "status": "وضعیت", "all": "همه",
+    "unread": "خوانده نشده", "read": "خوانده شده", "severity": "اهمیت", "type": "نوع", "loading": "در حال بارگذاری…",
+    "previous": "قبلی", "next": "بعدی", "preferences": "تنظیمات اطلاعیه",
+    "mandatoryHint": "اطلاعیه‌های رسمی تحصیلی، امنیتی، امتحانات، فراغت و مالی مهم قابل غیرفعال‌سازی نیستند.",
     "title": "اعلان‌ها",
     "empty": "هنوز اعلانی وجود ندارد."
   },

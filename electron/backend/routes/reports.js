@@ -7,6 +7,7 @@ const { runReport, httpError } = require('../reportBuilder');
 const { renderPdf, renderXlsx } = require('../reportExport');
 const { computeDashboardData } = require('../dashboardAnalytics');
 const { buildDashboardExport } = require('../dashboardExport');
+const { listCurricula, getCurriculumStructure } = require('../curriculum');
 
 const router = express.Router();
 
@@ -44,6 +45,21 @@ function parseConfig(raw) {
     the PDF/Excel dashboard export below, so there's exactly one query path for this data). */
 router.get('/', requireAuth, asyncHandler(async (req, res) => {
   res.json(await computeDashboardData(req.query.termId));
+}));
+
+/* ------------------------------ Curriculum Structure ------------------------------ *
+ * Phase 1 read-only report (see curriculum.js / db.js): renders one curriculum version as
+ * Program -> Version -> Semester -> Courses. Both routes are GETs behind this router's existing
+ * reports:read gate — no new module/permission needed.
+ */
+router.get('/curricula', requireAuth, asyncHandler(async (req, res) => {
+  res.json(await listCurricula());
+}));
+
+router.get('/curricula/:id/structure', requireAuth, asyncHandler(async (req, res) => {
+  const structure = await getCurriculumStructure(req.params.id);
+  if (!structure) return res.status(404).json({ error: 'Curriculum not found' });
+  res.json(structure);
 }));
 
 /* ---------------------------- Custom report builder ---------------------------- *

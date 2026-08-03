@@ -1,5 +1,3 @@
-const nodemailer = require('nodemailer');
-
 // No email-sending capability existed anywhere in this app before this file — every account
 // created up to now hands back a one-time temp password for an admin to relay manually (see
 // accounts.js). This adds real SMTP support for the admissions flow (credential + status-change
@@ -8,9 +6,20 @@ const nodemailer = require('nodemailer');
 // on email being configured.
 
 let transporter;
+let transportLoadError;
 function getTransporter() {
   if (transporter !== undefined) return transporter;
   if (!process.env.SMTP_HOST) { transporter = null; return transporter; }
+  let nodemailer;
+  try {
+    // SMTP is optional. A local/desktop install without the optional transport package must still
+    // start every non-email module, including graduation and the official registry.
+    nodemailer = require('nodemailer');
+  } catch (err) {
+    transportLoadError = err;
+    transporter = null;
+    return transporter;
+  }
   transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 587,
@@ -24,7 +33,12 @@ function getTransporter() {
     call site can treat email as strictly optional (log the failure, keep going). */
 async function sendMail({ to, subject, text, html }) {
   const t = getTransporter();
-  if (!t) return { sent: false, reason: 'Email is not configured (no SMTP_HOST set).' };
+  if (!t) return {
+    sent: false,
+    reason: transportLoadError
+      ? `Email transport is unavailable: ${transportLoadError.message}`
+      : 'Email is not configured (no SMTP_HOST set).',
+  };
   try {
     const fromName = process.env.SMTP_FROM_NAME || 'UniScheduler';
     const fromEmail = process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER || 'no-reply@example.com';

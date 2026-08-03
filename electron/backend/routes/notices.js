@@ -15,7 +15,7 @@ const { requirePermission, hasPermission, getUserRoles } = require('../authz');
 const asyncHandler = require('../middleware/asyncHandler');
 const { ROLES } = require('../permissions');
 const { isScopedRequest, departmentScopeClause } = require('../scope');
-const { createNotification } = require('../notificationTypes');
+const { safeCreateNotification } = require('../notificationTypes');
 const { NOTICE_TYPES, NOTICE_PRIORITIES, STAFF_ROLES } = require('../noticeConstants');
 const { TargetingError, validateGroup, validateGroups, resolveRecipients, enforceTargetingScope } = require('../noticeTargeting');
 const { getGroupsForNotice, publishNotice } = require('../noticePublish');
@@ -261,7 +261,7 @@ router.put('/:id', requireAuth, requirePermission('announcements.Update'), async
   if (notice.status === 'published' && notifyOnUpdate) {
     const recipients = await all('SELECT userId FROM notice_recipients WHERE noticeId = ?', [notice.id]);
     for (const r of recipients) {
-      await createNotification(r.userId, `Updated: ${title.trim()}`, 'notice_published', { entityType: 'notice', entityId: notice.id });
+      await safeCreateNotification(r.userId, `Updated: ${title.trim()}`, 'notice_published', { entityType: 'notice', entityId: notice.id });
     }
     await logAudit(req.user, 'notify-notice-update', 'notices', notice.id, { recipientCount: recipients.length });
   }

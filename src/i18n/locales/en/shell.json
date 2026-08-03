@@ -31,6 +31,7 @@
       "users": "Users",
       "auditLog": "Audit Log",
       "backup": "Backup",
+      "dataMigration": "Data Migration",
       "branding": "Branding",
       "gradingScale": "Grading Scale",
       "myCourses": "My Courses",
@@ -43,7 +44,10 @@
       "myFees": "My Fees",
       "announcements": "Announcements",
       "approvals": "Approvals",
-      "myAppeals": "My Appeals"
+      "myAppeals": "My Appeals",
+      "graduation": "Graduation",
+      "graduationCandidates": "Graduation Candidates",
+      "graduatesRegistry": "Graduates Registry"
     },
     "noTermsYet": "No terms yet"
   },
@@ -63,6 +67,10 @@
     "ariaLabel": "Select semester"
   },
   "notifications": {
+    "inbox": "Notification Inbox", "markAllRead": "Mark all as read", "status": "Status", "all": "All",
+    "unread": "Unread", "read": "Read", "severity": "Severity", "type": "Type", "loading": "Loading notifications…",
+    "previous": "Previous", "next": "Next", "preferences": "Notification preferences",
+    "mandatoryHint": "Formal academic, security, examination, graduation, and critical finance notifications cannot be disabled.",
     "title": "Notifications",
     "empty": "No notifications yet."
   },

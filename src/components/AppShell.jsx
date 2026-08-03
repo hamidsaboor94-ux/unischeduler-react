@@ -20,6 +20,7 @@ import SemestersPage from '../pages/SemestersPage.jsx';
 import UsersPage from '../pages/UsersPage.jsx';
 import AuditLogPage from '../pages/AuditLogPage.jsx';
 import BackupPage from '../pages/BackupPage.jsx';
+import DataMigrationPage from '../pages/DataMigrationPage.jsx';
 import CatalogPage from '../pages/CatalogPage.jsx';
 import MySchedulePage from '../pages/MySchedulePage.jsx';
 import AttendancePage from '../pages/AttendancePage.jsx';
@@ -39,6 +40,9 @@ import TranscriptPage from '../pages/TranscriptPage.jsx';
 import AnnouncementsPage from '../pages/AnnouncementsPage.jsx';
 import MyAppealsPage from '../pages/MyAppealsPage.jsx';
 import ApprovalsPage from '../pages/ApprovalsPage.jsx';
+import GraduationCandidatesPage from '../pages/GraduationCandidatesPage.jsx';
+import GraduatesRegistryPage from '../pages/GraduatesRegistryPage.jsx';
+import NotificationInboxPage from '../pages/NotificationInboxPage.jsx';
 
 export default function AppShell() {
   const { isLoading } = useAppData();
@@ -81,6 +85,7 @@ export default function AppShell() {
           <UsersPage />
           <AuditLogPage />
           <BackupPage />
+          <DataMigrationPage />
           <CatalogPage />
           <MySchedulePage />
           <AttendancePage />
@@ -100,6 +105,9 @@ export default function AppShell() {
           <AnnouncementsPage />
           <MyAppealsPage />
           <ApprovalsPage />
+          <GraduationCandidatesPage />
+          <GraduatesRegistryPage />
+          <NotificationInboxPage />
         </div>
       </div>
 

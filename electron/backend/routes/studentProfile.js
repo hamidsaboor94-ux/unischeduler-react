@@ -8,7 +8,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { runOrFriendlyError } = require('./crudRouter');
 const { teacherIdForUser } = require('../ownership');
 const { computeAcademicSummary } = require('../academicSummary');
-const { ensureOpenRecord } = require('../academicProgression');
+const { ensureOpenRecord, resolveRequiredCredits } = require('../academicProgression');
 const { can } = require('../permissions');
 const { isScopedRequest, departmentInScope } = require('../scope');
 const studentStorage = require('../studentStorage');
@@ -98,6 +98,11 @@ function validateAdminFields(body) {
   if (body.studentStatus !== undefined && body.studentStatus !== null && !STUDENT_STATUSES.has(body.studentStatus)) {
     return `studentStatus must be one of: ${[...STUDENT_STATUSES].join(', ')}`;
   }
+  // 'Graduated' requires the eligibility + financial-clearance checks that only
+  // POST /api/graduation/confirm/:studentId performs — never settable through this free-text edit.
+  if (body.studentStatus === 'Graduated') {
+    return "studentStatus 'Graduated' cannot be set here — use POST /api/graduation/confirm/:studentId";
+  }
   for (const f of NUMERIC_FIELDS) {
     if (body[f] !== undefined && body[f] !== null && (typeof body[f] !== 'number' || Number.isNaN(body[f]))) {
       return `${f} must be a number`;
@@ -141,20 +146,24 @@ router.get('/:studentId', requireAuth, asyncHandler(async (req, res) => {
   if (student.role === 'student') await ensureOpenRecord(studentId);
   const profile = await get('SELECT * FROM student_profiles WHERE studentId = ?', [studentId]);
   const department = profile.departmentId ? await get('SELECT id, name FROM departments WHERE id = ?', [profile.departmentId]) : null;
-  const program = profile.programId ? await get('SELECT id, name FROM programs WHERE id = ?', [profile.programId]) : null;
+  const program = profile.programId ? await get('SELECT id, name, totalCredits FROM programs WHERE id = ?', [profile.programId]) : null;
   const studentType = profile.studentTypeId ? await get('SELECT id, name FROM student_types WHERE id = ?', [profile.studentTypeId]) : null;
   const advisor = profile.advisorTeacherId ? await get('SELECT id, name FROM teachers WHERE id = ?', [profile.advisorTeacherId]) : null;
   const activeTerm = await get('SELECT id, name FROM terms WHERE isActive = 1');
   const summary = await computeAcademicSummary(studentId);
-  const requiredCreditsRow = await get(`SELECT value FROM settings WHERE key = 'requiredCreditsForGraduation'`);
-  const requiredCredits = requiredCreditsRow?.value ? Number(requiredCreditsRow.value) : null;
+  const requiredCredits = await resolveRequiredCredits(program);
   const documents = await all(
     'SELECT id, documentType, title, fileName, mimeType, createdAt FROM student_documents WHERE studentId = ? ORDER BY createdAt DESC',
     [studentId]
   );
+  const graduationRecord = await get(
+    `SELECT id,graduateNumber,degreeAwarded,officialGraduationDate,recordStatus
+     FROM graduation_records WHERE studentId=? AND finalizedAt IS NOT NULL ORDER BY id DESC LIMIT 1`,
+    [studentId]
+  );
   const responseProfile = redactSensitiveProfile(profile, req, studentId);
 
-  res.json({ student, profile: responseProfile, department, program, studentType, advisor, activeTerm, ...summary, requiredCredits, documents });
+  res.json({ student, profile: responseProfile, department, program, studentType, advisor, activeTerm, ...summary, requiredCredits, documents, graduationRecord });
 }));
 
 router.put('/me', requireAuth, requireRole('student'), asyncHandler(async (req, res) => {

@@ -185,6 +185,26 @@ re-run after any change under `uni scheduling/api/src`.
   block, matching the existing Student Profile / Payment Receipt pattern; branded with the existing
   `GET /settings/branding` org name/logo. New `api/test/transcript.test.js` (self/other-student/
   staff access, per-term + cumulative GPA math, in-progress courses excluded from GPA).
+- ✅ Graduation / degree issuance *(2026-08-02)* — closes the §3.1 P3 "Graduation clearance
+  workflow" gap and, for `studentStatus='Graduated'` specifically, closes part of the §3.1 P1
+  "Student status lifecycle" gap (a real server-side effect, not just a display field). New
+  `graduation_records` table (one canonical row per conferred degree: degree, date, conferring
+  user, unique certificate number). New bare-mounted `/api/graduation` router: `GET /eligible`
+  (students at `semesterStatus='Graduation Eligible'`, each annotated with live financial-clearance
+  state via the existing `finance.js` balance logic — never re-derived); `POST /confirm/:studentId`
+  (the core action — re-checks eligibility AND financial clearance fresh inside one transaction
+  immediately before writing, rejects 409 if not eligible / 422 `FINANCE_HOLD` with the exact
+  balance if not cleared, is idempotent-safe on an already-graduated student, writes an audit log
+  entry); `GET /certificate/:studentId` (pdfkit-generated diploma, self-or-staff access, only once
+  conferred). New `graduation` RBAC module (registrar/records_officer/admin only), mirrored
+  frontend + backend. Closed the pre-existing hole this feature depends on: `studentStatus` can no
+  longer be set to `'Graduated'` through `PUT /student-profile/:id` or `PUT /students/bulk` —
+  those now reject it in favor of the confirm endpoint's checks. Frontend: new `GraduationPage.jsx`
+  (registrar/admin worklist, confirm behind an explicit `ConfirmDialog`, finance-hold reason shown
+  inline, certificate download once conferred); Student Profile page shows the conferred
+  degree/date and a Download Certificate button once graduated. New `api/test/graduation.test.js`
+  (eligibility, financial-hold rejection + no partial writes, conferral + audit log + idempotent
+  retry, RBAC, certificate access, and the closed direct-edit paths).
 
 ### 2.9 Administration & operations
 - ✅ Reports (admin): room utilization, course popularity, teacher workload, enrollment trends (charts)
@@ -294,17 +314,30 @@ Priorities: **P1** = core gap for a real university deployment · **P2** = stron
 - 🔶 **P1 — Student status lifecycle**: active / on-leave / suspended / graduated / withdrawn,
   with status history and effects (e.g. blocked enrollment). *(2026-07-27: the status values and
   a display field exist — `student_profiles.studentStatus`, editable, shown on Student Profile —
-  as a byproduct of automatic semester progression (§2.8). Still missing: change history, and any
-  actual effects like blocking enrollment/finance actions for a Suspended/Withdrawn student.)*
-- ⬜ **P1 — Programs / majors & curriculum** *(decided 2026-07-19: full model)*: named degree
+  as a byproduct of automatic semester progression (§2.8). 2026-08-02: `'Graduated'` now has a real
+  effect and a real gate — it's only reachable through `POST /graduation/confirm/:studentId`'s
+  eligibility + financial-clearance checks (§2.8), no longer free-text editable. Still missing for
+  the other statuses: change history, and effects like blocking enrollment/finance actions for a
+  Suspended/Withdrawn student.)*
+- 🔶 **P1 — Programs / majors & curriculum** *(decided 2026-07-19: full model)*: named degree
   programs per department with a semester-by-semester curriculum plan; degree-audit view
-  (taken vs required vs remaining).
+  (taken vs required vs remaining). *(2026-08-02, Phase 1: schema only — `curriculum` /
+  `curriculum_semester` / `elective_group` / `curriculum_course` / `student_curriculum` / generic
+  `holds` tables added (additive, FK `ON DELETE RESTRICT`, pre-migration `.db` backup), plus one
+  read-only report, `GET /api/reports/curricula` + `GET /api/reports/curricula/:id/structure`
+  (`api/src/curriculum.js`), rendering Program → Version → Semester → Courses. `student_curriculum`
+  is deliberately left empty for all existing students — no grandfather rule decided yet; startup
+  logs the unassigned count. `academicYear` is a free-text label, not a FK — this schema has no
+  `academic_years` table, only per-term `terms`. Not done: authoring UI, validators (prerequisite/
+  credit-limit/elective-count checks against a curriculum), and actually assigning students.)*
 - ⬜ **P1 — Course sections** *(decided 2026-07-19: full model)*: multiple sections of the same
   course in one term (different teacher/time), enrollment per section.
 - ⬜ **P2 — Credit-load rules**: min/max credits per student per term, enforced at enrollment.
 - ⬜ **P2 — Repeat/retake policy**: how a retaken course affects GPA (replace vs average).
-- ⬜ **P3 — Graduation clearance workflow**: checklist (credits, GPA, documents, finance) → mark
-  graduated → appears in alumni list.
+- ✅ **P3 — Graduation clearance workflow** *(2026-08-02, see §2.8)*: eligibility (credits/semesters
+  via `academicProgression.js`) + finance clearance → confirm → graduated + certificate. Not done:
+  a dedicated alumni list view (a graduated student stays in `students`/Users, just with
+  `studentStatus='Graduated'` — no separate alumni surface yet), and a documents checklist step.
 
 ### 3.2 Scheduling engine
 - ⬜ **P1 — Teacher availability constraints**: per-teacher available days/times; conflict

@@ -4,6 +4,8 @@ const { requireAuth } = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { canModifyEnrollment } = require('../ownership');
 const { evaluateEligibility } = require('../eligibility');
+const { hasPermission, getUserRoles } = require('../authz');
+const { safeCreateNotification, createBulkNotifications } = require('../notificationTypes');
 
 const router = express.Router();
 
@@ -19,7 +21,7 @@ router.get('/me', requireAuth, asyncHandler(async (req, res) => {
 
 router.post('/', requireAuth, asyncHandler(async (req, res) => {
   const studentId = req.user.role === 'student' ? req.user.sub : req.body.studentId;
-  const { courseId, override } = req.body;
+  const { courseId, override, overrideReason } = req.body;
   if (!studentId || !courseId) return res.status(400).json({ error: 'studentId and courseId are required' });
 
   const course = await get('SELECT * FROM courses WHERE id = ?', [courseId]);
@@ -34,18 +36,38 @@ router.post('/', requireAuth, asyncHandler(async (req, res) => {
 
   // eligibility.js is the single source of truth for every eligibility gate (active status,
   // program/department, term offering, already-completed, duplicate/sibling-section, prerequisites,
-  // schedule clash, credit cap, financial hold) — see routes/students.js's GET /me/eligible-courses
-  // for the read-only catalog view that runs the exact same checks.
-  const result = await evaluateEligibility(studentId, courseId);
+  // schedule clash, credit cap, financial hold, registration window) — see routes/students.js's
+  // GET /me/eligible-courses for the read-only catalog view that runs the exact same checks.
+  // The registration window is only enforced for self-enrollment — Registrar/Admin enrolling a
+  // student on staff's behalf can do so any time, same as other staff enrollment actions.
+  let curriculumOverride = false;
+  if (!isSelfEnroll && override) {
+    const roles = await getUserRoles(req.user.sub, req.user.role);
+    if (!(await hasPermission(roles, 'curriculum', 'OverrideRegistrationRecommendation'))) {
+      return res.status(403).json({ error:'You do not have permission to override curriculum recommendations.' });
+    }
+    if (!String(overrideReason||'').trim()) return res.status(400).json({ error:'An override reason is required.' });
+    curriculumOverride = true;
+  }
+  const result = await evaluateEligibility(studentId, courseId, {
+    enforceRegistrationWindow: isSelfEnroll,
+    allowSemesterOverride: curriculumOverride,
+  });
 
   if (isSelfEnroll) {
     // Hard block: a student can't wave through their own ineligibility.
-    if (!result.eligible) return res.status(409).json({ error: result.reason });
-  } else if (!result.eligible && !override) {
+    if (!result.eligible) {
+      await safeCreateNotification({recipientUserId:studentId,type:'enrollment_rejected',title:'Registration not completed',message:result.reason,
+        severity:'warning',entityType:'course',entityId:Number(courseId),courseId:Number(courseId),actionSection:'catalog',
+        actionData:{courseId:Number(courseId)},deduplicationKey:`enrollment-rejected:${studentId}:${courseId}:${result.blocking?.[0]?.code||'blocked'}:${new Date().toISOString().slice(0,10)}`,
+        category:'academic_updates'});
+      return res.status(409).json({ error: result.reason });
+    }
+  } else if (!result.eligible) {
     // Staff-initiated enrollment: surface as a warning a Registrar/Admin can confirm past
     // (resubmit with override: true) rather than a hard block. Nothing is enrolled yet.
     return res.status(200).json({
-      requiresConfirmation: true, prereqIssues: result.prereqIssues, scheduleClash: result.scheduleClash, blocking: result.blocking,
+      requiresConfirmation: false, prereqIssues: result.prereqIssues, scheduleClash: result.scheduleClash, blocking: result.blocking,
     });
   }
 
@@ -58,11 +80,23 @@ router.post('/', requireAuth, asyncHandler(async (req, res) => {
   });
   const row = await get('SELECT * FROM enrollments WHERE id = ?', [inserted.id]);
   if (!isSelfEnroll) {
-    const wasOverridden = !!override && !result.eligible;
+    const wasOverridden = curriculumOverride;
     await logAudit(req.user, wasOverridden ? 'enroll-student-override' : 'enroll-student', 'enrollments', row.id, {
       studentId: Number(studentId), courseId: course.id, courseCode: course.code, status: row.status,
-      ...(wasOverridden ? { overriddenPrereqIssues: result.prereqIssues, overriddenScheduleClash: result.scheduleClash, overriddenBlocking: result.blocking } : {}),
+      ...(wasOverridden ? { overrideReason:String(overrideReason).trim(), recommendedSemester:result.curriculum?.recommendedSemester } : {}),
     });
+    if (wasOverridden) await run(`INSERT INTO curriculum_registration_overrides(studentId,courseId,curriculumId,reason,approvedBy) VALUES(?,?,?,?,?)`,[studentId,courseId,result.curriculum.curriculumId,String(overrideReason).trim(),req.user.sub]);
+  }
+  await safeCreateNotification({recipientUserId:Number(studentId),type:row.status==='waitlisted'?'enrollment_waitlisted':'enrollment_succeeded',
+    title:row.status==='waitlisted'?'Added to course waitlist':'Course registration confirmed',
+    message:row.status==='waitlisted'?`You were added to the waitlist for ${course.code} — ${course.name}.`:`You are enrolled in ${course.code} — ${course.name}.`,
+    severity:row.status==='waitlisted'?'warning':'success',entityType:'enrollment',entityId:row.id,courseId:course.id,
+    actionSection:'myschedule',deduplicationKey:`enrollment:${row.id}:${row.status}`,createdBy:req.user.sub,category:'academic_updates'});
+  if(row.status==='waitlisted'){
+    const staff=await all(`SELECT id FROM users WHERE role IN ('registrar','admin')`);
+    await createBulkNotifications({recipientUserIds:staff.map(x=>x.id),type:'enrollment_waitlisted',title:'Course waitlist requires attention',
+      message:`${course.code} has reached capacity and a student entered the waitlist.`,severity:'warning',entityType:'course',entityId:course.id,
+      actionSection:'enrollment',actionData:{courseId:course.id},deduplicationKeyPrefix:`course-waitlist:${course.id}:${row.id}`,createdBy:req.user.sub});
   }
   res.status(201).json(row);
 }));
@@ -118,8 +152,15 @@ router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
     );
     if (nextWaiting) {
       await run(`UPDATE enrollments SET status = 'enrolled' WHERE id = ?`, [nextWaiting.id]);
+      await safeCreateNotification({recipientUserId:nextWaiting.studentId,type:'waitlist_promoted',title:'Waitlist promotion',
+        message:`A place opened in ${course.code} — ${course.name}; you are now enrolled.`,severity:'success',entityType:'enrollment',entityId:nextWaiting.id,
+        courseId:course.id,actionSection:'myschedule',deduplicationKey:`waitlist-promoted:${nextWaiting.id}`,createdBy:req.user.sub,category:'academic_updates'});
     }
   }
+
+  await safeCreateNotification({recipientUserId:enrollment.studentId,type:'course_dropped',title:isWithdrawal?'Course withdrawal recorded':'Course dropped',
+    message:`Your ${isWithdrawal?'withdrawal from':'drop of'} ${course.code} — ${course.name} has been recorded.`,severity:'info',entityType:'enrollment',entityId:enrollment.id,
+    courseId:course.id,actionSection:'myschedule',deduplicationKey:`course-drop:${enrollment.id}:${isWithdrawal?'withdrawn':'dropped'}`,createdBy:req.user.sub,category:'academic_updates'});
 
   res.status(200).json({ status: isWithdrawal ? 'withdrawn' : 'dropped' });
 }));
@@ -138,10 +179,6 @@ router.post('/bulk', requireAuth, asyncHandler(async (req, res) => {
   if (!courseId || !studentIds || !studentIds.length) {
     return res.status(400).json({ error: 'courseId and a non-empty studentIds array are required' });
   }
-  const overrideIds = new Set(
-    (Array.isArray(req.body.overrideStudentIds) ? req.body.overrideStudentIds : []).map(Number)
-  );
-
   const course = await get('SELECT * FROM courses WHERE id = ?', [courseId]);
   if (!course) return res.status(404).json({ error: 'Course not found' });
   if (!(await canModifyEnrollment(req, course))) {
@@ -156,7 +193,6 @@ router.post('/bulk', requireAuth, asyncHandler(async (req, res) => {
   const enrolled = [];
   const skipped = [];
   const warnings = [];
-  const overridden = [];
 
   for (const studentId of uniqueIds) {
     const student = await get(`SELECT id, name FROM users WHERE id = ? AND role = 'student'`, [studentId]);
@@ -175,10 +211,11 @@ router.post('/bulk', requireAuth, asyncHandler(async (req, res) => {
 
     // Every other gate (prerequisites, schedule clash, program/department/term match, credit
     // cap, financial hold) runs through the same engine POST / uses — 'not a student'/'already
-    // enrolled'/'at capacity' stay hard skips above since bulk never waitlists.
-    const evalResult = await evaluateEligibility(studentId, courseId);
+    // enrolled'/'at capacity' stay hard skips above since bulk never waitlists. Registration
+    // window is never enforced here — bulk enroll is always staff-initiated.
+    const evalResult = await evaluateEligibility(studentId, courseId, { enforceRegistrationWindow: false });
     const hasIssues = !evalResult.eligible;
-    if (hasIssues && !overrideIds.has(studentId)) {
+    if (hasIssues) {
       warnings.push({ studentId, name: student.name, prereqIssues: evalResult.prereqIssues, scheduleClash: evalResult.scheduleClash, blocking: evalResult.blocking });
       continue;
     }
@@ -186,7 +223,9 @@ router.post('/bulk', requireAuth, asyncHandler(async (req, res) => {
     const result = await run('INSERT INTO enrollments (studentId, courseId, status) VALUES (?, ?, ?)', [studentId, courseId, 'enrolled']);
     enrolledCount += 1;
     enrolled.push({ studentId, name: student.name, enrollmentId: result.id });
-    if (hasIssues) overridden.push({ studentId, name: student.name, prereqIssues: evalResult.prereqIssues, scheduleClash: evalResult.scheduleClash, blocking: evalResult.blocking });
+    await safeCreateNotification({recipientUserId:studentId,type:'enrollment_succeeded',title:'Course registration confirmed',
+      message:`You are enrolled in ${course.code} — ${course.name}.`,severity:'success',entityType:'enrollment',entityId:result.id,courseId:course.id,
+      actionSection:'myschedule',deduplicationKey:`enrollment:${result.id}:enrolled`,createdBy:req.user.sub,category:'academic_updates'});
   }
 
   if (enrolled.length) {
@@ -195,12 +234,6 @@ router.post('/bulk', requireAuth, asyncHandler(async (req, res) => {
       studentIds: enrolled.map(e => e.studentId), count: enrolled.length,
     });
   }
-  if (overridden.length) {
-    await logAudit(req.user, 'bulk-enroll-override', 'enrollments', null, {
-      courseId: course.id, courseCode: course.code, overrides: overridden,
-    });
-  }
-
   res.status(201).json({ enrolled, skipped, warnings });
 }));
 

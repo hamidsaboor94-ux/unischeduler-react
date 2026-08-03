@@ -61,6 +61,13 @@ export function AppDataProvider({ children }) {
   // button, or a ConflictItem card's "Suggest fix" action), and both should update the same panel.
   const [lastResolutions, setLastResolutions] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  useEffect(()=>{
+    if(!currentUser)return undefined;
+    let cancelled=false;
+    const poll=async()=>{try{const rows=await api('GET','/notifications');if(!cancelled)setNotifications(rows);}catch{/* next poll retries */}};
+    const timer=setInterval(poll,30000);
+    return()=>{cancelled=true;clearInterval(timer);};
+  },[currentUser]);
   const [unviewedActivityCourseIds, setUnviewedActivityCourseIds] = useState(new Set());
   // courseId -> count of unseen assignments/announcements/materials — Map<number, number>, same
   // source (GET /course-activity/status) as unviewedActivityCourseIds, just the count alongside

@@ -7,6 +7,7 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 const asyncHandler = require('../middleware/asyncHandler');
 const { canManageCourse } = require('../ownership');
 const { notifyCourseStudents } = require('../notify');
+const { safeCreateNotification } = require('../notificationTypes');
 
 const router = express.Router();
 
@@ -91,7 +92,8 @@ router.post('/', requireAuth, requireRole('admin', 'faculty'), asyncHandler(asyn
   await logAudit(req.user, 'create-assignment', 'assignments', result.id, { courseId: course.id, title: title.trim() });
 
   const message = `New assignment posted in ${course.code} — ${course.name}: "${title.trim()}"${dueDate ? ` (due ${dueDate})` : ''}`;
-  await notifyCourseStudents(course.id, message, { type: 'assignment_posted', entityType: 'assignment', entityId: result.id });
+  await notifyCourseStudents(course.id, message, { type:'assignment_posted',title:'New assignment',severity:'info',entityType:'assignment',entityId:result.id,
+    actionSection:'catalog',actionData:{courseId:course.id,assignmentId:result.id},deduplicationKeyPrefix:`assignment-posted:${result.id}`,createdBy:req.user.sub,category:'lms' });
 
   res.status(201).json(await get('SELECT * FROM assignments WHERE id = ?', [result.id]));
 }));
@@ -154,7 +156,12 @@ router.post('/:id/submissions', requireAuth, requireRole('student'), upload.sing
       [assignment.id, req.user.sub, req.file ? req.file.originalname : null, req.file ? req.file.mimetype : null, textResponse]
     );
   }
-  res.status(201).json(await get('SELECT * FROM assignment_submissions WHERE assignmentId = ? AND studentId = ?', [assignment.id, req.user.sub]));
+  const saved=await get('SELECT * FROM assignment_submissions WHERE assignmentId = ? AND studentId = ?', [assignment.id, req.user.sub]);
+  const instructor=await get(`SELECT u.id FROM courses c JOIN teachers t ON t.id=c.teacherId JOIN users u ON u.id=t.userId WHERE c.id=?`,[assignment.courseId]);
+  if(instructor)await safeCreateNotification({recipientUserId:instructor.id,type:'submission_received',title:'Assignment submission received',
+    message:`A student submitted “${assignment.title}”.`,severity:'info',entityType:'assignment_submission',entityId:saved.id,courseId:assignment.courseId,
+    actionSection:'courses',actionData:{courseId:assignment.courseId,assignmentId:assignment.id},deduplicationKey:`submission:${saved.id}:${saved.submittedAt}`,createdBy:req.user.sub,category:'lms'});
+  res.status(201).json(saved);
 }));
 
 // --- Download a submitted file — the owning student, or admin/faculty who manages the course ---
@@ -196,7 +203,12 @@ router.put('/:id/submissions/:studentId', requireAuth, requireRole('admin', 'fac
   }
   await run('UPDATE assignment_submissions SET marksAwarded = ?, feedback = ? WHERE id = ?', [marks, (feedback || '').trim() || null, submission.id]);
   await logAudit(req.user, 'grade-submission', 'assignment_submissions', submission.id, { assignmentId: assignment.id, studentId: Number(req.params.studentId), marksAwarded: marks });
-  res.json(await get('SELECT * FROM assignment_submissions WHERE id = ?', [submission.id]));
+  const graded=await get('SELECT * FROM assignment_submissions WHERE id = ?', [submission.id]);
+  await safeCreateNotification({recipientUserId:Number(req.params.studentId),type:'submission_graded',title:'Assignment graded',
+    message:`“${assignment.title}” has been graded${feedback?' and feedback is available':''}.`,severity:'success',entityType:'assignment_submission',entityId:submission.id,
+    courseId:assignment.courseId,actionSection:'catalog',actionData:{courseId:assignment.courseId,assignmentId:assignment.id},
+    deduplicationKey:`submission-graded:${submission.id}:${graded.marksAwarded}:${graded.feedback||''}`,createdBy:req.user.sub,category:'lms'});
+  res.json(graded);
 }));
 
 module.exports = router;

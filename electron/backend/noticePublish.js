@@ -2,7 +2,7 @@
     noticeScheduler.js's periodic sweep of due scheduled announcements, so the two paths can
     never drift (one resolution/delivery routine, one place recipient snapshots get written). */
 const { get, all, run, transaction, logAudit } = require('./db');
-const { createNotification } = require('./notificationTypes');
+const { safeCreateNotification } = require('./notificationTypes');
 const { resolveRecipients } = require('./noticeTargeting');
 
 async function getGroupsForNotice(noticeId) {
@@ -37,7 +37,7 @@ async function publishNotice(noticeId, actorUser) {
 
   const preview = notice.message.length > 140 ? notice.message.slice(0, 137) + '...' : notice.message;
   for (const userId of recipientIds) {
-    await createNotification(userId, `${notice.title}: ${preview}`, 'notice_published', { entityType: 'notice', entityId: noticeId });
+    await safeCreateNotification(userId, `${notice.title}: ${preview}`, 'notice_published', { entityType: 'notice', entityId: noticeId });
   }
 
   await logAudit(actorUser, 'publish-notice', 'notices', noticeId, { recipientCount: recipientIds.length, groupCount: groups.length });

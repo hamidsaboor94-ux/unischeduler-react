@@ -13,7 +13,7 @@
  * the engine, so a flow module can never accidentally skip it.
  */
 const { run, get, all, logAudit } = require('./db');
-const { createNotification } = require('./notificationTypes');
+const { safeCreateNotification, createBulkNotifications } = require('./notificationTypes');
 const { getUserRoles } = require('./authz');
 
 const OPEN_STATUSES = ['In Review', 'Returned'];
@@ -31,9 +31,9 @@ function httpError(status, message) {
     time, before the database is necessarily ready (its chain is only written to the DB lazily,
     the first time the type is actually used — see ensureChainSeeded()). Calling this again for
     the same type (e.g. on a test file's fresh require) simply replaces the config. */
-function registerRequestType(type, { subjectType, chain, canAct, effect, validatePayload, label }) {
+function registerRequestType(type, { subjectType, chain, canAct, effect, onDecision, validatePayload, label }) {
   if (!chain?.length) throw new Error(`registerRequestType("${type}") needs at least one chain step`);
-  registry.set(type, { subjectType, chain: [...chain].sort((a, b) => a.order - b.order), canAct, effect, validatePayload, label: label || type });
+  registry.set(type, { subjectType, chain: [...chain].sort((a, b) => a.order - b.order), canAct, effect, onDecision, validatePayload, label: label || type });
 }
 
 function configFor(type) {
@@ -100,6 +100,12 @@ async function createRequest(type, { subjectId, requestedBy, payload }) {
     [type, config.subjectType, subjectId, requestedBy, payload == null ? null : JSON.stringify(payload)]
   );
   await logAudit({ sub: requestedBy }, 'approval-submit', 'approval_requests', id, { type }, null, { status: 'In Review', currentStepOrder: 1 });
+  await safeCreateNotification({recipientUserId:requestedBy,type:'approval_submitted',title:'Request submitted',message:`Your ${config.label} entered review.`,
+    severity:'info',entityType:'approval_request',entityId:id,actionSection:'approvals',deduplicationKey:`approval-submitted:${id}`,createdBy:requestedBy});
+  const first=config.chain[0],reviewers=await all('SELECT id FROM users WHERE role=?',[first.role]);
+  await createBulkNotifications({recipientUserIds:reviewers.map(x=>x.id),type:'approval_queue_entered',title:'New approval task',
+    message:`A ${config.label} requires your review.`,severity:'info',entityType:'approval_request',entityId:id,actionSection:'approvals',
+    deduplicationKeyPrefix:`approval-queue:${id}:${first.order}`,createdBy:requestedBy});
   return getRequest(id);
 }
 
@@ -196,9 +202,17 @@ async function decide(requestId, reviewer, decision, note) {
     { status: newStatus, currentStepOrder: newStepOrder });
 
   const updated = await getRequest(requestId);
+  if (config.onDecision) await config.onDecision(updated, reviewer, decision, note);
   if (newStatus === 'Approved' && config.effect) await config.effect(updated, reviewer);
-  await createNotification(request.requestedBy, statusMessage(config, newStatus, note), 'approval_status_changed',
-    { entityType: 'approval_request', entityId: requestId });
+  await safeCreateNotification({recipientUserId:request.requestedBy,message:statusMessage(config,newStatus,note),type:'approval_status_changed',
+    title:'Approval status changed',severity:newStatus==='Rejected'?'warning':newStatus==='Approved'?'success':'info',entityType:'approval_request',entityId:Number(requestId),
+    actionSection:'approvals',deduplicationKey:`approval-status:${requestId}:${step.stepOrder}:${decision}`,createdBy:reviewer.sub});
+  if(newStatus==='In Review'){
+    const nextStep=request.chain.find(s=>s.stepOrder===newStepOrder),reviewers=nextStep?await all('SELECT id FROM users WHERE role=?',[nextStep.role]):[];
+    await createBulkNotifications({recipientUserIds:reviewers.map(x=>x.id),type:'approval_queue_entered',title:'Approval task assigned',
+      message:`A ${config.label} requires your review.`,severity:'info',entityType:'approval_request',entityId:Number(requestId),actionSection:'approvals',
+      deduplicationKeyPrefix:`approval-queue:${requestId}:${newStepOrder}`,createdBy:reviewer.sub});
+  }
 
   return getRequest(requestId);
 }

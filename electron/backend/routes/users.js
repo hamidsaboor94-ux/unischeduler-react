@@ -6,6 +6,7 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { isValidPassword, isValidEmail } = require('../validate');
 const { createAccountWithTempPassword } = require('../accounts');
 const { ASSIGNABLE_ROLES, isDepartmentScoped, isCollegeScoped } = require('../permissions');
+const { safeCreateNotification } = require('../notificationTypes');
 
 const router = express.Router();
 const SAFE_COLUMNS = 'id, name, email, role, departmentId, collegeId, createdAt, mustChangePassword, idNumber';
@@ -61,6 +62,9 @@ router.post('/', requireAuth, requireRole('admin'), asyncHandler(async (req, res
   const account = await createAccountWithTempPassword({ name, email, role, departmentId, collegeId, teacherId: bareTeacher?.id });
   const user = await get(`SELECT ${SAFE_COLUMNS} FROM users WHERE id = ?`, [account.id]);
   await logAudit(req.user, 'create', 'users', account.id, { name, email, role });
+  await safeCreateNotification({recipientUserId:account.id,type:'temporary_credentials_issued',title:'Account created',
+    message:'Your account was created with temporary credentials. Change your password after signing in.',severity:'critical',entityType:'user',entityId:account.id,
+    deduplicationKey:`temporary-credentials:${account.id}`,createdBy:req.user.sub});
   res.status(201).json({ user, tempPassword: account.tempPassword });
 }));
 
@@ -106,6 +110,7 @@ router.post('/bulk-import', requireAuth, requireRole('admin'), asyncHandler(asyn
   if (created.length) {
     await logAudit(req.user, 'bulk-import', 'users', null, { count: created.length, emails: created.map(c => c.email) });
   }
+  for(const account of created)await safeCreateNotification({recipientUserId:account.id,type:'temporary_credentials_issued',title:'Account created',message:'Your account was created with temporary credentials. Change your password after signing in.',severity:'critical',entityType:'user',entityId:account.id,deduplicationKey:`temporary-credentials:${account.id}`,createdBy:req.user.sub});
   res.status(200).json({ created, errors });
 }));
 
@@ -148,6 +153,7 @@ router.put('/:id', requireAuth, requireRole('admin'), asyncHandler(async (req, r
   const row = await get(`SELECT ${SAFE_COLUMNS} FROM users WHERE id = ?`, [req.params.id]);
   if (!row) return res.status(404).json({ error: 'Not found' });
   await logAudit(req.user, 'update', 'users', req.params.id, { name, role, departmentId, collegeId });
+  if(role!==undefined&&role!==existing.role)await safeCreateNotification({recipientUserId:Number(req.params.id),type:'role_assignment_changed',title:'Account role changed',message:`Your university account role changed to ${role}.`,severity:'critical',entityType:'user',entityId:Number(req.params.id),deduplicationKey:`role-change:${req.params.id}:${existing.role}:${role}`,createdBy:req.user.sub});
   res.json(row);
 }));
 
@@ -160,6 +166,7 @@ router.put('/:id/password', requireAuth, requireRole('admin'), asyncHandler(asyn
   // An admin-set password is a shared secret again, same as at account creation — force a change on next login.
   await run('UPDATE users SET passwordHash = ?, mustChangePassword = 1 WHERE id = ?', [passwordHash, req.params.id]);
   await logAudit(req.user, 'reset-password', 'users', req.params.id, null);
+  await safeCreateNotification({recipientUserId:Number(req.params.id),type:'temporary_credentials_issued',title:'Password reset',message:'An administrator reset your password. You must change it after signing in.',severity:'critical',entityType:'user',entityId:Number(req.params.id),deduplicationKey:`password-reset:${req.params.id}:${Date.now()}`,createdBy:req.user.sub});
   res.json({ ok: true });
 }));
 

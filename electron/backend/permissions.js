@@ -16,7 +16,8 @@ const MODULES = [
   'dashboard', 'reports', 'timetable', 'rooms', 'courses', 'teachers', 'students',
   'departments', 'terms', 'exams', 'enrollment', 'attendance', 'grades',
   'gradingScale', 'admissions', 'conflicts', 'finance', 'users', 'audit',
-  'backup', 'branding', 'announcements', 'approvals',
+  'backup', 'branding', 'announcements', 'approvals', 'dataMigration', 'graduation',
+  'curriculum',
 ];
 
 // Access levels. WRITE implies READ. Absence of a role from a module's row
@@ -96,6 +97,9 @@ const POLICY = {
   audit:        { },
   backup:       { /* Super Admin only */ },
   branding:     { /* Super Admin only */ },
+  // Data Migration Center (see migration/engine.js) — reads/writes raw source-DB credentials
+  // and bulk-inserts into production tables, so it's Super Admin only, same as backup/branding.
+  dataMigration: { /* Super Admin only */ },
   // Manage/compose university-wide announcements. registrar is the university-wide operations
   // role (targets any audience); dean/dept_head get write too but are confined to their own
   // college/department when targeting (enforced server-side in noticeTargeting.js, on top of
@@ -106,7 +110,13 @@ const POLICY = {
   // The Approvals reviewer queue (see approvalEngine.js) — just "may this role see the page
   // shell at all". Real per-request eligibility (whose turn it is, canAct ownership checks) is
   // enforced dynamically server-side in approvalEngine.js, not by this module policy.
-  approvals: { registrar:R, faculty:R },
+  approvals: { registrar:R, records_officer:R, dept_head:R, bursar:R, faculty:R },
+  // Confers degrees and issues certificates — the terminal, hard-to-undo step of the academic
+  // lifecycle. Deliberately narrower than `students` (which records_officer/registrar already
+  // have write on): Super Admin + Registrar + Records Officer only. A student's own certificate
+  // download is self-scoped (routes/graduation.js), not governed by this module policy.
+  graduation: { registrar:W, records_officer:W },
+  curriculum: { registrar:W, records_officer:W, dean:R, dept_head:R, viewer:R },
 };
 
 /** Access level (0/1/2) a role has for a module. admin always WRITE. */

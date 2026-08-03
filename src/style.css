@@ -2164,3 +2164,35 @@ button.btn-loading { pointer-events: none; opacity: 0.75; }
   .stf-toolbar > select.select-sm { flex: 1 1 auto; min-width: 0; }
   .stf-advanced-grid { grid-template-columns: 1fr; }
 }
+
+/* Data Migration Center wizard (DataMigrationPage.jsx + components/dataMigration/*) */
+.migration-step-indicator {
+  display: flex; flex-wrap: wrap; gap: 4px; list-style: none; margin: 0 0 16px; padding: 0;
+}
+.migration-step-indicator li {
+  display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted);
+  padding: 6px 10px; border-radius: var(--radius-sm); background: var(--surface-recessed);
+}
+.migration-step-indicator li.active { color: var(--text-primary); background: var(--accent-dim); font-weight: 500; }
+.migration-step-indicator li.done { color: var(--text-secondary); }
+.migration-step-number {
+  display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--surface-base); font-size: 10.5px; flex-shrink: 0;
+}
+.migration-step-indicator li.active .migration-step-number { background: var(--accent); color: #fff; }
+.migration-step-indicator li.done .migration-step-number { color: var(--accent); }
+
+.migration-source-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.migration-source-card {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: 20px 10px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface-recessed); color: var(--text-primary); cursor: pointer; font-size: 12.5px;
+}
+.migration-source-card:hover { border-color: var(--accent); background: var(--accent-dim); }
+.migration-source-card i { font-size: 22px; color: var(--accent); }
+
+.migration-progress-bar {
+  width: 100%; height: 10px; border-radius: 5px; background: var(--surface-recessed);
+  overflow: hidden; margin: 10px 0;
+}
+.migration-progress-fill { height: 100%; background: var(--accent); transition: width 0.3s ease; }

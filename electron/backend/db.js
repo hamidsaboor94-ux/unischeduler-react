@@ -68,6 +68,29 @@ async function init() {
       const stamp = new Date().toISOString().replace(/[:.]/g, '-');
       await backupTo(path.join(backupDir, `pre-student-canonical-migration-${stamp}.sqlite`));
     }
+    // Same one-time-snapshot rationale ahead of the Curriculum Management tables below
+    // (curriculum/curriculum_semester/elective_group/curriculum_course/student_curriculum/holds).
+    const hasCurriculum = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='curriculum'").get();
+    if (hasUsers && !hasCurriculum) {
+      const backupDir = path.join(path.dirname(DB_PATH), 'backups');
+      fs.mkdirSync(backupDir, { recursive: true });
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      await backupTo(path.join(backupDir, `pre-curriculum-migration-${stamp}.sqlite`));
+    }
+    const hasCurriculumHistory = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='student_curriculum_history'").get();
+    if (hasUsers && hasCurriculum && !hasCurriculumHistory) {
+      const backupDir = path.join(path.dirname(DB_PATH), 'backups');
+      fs.mkdirSync(backupDir, { recursive: true });
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      await backupTo(path.join(backupDir, `pre-curriculum-phase2-${stamp}.sqlite`));
+    }
+    const hasGraduationApplications = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='graduation_applications'").get();
+    if (hasUsers && !hasGraduationApplications) {
+      const backupDir = path.join(path.dirname(DB_PATH), 'backups');
+      fs.mkdirSync(backupDir, { recursive: true });
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      await backupTo(path.join(backupDir, `pre-graduation-workflow-${stamp}.sqlite`));
+    }
   }
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -216,6 +239,36 @@ async function init() {
       message TEXT NOT NULL,
       isRead INTEGER DEFAULT 0,
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS notification_preferences (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      userId INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      category TEXT NOT NULL,
+      enabled INTEGER NOT NULL DEFAULT 1,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(userId, category)
+    );
+
+    CREATE TABLE IF NOT EXISTS notification_delivery_failures (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      recipientUserId INTEGER,
+      type TEXT,
+      entityType TEXT,
+      entityId INTEGER,
+      error TEXT NOT NULL,
+      deduplicationKey TEXT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS published_grades (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      courseId INTEGER NOT NULL REFERENCES courses(id) ON DELETE RESTRICT,
+      studentId INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      letterGrade TEXT NOT NULL,
+      publishedBy INTEGER REFERENCES users(id) ON DELETE RESTRICT,
+      publishedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(courseId,studentId)
     );
 
     -- Generic approval-chain engine (see approvalEngine.js): one request/review/decision shape
@@ -526,6 +579,124 @@ async function init() {
     );
     CREATE INDEX IF NOT EXISTS idx_semester_records_studentId ON semester_records(studentId);
     CREATE INDEX IF NOT EXISTS idx_semester_records_termId ON semester_records(termId);
+
+    -- One canonical row per conferred degree, written exclusively by POST
+    -- /api/graduation/confirm/:studentId (routes/graduation.js). student_profiles'
+    -- graduationStatus/graduationDate/degreeAwarded mirror the latest row here for fast reads,
+    -- same "ledger + mirrored summary" relationship semester_records has with student_profiles.
+    CREATE TABLE IF NOT EXISTS graduation_records (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      studentId INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      degreeAwarded TEXT NOT NULL,
+      graduationDate TEXT NOT NULL,
+      conferredBy INTEGER REFERENCES users(id),
+      certificateNumber TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'Active',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_graduation_records_studentId ON graduation_records(studentId);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_graduation_records_certificateNumber ON graduation_records(certificateNumber);
+
+    -- A program attempt is distinct from the student's identity. Existing profile.programId stays
+    -- as the current-program pointer; rows are created only through an explicit graduation or
+    -- future admissions workflow, never silently inferred during migration.
+    CREATE TABLE IF NOT EXISTS student_programs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      studentId INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      programId INTEGER NOT NULL REFERENCES programs(id) ON DELETE RESTRICT,
+      admissionDate TEXT,
+      status TEXT NOT NULL DEFAULT 'active',
+      createdBy INTEGER REFERENCES users(id) ON DELETE RESTRICT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_student_programs_student ON student_programs(studentId, status);
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_student_programs_one_open
+      ON student_programs(studentId, programId) WHERE status IN ('active','on_leave','suspended');
+
+    CREATE TABLE IF NOT EXISTS graduation_applications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      studentId INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      studentProgramId INTEGER NOT NULL REFERENCES student_programs(id) ON DELETE RESTRICT,
+      expectedGraduationTermId INTEGER REFERENCES terms(id) ON DELETE RESTRICT,
+      applicationDate TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'submitted',
+      submittedBy INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      reviewedBy INTEGER REFERENCES users(id) ON DELETE RESTRICT,
+      reviewedAt DATETIME,
+      decisionReason TEXT,
+      notes TEXT,
+      approvalRequestId INTEGER REFERENCES approval_requests(id) ON DELETE RESTRICT,
+      lastEvaluatedAt DATETIME,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_graduation_applications_student ON graduation_applications(studentId, createdAt DESC);
+    CREATE INDEX IF NOT EXISTS idx_graduation_applications_status ON graduation_applications(status, expectedGraduationTermId);
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_graduation_application_active
+      ON graduation_applications(studentProgramId, COALESCE(expectedGraduationTermId, -1))
+      WHERE status IN ('submitted','under_review','corrections_required','approved');
+
+    CREATE TABLE IF NOT EXISTS graduation_audits (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      studentId INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      studentProgramId INTEGER REFERENCES student_programs(id) ON DELETE RESTRICT,
+      graduationApplicationId INTEGER REFERENCES graduation_applications(id) ON DELETE RESTRICT,
+      graduationRecordId INTEGER REFERENCES graduation_records(id) ON DELETE RESTRICT,
+      result TEXT NOT NULL,
+      snapshot TEXT NOT NULL,
+      purpose TEXT NOT NULL DEFAULT 'evaluation',
+      evaluatedBy INTEGER REFERENCES users(id) ON DELETE RESTRICT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_graduation_audits_application ON graduation_audits(graduationApplicationId, createdAt DESC);
+    CREATE INDEX IF NOT EXISTS idx_graduation_audits_record ON graduation_audits(graduationRecordId);
+
+    CREATE TABLE IF NOT EXISTS graduation_requirements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      curriculumId INTEGER NOT NULL REFERENCES curriculum(id) ON DELETE RESTRICT,
+      requirementType TEXT NOT NULL,
+      label TEXT NOT NULL,
+      required INTEGER NOT NULL DEFAULT 1,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(curriculumId, requirementType)
+    );
+
+    CREATE TABLE IF NOT EXISTS graduation_requirement_results (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      graduationApplicationId INTEGER NOT NULL REFERENCES graduation_applications(id) ON DELETE RESTRICT,
+      requirementType TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      evidence TEXT,
+      verifiedBy INTEGER REFERENCES users(id) ON DELETE RESTRICT,
+      verifiedAt DATETIME,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(graduationApplicationId, requirementType)
+    );
+
+    CREATE TABLE IF NOT EXISTS graduation_issuance_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      graduationRecordId INTEGER NOT NULL REFERENCES graduation_records(id) ON DELETE RESTRICT,
+      documentType TEXT NOT NULL,
+      status TEXT NOT NULL,
+      reason TEXT,
+      notes TEXT,
+      actedBy INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      collectedBy TEXT,
+      actedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_graduation_issuance_record ON graduation_issuance_events(graduationRecordId, documentType, actedAt DESC);
+
+    CREATE TABLE IF NOT EXISTS graduation_corrections (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      graduationRecordId INTEGER NOT NULL REFERENCES graduation_records(id) ON DELETE RESTRICT,
+      correctionType TEXT NOT NULL,
+      reason TEXT NOT NULL,
+      previousValue TEXT,
+      correctedValue TEXT,
+      authorizedBy INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
 
     -- One term's specific binding of a course to a teacher/room/section/cap, kept
     -- alongside (not instead of) the same fields on courses — courses.teacherId etc.
@@ -933,6 +1104,221 @@ async function init() {
     );
     CREATE INDEX IF NOT EXISTS idx_notice_attachments_noticeId ON notice_attachments(noticeId);
 
+    -- Data Migration Center (see migration/engine.js): insert-only import of external data
+    -- (SQL sources via information_schema, or CSV/Excel files) into this app's own tables.
+    -- migration_connections holds saved source-DB credentials for reuse across runs; the
+    -- password is AES-GCM encrypted (migration/crypto.js) and NULL for file-based sources.
+    CREATE TABLE IF NOT EXISTS migration_connections (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      label TEXT NOT NULL,
+      sourceType TEXT NOT NULL,
+      configJson TEXT NOT NULL,
+      encryptedPassword TEXT,
+      createdBy INTEGER REFERENCES users(id),
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- One row per migration run. status walks draft -> discovering -> mapped -> validated ->
+    -- dry_run -> running -> completed|failed|cancelled, with a separate rolled_back terminal
+    -- state reachable from completed. The counters/currentTable columns are the durable fallback
+    -- for GET /migrations/:id/progress when the in-memory progress map (migration/progress.js)
+    -- doesn't have an entry (server restarted mid-run, or querying a finished migration).
+    CREATE TABLE IF NOT EXISTS migrations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      label TEXT,
+      sourceType TEXT NOT NULL,
+      connectionId INTEGER REFERENCES migration_connections(id),
+      sourceFilePath TEXT,
+      status TEXT NOT NULL DEFAULT 'draft',
+      discoverySnapshotJson TEXT,
+      snapshotPath TEXT,
+      cancelRequested INTEGER NOT NULL DEFAULT 0,
+      totalTables INTEGER,
+      totalRows INTEGER,
+      processedRows INTEGER NOT NULL DEFAULT 0,
+      insertedRows INTEGER NOT NULL DEFAULT 0,
+      errorRows INTEGER NOT NULL DEFAULT 0,
+      currentTable TEXT,
+      lastDryRunSummaryJson TEXT,
+      errorMessage TEXT,
+      startedAt DATETIME,
+      finishedAt DATETIME,
+      createdBy INTEGER REFERENCES users(id),
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME
+    );
+    CREATE INDEX IF NOT EXISTS idx_migrations_status ON migrations(status);
+
+    -- Saved column mapping per source table -> destination target (migration/destinationTargets.js
+    -- registry key, not always a literal table name — e.g. 'students' fans out to users +
+    -- student_profiles). importOrder is the resolved topological position (dependency order),
+    -- computed and stored when the mapping is saved so the import loop never re-sorts mid-run.
+    CREATE TABLE IF NOT EXISTS migration_mappings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      migrationId INTEGER NOT NULL REFERENCES migrations(id) ON DELETE CASCADE,
+      sourceTable TEXT NOT NULL,
+      destinationTarget TEXT NOT NULL,
+      columnMapJson TEXT NOT NULL,
+      importOrder INTEGER NOT NULL DEFAULT 0,
+      enabled INTEGER NOT NULL DEFAULT 1,
+      UNIQUE(migrationId, sourceTable)
+    );
+    CREATE INDEX IF NOT EXISTS idx_migration_mappings_migrationId ON migration_mappings(migrationId);
+
+    -- Per-batch audit trail (~500 rows/batch) backing the Report step and giving rollback/
+    -- diagnostics a record independent of re-scanning every destination table. 'phase'
+    -- distinguishes a dry run's batches from the real import's — both write here (see
+    -- migration/engine.js's runBody(), shared between the two), and without it the Report step
+    -- couldn't tell them apart for a migration that was dry-run more than once before importing.
+    CREATE TABLE IF NOT EXISTS migration_batches (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      migrationId INTEGER NOT NULL REFERENCES migrations(id) ON DELETE CASCADE,
+      sourceTable TEXT NOT NULL,
+      destinationTarget TEXT NOT NULL,
+      batchNumber INTEGER NOT NULL,
+      rowCount INTEGER NOT NULL,
+      insertedCount INTEGER NOT NULL,
+      errorCount INTEGER NOT NULL,
+      status TEXT NOT NULL,
+      phase TEXT NOT NULL DEFAULT 'import',
+      startedAt DATETIME,
+      finishedAt DATETIME
+    );
+    CREATE INDEX IF NOT EXISTS idx_migration_batches_migrationId ON migration_batches(migrationId);
+
+    -- Validation/insert errors only (never one row per successful insert — that would be
+    -- unbounded on a large import); successful counts live on migrations/migration_batches.
+    -- 'phase' — see migration_batches' comment above, same reasoning.
+    CREATE TABLE IF NOT EXISTS migration_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      migrationId INTEGER NOT NULL REFERENCES migrations(id) ON DELETE CASCADE,
+      level TEXT NOT NULL,
+      sourceTable TEXT,
+      sourceRowRef TEXT,
+      message TEXT NOT NULL,
+      detailsJson TEXT,
+      phase TEXT NOT NULL DEFAULT 'import',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_migration_logs_migrationId ON migration_logs(migrationId);
+
+    -- Curriculum Management (Phase 1: schema only — no validators/authoring UI yet).
+    -- One curriculum row is one versioned "plan" for a program (e.g. Computer Science, 2025-2026):
+    -- Program (programs) -> Version (curriculum) -> Semester (curriculum_semester) ->
+    -- Courses (curriculum_course). academicYear is a plain label, not a FK — this schema has no
+    -- academic_years table (only per-term terms), so it's freeform text like '2025-2026' until
+    -- that concept exists. status is app-validated, not a CHECK constraint, matching every other
+    -- lifecycle status column in this file (enrollments.status, approval_requests.status, ...).
+    CREATE TABLE IF NOT EXISTS curriculum (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      programId INTEGER NOT NULL REFERENCES programs(id) ON DELETE RESTRICT,
+      curriculumName TEXT NOT NULL,
+      academicYear TEXT,
+      effectiveFrom TEXT,
+      effectiveTo TEXT,
+      totalCredits INTEGER,
+      status TEXT NOT NULL DEFAULT 'Draft',
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_curriculum_programId ON curriculum(programId);
+
+    CREATE TABLE IF NOT EXISTS curriculum_semester (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      curriculumId INTEGER NOT NULL REFERENCES curriculum(id) ON DELETE RESTRICT,
+      semesterNumber INTEGER NOT NULL,
+      name TEXT,
+      minimumCredits INTEGER,
+      maximumCredits INTEGER,
+      UNIQUE(curriculumId, semesterNumber)
+    );
+    CREATE INDEX IF NOT EXISTS idx_curriculum_semester_curriculumId ON curriculum_semester(curriculumId);
+
+    CREATE TABLE IF NOT EXISTS elective_group (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      curriculumId INTEGER NOT NULL REFERENCES curriculum(id) ON DELETE RESTRICT,
+      name TEXT NOT NULL,
+      requiredCount INTEGER,
+      requiredCredits REAL
+    );
+    CREATE INDEX IF NOT EXISTS idx_elective_group_curriculumId ON elective_group(curriculumId);
+
+    -- courseId points at a row in courses, which (per this schema's existing design) is itself
+    -- a per-term row, not a term-independent catalog entry -- there is no course-catalog table to
+    -- reference instead. A curriculum listing is therefore pinned to whichever course row it was
+    -- authored against; matching a student's actual completions across terms will need to join on
+    -- courses.code, not courseId. Flagged here for whoever builds the Phase 2 validator.
+    CREATE TABLE IF NOT EXISTS curriculum_course (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      curriculumSemesterId INTEGER NOT NULL REFERENCES curriculum_semester(id) ON DELETE RESTRICT,
+      courseId INTEGER NOT NULL REFERENCES courses(id) ON DELETE RESTRICT,
+      required INTEGER NOT NULL DEFAULT 1,
+      electiveGroupId INTEGER REFERENCES elective_group(id) ON DELETE RESTRICT,
+      minimumGrade TEXT,
+      sequence INTEGER,
+      notes TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_curriculum_course_curriculumSemesterId ON curriculum_course(curriculumSemesterId);
+    CREATE INDEX IF NOT EXISTS idx_curriculum_course_courseId ON curriculum_course(courseId);
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_curriculum_course_semester_course
+      ON curriculum_course(curriculumSemesterId, courseId);
+
+    -- One row per student once assigned to a curriculum version; no row = curriculum checks are
+    -- skipped for that student (deliberate for existing students -- see the startup backfill log
+    -- below, which reports how many are currently unassigned rather than guessing a grandfather
+    -- rule).
+    CREATE TABLE IF NOT EXISTS student_curriculum (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      studentId INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      curriculumId INTEGER NOT NULL REFERENCES curriculum(id) ON DELETE RESTRICT,
+      assignedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(studentId)
+    );
+
+    -- Append-only assignment history. student_curriculum remains the single-current-assignment
+    -- pointer for backward compatibility; every assignment/reassignment is also recorded here.
+    CREATE TABLE IF NOT EXISTS student_curriculum_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      studentId INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      curriculumId INTEGER NOT NULL REFERENCES curriculum(id) ON DELETE RESTRICT,
+      assignedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+      assignedBy INTEGER REFERENCES users(id) ON DELETE RESTRICT,
+      status TEXT NOT NULL DEFAULT 'active',
+      notes TEXT,
+      endedAt DATETIME,
+      endedBy INTEGER REFERENCES users(id) ON DELETE RESTRICT
+    );
+    CREATE INDEX IF NOT EXISTS idx_student_curriculum_history_student
+      ON student_curriculum_history(studentId, assignedAt DESC);
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_student_curriculum_history_active
+      ON student_curriculum_history(studentId) WHERE status = 'active';
+
+    CREATE TABLE IF NOT EXISTS curriculum_registration_overrides (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      studentId INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      courseId INTEGER NOT NULL REFERENCES courses(id) ON DELETE RESTRICT,
+      curriculumId INTEGER NOT NULL REFERENCES curriculum(id) ON DELETE RESTRICT,
+      reason TEXT NOT NULL,
+      approvedBy INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Generic hold, so graduation clearance (and later, registration) can query one shape instead
+    -- of each blocking condition inventing its own flag. Distinct from finance.js's
+    -- hasFinancialHold(), which is a computed (balance > 0) view over finance_transactions, not a
+    -- persisted row -- nothing currently writes a 'financial' row here; that reconciliation is a
+    -- later phase's decision, not assumed by this migration.
+    CREATE TABLE IF NOT EXISTS holds (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      studentId INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+      type TEXT NOT NULL,
+      active INTEGER NOT NULL DEFAULT 1,
+      reason TEXT,
+      placedBy INTEGER REFERENCES users(id) ON DELETE RESTRICT,
+      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_holds_studentId ON holds(studentId);
+
     -- Non-unique indexes on hot foreign-key lookup columns — these tables were
     -- previously relying on full scans for every enrollment/roster/attendance/
     -- payment lookup keyed by student or course.
@@ -1002,26 +1388,126 @@ async function init() {
   ensureColumn('notifications', 'courseId', 'INTEGER');
   ensureColumn('notifications', 'entityType', 'TEXT');
   ensureColumn('notifications', 'entityId', 'INTEGER');
+  ensureColumn('notifications', 'title', 'TEXT');
+  ensureColumn('notifications', 'severity', "TEXT DEFAULT 'info'");
+  ensureColumn('notifications', 'actionSection', 'TEXT');
+  ensureColumn('notifications', 'actionData', 'TEXT');
+  ensureColumn('notifications', 'metadata', 'TEXT');
+  ensureColumn('notifications', 'deduplicationKey', 'TEXT');
+  ensureColumn('notifications', 'createdBy', 'INTEGER');
+  ensureColumn('notifications', 'readAt', 'DATETIME');
+  ensureColumn('courses', 'resultsPublishedAt', 'DATETIME');
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS uq_notifications_deduplication ON notifications(deduplicationKey) WHERE deduplicationKey IS NOT NULL');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(userId,isRead,createdAt DESC)');
 
-  // Nullable — nothing sets these yet. Schema only, ahead of a future graduation-tracking phase.
+  // Written exclusively by POST /api/graduation/confirm/:studentId (routes/graduation.js), which
+  // mirrors the fields of the graduation_records row it just inserted here for join-free reads
+  // (transcript.js, profile pages). Nullable until a degree is actually conferred.
   ensureColumn('student_profiles', 'graduationStatus', 'TEXT');
   ensureColumn('student_profiles', 'graduationDate', 'TEXT');
   ensureColumn('student_profiles', 'degreeAwarded', 'TEXT');
 
+  // Graduation workflow phase 2 expands the original degree ledger in place. Nullable columns
+  // keep every legacy row readable while the reconciliation preview identifies what is missing.
+  ensureColumn('graduation_records', 'graduateNumber', 'TEXT');
+  ensureColumn('graduation_records', 'studentProgramId', 'INTEGER');
+  ensureColumn('graduation_records', 'programId', 'INTEGER');
+  ensureColumn('graduation_records', 'curriculumId', 'INTEGER');
+  ensureColumn('graduation_records', 'graduationApplicationId', 'INTEGER');
+  ensureColumn('graduation_records', 'graduationTermId', 'INTEGER');
+  ensureColumn('graduation_records', 'completionDate', 'TEXT');
+  ensureColumn('graduation_records', 'officialGraduationDate', 'TEXT');
+  ensureColumn('graduation_records', 'degreeClassification', 'TEXT');
+  ensureColumn('graduation_records', 'finalGpa', 'REAL');
+  ensureColumn('graduation_records', 'totalCreditsCompleted', 'REAL');
+  ensureColumn('graduation_records', 'honorsOrDistinction', 'TEXT');
+  ensureColumn('graduation_records', 'thesisTitle', 'TEXT');
+  ensureColumn('graduation_records', 'certificateStatus', "TEXT DEFAULT 'not_generated'");
+  ensureColumn('graduation_records', 'certificateIssuedAt', 'DATETIME');
+  ensureColumn('graduation_records', 'transcriptStatus', "TEXT DEFAULT 'pending'");
+  ensureColumn('graduation_records', 'transcriptIssuedAt', 'DATETIME');
+  ensureColumn('graduation_records', 'approvedBy', 'INTEGER');
+  ensureColumn('graduation_records', 'approvedAt', 'DATETIME');
+  ensureColumn('graduation_records', 'finalizedBy', 'INTEGER');
+  ensureColumn('graduation_records', 'finalizedAt', 'DATETIME');
+  ensureColumn('graduation_records', 'recordStatus', "TEXT DEFAULT 'active'");
+  ensureColumn('graduation_records', 'notes', 'TEXT');
+  ensureColumn('graduation_records', 'updatedAt', 'DATETIME');
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS uq_graduation_records_graduate_number ON graduation_records(graduateNumber) WHERE graduateNumber IS NOT NULL');
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS uq_graduation_records_student_program ON graduation_records(studentProgramId) WHERE studentProgramId IS NOT NULL');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_graduation_records_term_program ON graduation_records(graduationTermId, programId)');
+
+  // Records written by the original /graduation/confirm workflow are already legitimate degree
+  // awards: they have a graduation date, degree, conferring actor and certificate number. Preserve
+  // and expose those records in the richer registry without inventing an application or approval
+  // history that never existed. The migration is deliberately limited to canonical legacy
+  // graduation_records rows; a profile merely marked Graduated without a record still goes to the
+  // explicit reconciliation queue in graduationService.js.
+  await run(`
+    UPDATE graduation_records
+    SET graduateNumber = COALESCE(graduateNumber,
+          printf('GR-%s-%06d', COALESCE(NULLIF(substr(graduationDate,1,4),''), strftime('%Y',createdAt), strftime('%Y','now')), id)),
+        programId = COALESCE(programId, (SELECT programId FROM student_profiles WHERE studentId=graduation_records.studentId)),
+        completionDate = COALESCE(completionDate, graduationDate),
+        officialGraduationDate = COALESCE(officialGraduationDate, graduationDate),
+        certificateStatus = CASE WHEN certificateStatus IS NULL OR certificateStatus='not_generated' THEN 'generated' ELSE certificateStatus END,
+        approvedBy = COALESCE(approvedBy, conferredBy),
+        approvedAt = COALESCE(approvedAt, createdAt),
+        finalizedBy = COALESCE(finalizedBy, conferredBy),
+        finalizedAt = COALESCE(finalizedAt, createdAt),
+        recordStatus = COALESCE(recordStatus, 'active'),
+        notes = CASE WHEN notes IS NULL OR notes='' THEN
+          'Migrated from the legacy graduation workflow; application and ordered approval history were not captured by that workflow.'
+          ELSE notes END,
+        updatedAt = COALESCE(updatedAt, CURRENT_TIMESTAMP)
+    WHERE finalizedAt IS NULL
+      AND graduationDate IS NOT NULL
+      AND degreeAwarded IS NOT NULL
+      AND certificateNumber IS NOT NULL
+  `);
   // Denormalized mirror of the student's currently-open semester_records row (see
   // academicProgression.js) — lets every read site (Student Profile, Student Dashboard) show
   // "In Progress" / "Awaiting Results" / "Passed" / "Failed" / "On Hold" / "Graduation Eligible"
   // without a join. Always written together with the semester_records row it mirrors.
   ensureColumn('student_profiles', 'semesterStatus', "TEXT DEFAULT 'In Progress'");
   // Lifecycle status distinct from enrollmentStatus (which is a study-mode/standing flag —
-  // Regular/Part-time/Probation/Withdrawn). Active/Graduated/Suspended/On Leave — admin-editable,
-  // same ADMIN_FIELDS path as the rest of student_profiles.
+  // Regular/Part-time/Probation/Withdrawn). Active/Suspended/Withdrawn/On Leave are admin-editable
+  // via ADMIN_FIELDS; 'Graduated' is set exclusively by POST /api/graduation/confirm/:studentId
+  // (routes/studentProfile.js and routes/students.js both reject it) since it requires the
+  // eligibility + financial-clearance checks that live there.
   ensureColumn('student_profiles', 'studentStatus', "TEXT DEFAULT 'Active'");
+  await run(`
+    UPDATE student_profiles
+    SET semesterStatus='Completed'
+    WHERE studentStatus='Graduated'
+      AND EXISTS (SELECT 1 FROM graduation_records gr WHERE gr.studentId=student_profiles.studentId AND gr.finalizedAt IS NOT NULL)
+  `);
   // Optional cap on how many semesters a program runs — when set, reaching it after a Passed
   // semester marks the student Graduation Eligible instead of opening semester N+1. When unset,
   // graduation eligibility instead falls back to totalCredits (see resolveGraduationEligibility
   // in academicProgression.js). Nullable — most programs work fine driven by credits alone.
   ensureColumn('programs', 'numberOfSemesters', 'INTEGER');
+
+  // Curriculum Phase 2 additions. Kept as ensureColumn migrations so existing installations
+  // retain every Phase 1 row and can migrate idempotently at startup.
+  ensureColumn('curriculum', 'catalogYear', 'TEXT');
+  ensureColumn('curriculum', 'totalRequiredCredits', 'INTEGER');
+  ensureColumn('curriculum_semester', 'createdAt', 'DATETIME');
+  ensureColumn('curriculum_semester', 'updatedAt', 'DATETIME');
+  ensureColumn('elective_group', 'minimumCourses', 'INTEGER');
+  ensureColumn('elective_group', 'minimumCredits', 'REAL');
+  ensureColumn('elective_group', 'maximumCourses', 'INTEGER');
+  ensureColumn('elective_group', 'description', 'TEXT');
+  ensureColumn('elective_group', 'createdAt', 'DATETIME');
+  ensureColumn('elective_group', 'updatedAt', 'DATETIME');
+  ensureColumn('curriculum_course', 'courseType', "TEXT DEFAULT 'required'");
+  ensureColumn('curriculum_course', 'minimumPassingGrade', 'TEXT');
+  ensureColumn('curriculum_course', 'recommendedSequence', 'INTEGER');
+  ensureColumn('curriculum_course', 'createdAt', 'DATETIME');
+  ensureColumn('curriculum_course', 'updatedAt', 'DATETIME');
+  ensureColumn('student_curriculum', 'assignedBy', 'INTEGER');
+  ensureColumn('student_curriculum', 'status', "TEXT DEFAULT 'active'");
+  ensureColumn('student_curriculum', 'notes', 'TEXT');
 
   // Free-text intake cohort label (e.g. "Fall 2024"), admin-editable, used by the Students page
   // as a lightweight "Batch/Session" filter — deliberately not a full batches entity (that would
@@ -1271,6 +1757,26 @@ async function init() {
   db.exec('CREATE INDEX IF NOT EXISTS idx_approval_requests_subject ON approval_requests(subjectType, subjectId)');
   db.exec('CREATE INDEX IF NOT EXISTS idx_approval_decisions_request ON approval_decisions(requestId)');
 
+  // Data Migration Center provenance/rollback key (migration/adapters/SqliteDestinationAdapter.js):
+  // every row a migration inserts is tagged with the migration's id, so `DELETE FROM <table>
+  // WHERE source_migration_id = ?` can undo exactly that run and nothing else. Only added to the
+  // realistic set of migration-target tables — junction/log/audit/finance tables are never a
+  // migration destination, so they don't get this column.
+  for (const table of ['colleges', 'departments', 'programs', 'terms', 'rooms', 'courses',
+    'users', 'student_profiles', 'teachers', 'teacher_profiles', 'enrollments']) {
+    ensureColumn(table, 'source_migration_id', 'INTEGER');
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_${table}_source_migration_id ON ${table}(source_migration_id)`);
+  }
+  // The originally-uploaded file's name (e.g. "students.csv"), kept only so CsvConnector/
+  // ExcelConnector can name a discovered table after it instead of the opaque server-side storage
+  // path (migration-uploads/migration-<id>.csv) — cosmetic, never used for anything security- or
+  // logic-relevant. NULL for saved-connection (SQL) sources. Added via ensureColumn, not the
+  // CREATE TABLE above, because the `migrations` table may already exist on a running install.
+  ensureColumn('migrations', 'sourceFileName', 'TEXT');
+  ensureColumn('migration_batches', 'phase', "TEXT NOT NULL DEFAULT 'import'");
+  ensureColumn('migration_logs', 'phase', "TEXT NOT NULL DEFAULT 'import'");
+
+  await reportUnassignedCurriculumStudents();
   await seedAuthzTables();
 }
 
@@ -1286,6 +1792,9 @@ const CRUD_ACTIONS = ['View', 'Create', 'Update', 'Delete'];
 // seeded permission — additive, doesn't touch any other module's seeding.
 const EXTRA_ACTIONS = {
   announcements: ['Publish', 'Schedule', 'Archive', 'ManageRecipients', 'ViewAnalytics'],
+  curriculum: ['Activate', 'Archive', 'AssignStudent', 'Compare', 'AuditStudent', 'OverrideRegistrationRecommendation'],
+  graduation: ['CandidatesView', 'AuditRun', 'ApplicationReview', 'ApproveDepartment', 'ApproveRegistrar',
+    'Finalize', 'RegistryView', 'RegistryExport', 'Correct', 'CertificateManage', 'TranscriptManage', 'ReportsView'],
   // Evaluate/advance/override a student's semester progression (routes/progression.js) — a
   // distinct action from the generic students CRUD, since it triggers automatic academic-record
   // writes rather than a simple field edit. Seeded for every WRITE-level role on 'students'
@@ -1377,6 +1886,18 @@ async function nextEmployeeId(year = new Date().getFullYear()) {
   return formatIdNumber('faculty', year, nextSequenceNumber(prefix, [...fromUsers, ...fromProfiles]));
 }
 
+/** Deliberately does NOT backfill student_curriculum — inventing a curriculum assignment for an
+    existing student is a grandfathering-rule decision, not a schema concern. Just logs how many
+    students currently have none, every startup, so the number stays visible until that rule is
+    decided and Phase 2 actually assigns them. */
+async function reportUnassignedCurriculumStudents() {
+  const row = await get(`
+    SELECT COUNT(*) as n FROM users
+    WHERE role = 'student' AND id NOT IN (SELECT studentId FROM student_curriculum)
+  `);
+  console.log(`[curriculum] ${row?.n || 0} existing student(s) have no curriculum assigned (student_curriculum left empty for them — grandfather rule pending).`);
+}
+
 /** Adds a column to an existing table if it isn't already there — safe to call on every startup. */
 function ensureColumn(table, column, definition) {
   const cols = db.prepare(`PRAGMA table_info(${table})`).all();
@@ -1422,12 +1943,14 @@ async function logAudit(user, action, entityType, entityId, details, oldValue, n
 /** Runs `fn` (an async function making run()/get()/all() calls) inside a single SQLite
     transaction — commits if it resolves, rolls back and rethrows if it throws. For callers
     doing several dependent writes that must all succeed or none at all (see
-    routes/superAdmin.js's system reset). */
-async function transaction(fn) {
+    routes/superAdmin.js's system reset). Pass { commit: false } to always roll back even on
+    success — used by simulationHarness.js for dry runs; every existing call site omits the
+    option and keeps committing on success exactly as before. */
+async function transaction(fn, { commit = true } = {}) {
   db.exec('BEGIN');
   try {
     const result = await fn();
-    db.exec('COMMIT');
+    db.exec(commit ? 'COMMIT' : 'ROLLBACK');
     return result;
   } catch (err) {
     db.exec('ROLLBACK');

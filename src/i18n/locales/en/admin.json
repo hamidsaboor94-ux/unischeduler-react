@@ -1,4 +1,27 @@
 {
+  "graduationPage": {
+    "title": "Graduation",
+    "hint": "Confirm degree conferral for students who have completed their program. Confirming graduation sets the student's status to Graduated and issues a certificate — this cannot be undone from here.",
+    "table": {
+      "name": "Name",
+      "idNumber": "ID Number",
+      "department": "Department",
+      "program": "Program",
+      "degree": "Degree",
+      "finance": "Finance",
+      "actions": "Actions"
+    },
+    "empty": "No students are currently Graduation Eligible.",
+    "financiallyCleared": "Cleared",
+    "financeBlocked": "Balance: {{amount}}",
+    "confirmButton": "Confirm Graduation",
+    "confirmDialog": "Confirm graduation for {{name}}? This sets their status to Graduated and issues a certificate. This cannot be undone from here.",
+    "confirmLabel": "Confirm Graduation",
+    "conferredToast": "{{name}} has been graduated — {{degree}}.",
+    "downloadCertificate": "Download Certificate",
+    "financeHoldError": "Cannot graduate — outstanding balance of {{amount}} must be cleared first.",
+    "genericError": "Could not confirm graduation."
+  },
   "conflictsPage": {
     "title": "Conflict Detection",
     "rescan": "Re-scan",
@@ -192,6 +215,127 @@
         "successNoBackup": "Reset complete. No backup was taken.",
         "successWithBackup": "Reset complete. Backup saved as \"{{fileName}}\"."
       }
+    }
+  },
+  "dataMigrationPage": {
+    "title": "Data Migration Center",
+    "hint": "Import data from another database, or a CSV/Excel file, into this system. Nothing existing is ever changed or deleted — every import only adds new rows, and a full snapshot is taken before anything is written so an import can always be undone.",
+    "newMigration": "New migration",
+    "viewHistory": "View history",
+    "history": {
+      "label": "Label",
+      "source": "Source",
+      "status": "Status",
+      "rows": "Rows imported",
+      "created": "Created",
+      "empty": "No migrations yet — start a new one to import data."
+    },
+    "steps": {
+      "selectSource": "Select source",
+      "connect": "Connect",
+      "discover": "Discover",
+      "map": "Map columns",
+      "validate": "Validate",
+      "dryRun": "Dry run",
+      "import": "Import",
+      "report": "Report"
+    },
+    "selectSource": {
+      "title": "What are you importing from?"
+    },
+    "sourceTypes": {
+      "sqlite": "SQLite file",
+      "mysql": "MySQL",
+      "postgres": "PostgreSQL",
+      "mssql": "SQL Server",
+      "csv": "CSV file",
+      "excel": "Excel file"
+    },
+    "connect": {
+      "title": "Connect to the source",
+      "label": "Label",
+      "labelPlaceholder": "e.g. Legacy student system",
+      "file": "File",
+      "uploadButton": "Upload and continue",
+      "savedConnections": "Use a saved connection",
+      "choosePlaceholder": "Choose a saved connection…",
+      "useConnection": "Use this connection",
+      "newConnection": "Or connect to a new database",
+      "host": "Host",
+      "port": "Port",
+      "database": "Database",
+      "user": "User",
+      "password": "Password",
+      "testButton": "Test connection",
+      "saveAndContinue": "Save and continue",
+      "testOk": "Connection succeeded.",
+      "testFailed": "Connection failed"
+    },
+    "discover": {
+      "title": "Tables found in the source",
+      "table": "Table",
+      "rows": "Rows",
+      "columns": "Columns",
+      "primaryKey": "Primary key",
+      "continue": "Continue to mapping",
+      "retry": "Retry"
+    },
+    "map": {
+      "title": "Map source tables to destination",
+      "rows": "rows",
+      "skipTable": "— don't import this table —",
+      "destinationField": "Destination field",
+      "sourceColumn": "Source column",
+      "unmapped": "— not mapped —",
+      "saveAndContinue": "Save mapping and continue"
+    },
+    "validate": {
+      "title": "Validate",
+      "ok": "Everything looks good — you're ready for a dry run.",
+      "backToMapping": "Back to mapping",
+      "recheck": "Re-check",
+      "continue": "Continue to dry run"
+    },
+    "dryRun": {
+      "title": "Dry run",
+      "hint": "Checks every row against the mapping without writing anything to the database. Counts below are estimated — the real import may differ slightly if the source data changes before you run it.",
+      "start": "Start dry run",
+      "processing": "Checking {{table}} — {{processed}} of {{total}} rows",
+      "summary": "Estimated {{estimated}} rows ready to import, {{errors}} would fail.",
+      "rerun": "Run again",
+      "continue": "Continue to import",
+      "failed": "The dry run failed. You can try again."
+    },
+    "import": {
+      "title": "Import",
+      "hint": "Writes the mapped rows into the database. A full backup snapshot is taken first, so this can be rolled back afterward if needed.",
+      "start": "Start import",
+      "processing": "Importing {{table}} — {{processed}} of {{total}} rows",
+      "cancel": "Cancel import",
+      "confirmCancel": "Stop this import? Rows already written stay in place — nothing already imported is undone by cancelling.",
+      "summary": "Imported {{inserted}} rows, {{errors}} failed.",
+      "viewReport": "View report",
+      "cancelled": "This import was cancelled.",
+      "failed": "The import failed.",
+      "retry": "Try again"
+    },
+    "report": {
+      "title": "Report",
+      "status": "Status",
+      "inserted": "Rows inserted",
+      "errors": "Rows with errors",
+      "errorMessage": "Error",
+      "batches": "Batches",
+      "sourceTable": "Source table",
+      "target": "Destination",
+      "batch": "Batch #",
+      "noBatches": "No batches recorded.",
+      "errorLog": "Error log",
+      "done": "Done",
+      "rollbackButton": "Roll back this migration",
+      "confirmRollback": "Undo this migration? Every row it inserted will be deleted. If that can't be done cleanly, the database is restored from the snapshot taken just before this import instead — which replaces the ENTIRE database with how it looked at that moment, undoing any other changes made since. This cannot be undone.",
+      "rollbackToastOk": "Migration rolled back — the rows it inserted have been removed.",
+      "rollbackToastSnapshot": "Migration rolled back by restoring the pre-import snapshot — the entire database was reverted to that point in time."
     }
   }
 }
